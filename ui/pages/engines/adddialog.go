@@ -10,7 +10,6 @@ import (
 	"github.com/mehran9675/sonora/internal/engines/command"
 	"github.com/mehran9675/sonora/internal/engines/openai"
 	"github.com/mehran9675/sonora/internal/paths"
-	"github.com/mehran9675/sonora/ui/components/focusarea"
 	"github.com/mehran9675/sonora/ui/components/optionfield"
 	"github.com/mehran9675/sonora/ui/components/overlay"
 	"github.com/mehran9675/sonora/ui/components/segmented"
@@ -27,12 +26,11 @@ const (
 
 // addDialog creates API and command engines and explains plugins.
 type addDialog struct {
-	c        *core.Ctx
-	open     bool
-	kind     string
-	tabs     *segmented.Control
-	name     *input.Input
-	nameArea *focusarea.Area
+	c    *core.Ctx
+	open bool
+	kind string
+	tabs *segmented.Control
+	name *input.Input
 
 	forms map[string]*setupForm
 
@@ -64,7 +62,6 @@ func newAddDialog(c *core.Ctx) *addDialog {
 		{Value: addPlugin, Label: "Python plugin"},
 	}, func() string { return d.kind }, func(v string) { d.kind = v })
 	d.name = giode.Input.Text("Name, e.g. “Kokoro server”", theme.Field()).Label("Engine name")
-	d.nameArea = focusarea.New(d.name, giode.Styles{Width: -1})
 	d.forms = map[string]*setupForm{
 		addAPI:     newSetupForm(openai.Template("", "")),
 		addCommand: newSetupForm(command.Template("", "")),
@@ -143,7 +140,7 @@ func (d *addDialog) content() giode.Element {
 		}
 		els = append(els,
 			giode.Text(help, giode.Styles{Color: "theme.secondary", FontSize: 13, LineHeight: 20}),
-			giode.Stack(giode.Styles{Width: -1, Gap: 8}, giode.Text("Name", theme.Overline), d.nameArea.Element()),
+			giode.Stack(giode.Styles{Width: -1, Gap: 8}, giode.Text("Name", theme.Overline), giode.Box(giode.Styles{Width: -1}, d.name)),
 		)
 		for _, f := range d.forms[d.kind].fields {
 			els = append(els, f.Element())

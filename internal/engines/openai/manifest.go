@@ -20,7 +20,7 @@ func Template(id, name string) *engines.Manifest {
 		Options: []engines.Option{
 			{ID: "base_url", Label: "Server URL", Type: engines.OptionText, Scope: engines.ScopeSetup,
 				Default: "http://localhost:8880/v1", Placeholder: "http://localhost:8880/v1",
-				Help: "Everything before /audio/speech"},
+				Help: "Everything before /audio/speech", Keyboard: "url"},
 			{ID: "api_key", Label: "API key", Type: engines.OptionSecret, Scope: engines.ScopeSetup, Placeholder: "optional for local servers"},
 			{ID: "model", Label: "Model", Type: engines.OptionText, Scope: engines.ScopeSetup, Default: "tts-1",
 				Suggestions: []string{"tts-1", "tts-1-hd", "gpt-4o-mini-tts", "kokoro"}},

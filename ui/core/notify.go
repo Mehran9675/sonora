@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/mehran9675/giode"
-	"github.com/mehran9675/sonora/internal/sysdlg"
 )
 
 // Info shows a short notification.
@@ -16,7 +15,7 @@ func (c *Ctx) Success(msg string) { c.Toasts.Show(giode.ToastSuccess, msg) }
 
 // Error shows err's first line; cancelled dialogs are ignored.
 func (c *Ctx) Error(err error) {
-	if err == nil || errors.Is(err, sysdlg.ErrCancelled) {
+	if err == nil || errors.Is(err, giode.ErrCanceled) {
 		return
 	}
 	msg := err.Error()

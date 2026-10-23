@@ -14,7 +14,9 @@ single scrolling column with a bottom tab bar.
 **On Android** Sonora speaks through API servers — run a server such as
 [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) on your computer, or use a cloud
 TTS API, and add it under *Engines → Add engine*. Phones can't run the Python models, so
-the one-click engines, voice cloning and exporting files are desktop features.
+the one-click engines and voice cloning are desktop features. Clips are saved through the
+system file picker or sent to other apps with the share sheet; Back closes dialogs and
+returns to the Studio; your script is kept when you switch away.
 
 ![Studio](docs/screenshots/studio.png)
 
@@ -69,7 +71,7 @@ Grab the archive for your OS and CPU from the [Releases](https://github.com/Mehr
 first time you install a Python engine, Sonora downloads its toolchain (~30 MB) by itself.
 
 - **Linux:** System voices need `espeak-ng` (`sudo apt install espeak-ng`); file dialogs
-  use `zenity` or `kdialog` when available.
+  go through the desktop's XDG portal (standard on GNOME, KDE and most other desktops).
 - **macOS:** the app isn't notarized by Apple yet, so the first launch is blocked. Run
   `xattr -dr com.apple.quarantine /Applications/Sonora.app` once (or right-click → Open).
   macOS asks for microphone access the first time you record a voice.
@@ -125,7 +127,7 @@ internal/
   catalog/             finds built-in engines and plugins
   pyenv/               uv toolchain, virtualenvs, downloads
   audio/               clip ops, wav/, playback/, record/, convert/
-  library/ settings/ paths/ sysdlg/
+  library/ settings/ paths/
 python/
   runtime/             worker.py + the `sonora` helper package
   engines/<id>/        engine.json + adapter.py for each built-in engine
@@ -164,8 +166,8 @@ go run gioui.org/cmd/gogio@v0.10.3 -target android -appid com.sonora.app -icon a
 ```sh
 go test ./...          # unit + integration tests (the worker test uses python3 if present)
 GIODE_MCP=1 ./sonora   # exposes the UI over MCP (giode) for automated UI testing
+                       # its window tool resizes to a phone, e.g. {"action":"resize","width":400,"height":840}
 SONORA_HOME=/tmp/s ./sonora   # use a throwaway data folder
-SONORA_WINDOW_SIZE=400x840 ./sonora   # start with a phone-sized window
 ```
 
 The icon is drawn by code. After changing `tools/makeicon`, regenerate the PNGs and the

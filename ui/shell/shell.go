@@ -10,8 +10,10 @@ import (
 	"github.com/mehran9675/sonora/ui/icons"
 )
 
-// compactBelow is the width, in dp, under which the app switches to the
-// one-column phone layout with a bottom tab bar.
+// compactBelow is the width, in dp, up to which the app uses the
+// one-column phone layout with a bottom tab bar. Inside it,
+// giode.Compact() reports true, which is how pages and components
+// adapt.
 const compactBelow = 760
 
 // Shell lays out the frame around the current page.
@@ -39,30 +41,37 @@ func New(c *core.Ctx, pages map[core.Page]func() giode.Element, onTheme func()) 
 // Element lays out the whole window, choosing the layout by width.
 func (s *Shell) Element() giode.Element {
 	return giode.Responsive(
-		// DpToPx is 0 before the first frame; never let that match.
-		giode.Breakpoint{Width: max(1, giode.DpToPx(compactBelow)), View: s.compact},
+		giode.Breakpoint{MaxWidth: compactBelow, Name: "compact", View: s.compact},
 		giode.Breakpoint{View: s.wide},
 	)
 }
 
 // wide is the desktop layout: sidebar beside the page.
 func (s *Shell) wide() giode.Element {
-	s.c.SetCompact(false)
 	return s.frame(giode.Row(giode.Styles{Width: -1, FlexGrow: 1, Wrap: giode.WrapNoWrap},
 		s.sidebar.Element(),
 		giode.Box(giode.Styles{Width: 1, Height: -1, Background: "theme.border"}),
-		giode.Box(giode.Styles{FlexGrow: 1, Height: -1, Background: "theme.background"}, s.pages[s.c.Page()]()),
+		giode.Box(giode.Styles{FlexGrow: 1, Height: -1, Background: "theme.background"}, s.page()),
 	))
 }
 
 // compact is the phone layout: the page above a bottom tab bar.
 func (s *Shell) compact() giode.Element {
-	s.c.SetCompact(true)
 	return s.frame(giode.Stack(giode.Styles{Width: -1, FlexGrow: 1},
-		giode.Box(giode.Styles{Width: -1, FlexGrow: 1, Background: "theme.background"}, s.pages[s.c.Page()]()),
+		giode.Box(giode.Styles{Width: -1, FlexGrow: 1, Background: "theme.background"}, s.page()),
 		giode.Box(giode.Styles{Width: -1, Height: 1, Background: "theme.border"}),
 		s.sidebar.Tabs(),
 	))
+}
+
+// page builds the current page. Back on any page but the Studio returns
+// to the Studio; it's registered first, so a page or an open dialog
+// that handles Back itself takes precedence.
+func (s *Shell) page() giode.Element {
+	if s.c.Page() != core.PageStudio {
+		giode.HandleBack(func() { s.c.Go(core.PageStudio) })
+	}
+	return s.pages[s.c.Page()]()
 }
 
 // frame adds the title bar and the layers that cover the whole window.

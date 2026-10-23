@@ -44,6 +44,9 @@ type Option struct {
 	Step        float64    `json:"step,omitempty"`
 	Help        string     `json:"help,omitempty"`
 	Placeholder string     `json:"placeholder,omitempty"`
+	// Keyboard picks the on-screen keyboard for text options on touch
+	// devices: "url", "number", "email" or "phone".
+	Keyboard string `json:"keyboard,omitempty"`
 }
 
 // Choice is one value of a select option.

@@ -2,10 +2,8 @@
 package app
 
 import (
-	"fmt"
 	"image"
 	"log"
-	"os"
 
 	"github.com/mehran9675/giode"
 
@@ -49,17 +47,19 @@ func Run() error {
 		Background: "theme.background",
 		Logger:     log.Default(),
 		LogLevel:   giode.LogLevelWarning,
+		// Android may end a backgrounded app without warning, so the
+		// draft is saved whenever the app leaves the screen.
+		OnBackground: func() {
+			if studioPage != nil {
+				studioPage.SaveDraft()
+			}
+		},
 		OnShutdown: func() {
 			if studioPage != nil {
 				studioPage.SaveDraft()
 			}
 			c.Manager.Shutdown()
 		},
-	}
-	// SONORA_WINDOW_SIZE=400x840 starts with that size, to try the
-	// phone layout on a desktop.
-	if w, h, ok := parseSize(os.Getenv("SONORA_WINDOW_SIZE")); ok {
-		cfg.Size = image.Pt(w, h)
 	}
 	if core.Mobile {
 		// The OS owns the window and runs one instance.
@@ -95,12 +95,4 @@ func Run() error {
 	}, toggleTheme)
 
 	return c.App.Run(frame.Element)
-}
-
-// parseSize reads "WIDTHxHEIGHT".
-func parseSize(v string) (w, h int, ok bool) {
-	if _, err := fmt.Sscanf(v, "%dx%d", &w, &h); err != nil || w <= 0 || h <= 0 {
-		return 0, 0, false
-	}
-	return w, h, true
 }

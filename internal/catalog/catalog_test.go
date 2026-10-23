@@ -28,6 +28,11 @@ func TestBuiltinEngines(t *testing.T) {
 			t.Errorf("%s: name, description and install recipe are required", m.ID)
 		}
 		for _, o := range m.Options {
+			switch o.Keyboard {
+			case "", "url", "number", "email", "phone":
+			default:
+				t.Errorf("%s.%s: unknown keyboard %q", m.ID, o.ID, o.Keyboard)
+			}
 			switch o.Type {
 			case engines.OptionSelect:
 				if len(o.Choices) == 0 {

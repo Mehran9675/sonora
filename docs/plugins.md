@@ -56,7 +56,7 @@ folder**, drop your folder in, and press **Reload engines**. Your engine appears
 | `transcript` | Whether the reference recording's transcript is `"optional"` or `"required"`. |
 | `voices` | A fixed voice list. Leave it out to report voices from `load()` instead. |
 | `hint` | A tip shown under the editor. |
-| `options` | Settings rendered as controls: `select` (segments for ≤ 3 choices, a searchable list beyond), `number` (slider over `min`–`max`), `text` (with optional `suggestions`), `secret`, `bool`. `scope: "load"` means changing it reloads the model. |
+| `options` | Settings rendered as controls: `select` (segments for ≤ 3 choices, a searchable list beyond), `number` (slider over `min`–`max`), `text` (with optional `suggestions`, and `keyboard`: `url`, `number`, `email` or `phone` for the on-screen keyboard on touch screens), `secret`, `bool`. `scope: "load"` means changing it reloads the model. |
 
 ## adapter.py
 

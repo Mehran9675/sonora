@@ -1,9 +1,14 @@
 package studio
 
 import (
+	"bytes"
+	"context"
+	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/mehran9675/giode"
 	"github.com/mehran9675/giode/components/input"
@@ -12,8 +17,6 @@ import (
 	"github.com/mehran9675/sonora/internal/engines"
 	"github.com/mehran9675/sonora/internal/manager"
 	"github.com/mehran9675/sonora/internal/settings"
-	"github.com/mehran9675/sonora/internal/sysdlg"
-	"github.com/mehran9675/sonora/ui/components/focusarea"
 	"github.com/mehran9675/sonora/ui/components/optionfield"
 	"github.com/mehran9675/sonora/ui/components/picker"
 	"github.com/mehran9675/sonora/ui/components/segmented"
@@ -34,15 +37,14 @@ type engineForm struct {
 	speed        *slider.Slider
 
 	// cloneMode is set when the user chose "Clone a voice".
-	cloneMode      bool
-	modes          *segmented.Control
-	reference      string
-	refPick        *giode.ButtonElement
-	refPlay        *giode.PressableElement
-	recorder       *voicerecorder.Recorder
-	refClear       *giode.ButtonElement
-	transcript     *input.Input
-	transcriptArea *focusarea.Area
+	cloneMode  bool
+	modes      *segmented.Control
+	reference  string
+	refPick    *giode.ButtonElement
+	refPlay    *giode.PressableElement
+	recorder   *voicerecorder.Recorder
+	refClear   *giode.ButtonElement
+	transcript *input.Input
 }
 
 func newEngineForm(c *core.Ctx, rt *manager.Runtime) *engineForm {
@@ -117,7 +119,6 @@ func newEngineForm(c *core.Ctx, rt *manager.Runtime) *engineForm {
 		c.PlayPause(f.reference, "Voice sample", filepath.Base(f.reference))
 	})
 	f.transcript = giode.Input.Text("What is said in the recording", theme.Field()).Label("Reference transcript")
-	f.transcriptArea = focusarea.New(f.transcript, giode.Styles{Width: -1})
 	f.cloneMode = m.Clone == engines.CloneRequired
 	f.modes = segmented.New([]segmented.Option{{Value: "voice", Label: "Built-in voice"}, {Value: "clone", Label: "Clone a voice"}},
 		func() string {
@@ -175,11 +176,16 @@ func (f *engineForm) speedValue() float64 {
 func (f *engineForm) pickReference() {
 	var picked string
 	f.c.Background(func() error {
-		p, err := sysdlg.OpenFile("Choose a voice recording", sysdlg.Filter{Name: "Audio", Extensions: []string{"wav", "mp3", "flac", "ogg", "m4a"}})
+		r, err := f.c.App.OpenFile(context.Background(), giode.FileFilter{Extensions: []string{"wav", "mp3", "flac", "ogg", "m4a"}})
+		if err != nil && !errors.Is(err, giode.ErrCanceled) {
+			// Linux systems without the XDG desktop portal have no picker.
+			return fmt.Errorf("couldn't open a file picker on this system (%v); record your voice instead", err)
+		}
 		if err != nil {
 			return err
 		}
-		picked, err = copyReference(p)
+		defer r.Close()
+		picked, err = saveReference(r)
 		return err
 	}, func(err error) {
 		if err != nil {
@@ -190,20 +196,49 @@ func (f *engineForm) pickReference() {
 	})
 }
 
-func copyReference(src string) (string, error) {
-	in, err := os.Open(src)
-	if err != nil {
-		return "", err
+// saveReference copies a picked recording into the references folder,
+// so library entries keep working if the original moves. The system
+// picker on Android hands over a stream without a file name, so the
+// extension is then taken from the audio format itself.
+func saveReference(r io.Reader) (string, error) {
+	name := ""
+	if n, ok := r.(interface{ Name() string }); ok {
+		name = filepath.Base(n.Name())
 	}
-	defer in.Close()
-	dst := filepath.Join(core.ReferencesDir(), filepath.Base(src))
+	head := make([]byte, 12)
+	n, _ := io.ReadFull(r, head)
+	head = head[:n]
+	if name == "" || filepath.Ext(name) == "" {
+		name = "voice-" + time.Now().Format("20060102-150405") + audioExt(head)
+	}
+	dst := filepath.Join(core.ReferencesDir(), name)
 	out, err := os.Create(dst)
 	if err != nil {
 		return "", err
 	}
 	defer out.Close()
-	_, err = io.Copy(out, in)
+	if _, err := out.Write(head); err != nil {
+		return "", err
+	}
+	_, err = io.Copy(out, r)
 	return dst, err
+}
+
+// audioExt guesses a file extension from the first bytes of audio.
+func audioExt(head []byte) string {
+	switch {
+	case bytes.HasPrefix(head, []byte("RIFF")):
+		return ".wav"
+	case bytes.HasPrefix(head, []byte("fLaC")):
+		return ".flac"
+	case bytes.HasPrefix(head, []byte("OggS")):
+		return ".ogg"
+	case len(head) >= 8 && string(head[4:8]) == "ftyp":
+		return ".m4a"
+	case bytes.HasPrefix(head, []byte("ID3")), len(head) >= 2 && head[0] == 0xFF && head[1]&0xE0 == 0xE0:
+		return ".mp3"
+	}
+	return ".wav"
 }
 
 func sliderToSpeed(v float32) float64 { return float64(int((0.5+float64(v)*1.5)*20+0.5)) / 20 }

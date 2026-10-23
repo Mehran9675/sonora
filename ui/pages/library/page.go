@@ -11,7 +11,6 @@ import (
 
 	lib "github.com/mehran9675/sonora/internal/library"
 	"github.com/mehran9675/sonora/ui/components/emptystate"
-	"github.com/mehran9675/sonora/ui/components/focusarea"
 	"github.com/mehran9675/sonora/ui/components/pagehead"
 	"github.com/mehran9675/sonora/ui/components/playerbar"
 	"github.com/mehran9675/sonora/ui/core"
@@ -23,7 +22,6 @@ import (
 type Page struct {
 	c      *core.Ctx
 	search *input.Input
-	find   *focusarea.Area
 	scroll *scroll.Scroll
 	rows   *giode.KeyedCache[string, *row]
 	player *playerbar.Bar
@@ -33,8 +31,9 @@ type Page struct {
 // New builds the page.
 func New(c *core.Ctx) *Page {
 	p := &Page{c: c, rows: giode.NewKeyedCache[string, *row]()}
-	p.search = giode.Input.Text("Search your clips…", theme.Field())
-	p.find = focusarea.New(p.search, giode.Styles{Width: 280})
+	field := theme.Field()
+	field.Width = 280
+	p.search = giode.Input.Text("Search your clips…", field)
 	p.scroll = giode.Scroll(p.list, giode.Styles{ScrollBar: giode.ScrollBar{ThumbColor: "theme.text/0.15", Width: 6}})
 	p.player = playerbar.New(c)
 	p.studio = giode.Button("Open Studio", giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
@@ -73,8 +72,8 @@ func (p *Page) list() giode.Element {
 
 // Element lays out the page.
 func (p *Page) Element() giode.Element {
-	return giode.Stack(giode.Styles{Width: -1, Height: -1, Gap: 20, Padding: giode.UniformInset(p.c.Gutter())},
-		pagehead.Head(p.c.Compact(), "Library", "Your generated audio, newest first.", p.find.Element()),
+	return giode.Stack(giode.Styles{Width: -1, Height: -1, Gap: 20, Padding: giode.UniformInset(core.Gutter())},
+		pagehead.Head(giode.Compact(), "Library", "Your generated audio, newest first.", p.search),
 		giode.Box(giode.Styles{Width: -1, FlexGrow: 1}, p.scroll),
 		p.player.Element(),
 	)

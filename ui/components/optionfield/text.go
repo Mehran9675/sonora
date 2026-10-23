@@ -7,14 +7,12 @@ import (
 	"github.com/mehran9675/giode/components/input"
 
 	"github.com/mehran9675/sonora/internal/engines"
-	"github.com/mehran9675/sonora/ui/components/focusarea"
 	"github.com/mehran9675/sonora/ui/theme"
 )
 
 // text is a single-line input with optional suggestion chips.
 type text struct {
 	in   *input.Input
-	area *focusarea.Area
 	sugg []*giode.PressableElement
 }
 
@@ -29,7 +27,9 @@ func newText(opt engines.Option, st Store) *text {
 	if opt.Type == engines.OptionSecret {
 		t.in.Password(true)
 	}
-	t.area = focusarea.New(t.in, giode.Styles{Width: -1})
+	if k, ok := keyboards[opt.Keyboard]; ok {
+		t.in.Keyboard(k)
+	}
 	t.in.SetText(fmt.Sprint(valueOr(st.Get(opt.ID), valueOr(opt.Default, ""))))
 	for _, s := range opt.Suggestions {
 		s := s
@@ -47,14 +47,22 @@ func newText(opt engines.Option, st Store) *text {
 
 func (t *text) Element() giode.Element {
 	if len(t.sugg) == 0 {
-		return t.area.Element()
+		return giode.Box(giode.Styles{Width: -1}, t.in)
 	}
 	chips := make([]giode.Element, len(t.sugg))
 	for i, s := range t.sugg {
 		chips[i] = s
 	}
 	return giode.Stack(giode.Styles{Width: -1, Gap: 8},
-		t.area.Element(),
+		giode.Box(giode.Styles{Width: -1}, t.in),
 		giode.Row(giode.Styles{Width: -1, Gap: 6}, chips...),
 	)
+}
+
+// keyboards maps an option's "keyboard" to giode's on-screen keyboards.
+var keyboards = map[string]input.Keyboard{
+	"url":    giode.KeyboardURL,
+	"number": giode.KeyboardNumeric,
+	"email":  giode.KeyboardEmail,
+	"phone":  giode.KeyboardPhone,
 }

@@ -4,7 +4,6 @@ import (
 	"github.com/mehran9675/giode"
 
 	lib "github.com/mehran9675/sonora/internal/library"
-	"github.com/mehran9675/sonora/internal/paths"
 	"github.com/mehran9675/sonora/ui/components/chip"
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
@@ -17,7 +16,7 @@ type row struct {
 	e      lib.Entry
 	play   *giode.PressableElement
 	reuse  *giode.ButtonElement
-	reveal *giode.ButtonElement
+	share  *giode.ButtonElement
 	remove *giode.ButtonElement
 }
 
@@ -40,8 +39,8 @@ func newRow(c *core.Ctx, e lib.Entry) *row {
 	ghost := giode.Styles{Color: "theme.muted", Background: "theme.text", Padding: giode.UniformInset(8), BorderRadius: 8}
 	r.reuse = giode.Button("", ghost).Variant(giode.VariantGhost).Icon(icons.Icon(icons.Reuse, 16, "")).
 		OnClick(func() { c.Reuse(e) })
-	r.reveal = giode.Button("", ghost).Variant(giode.VariantGhost).Icon(icons.Icon(icons.Folder, 16, "")).
-		OnClick(func() { c.Error(paths.Reveal(path)) })
+	r.share = giode.Button("", ghost).Variant(giode.VariantGhost).Icon(icons.Icon(core.ShareIcon(), 16, "")).
+		OnClick(func() { c.ShareClip(path) })
 	r.remove = giode.Button("", ghost).Variant(giode.VariantGhost).Icon(icons.Icon(icons.Trash, 16, "")).OnClick(func() {
 		giode.AfterLayout(func() {
 			if c.Player.Loaded() == path {
@@ -54,13 +53,10 @@ func newRow(c *core.Ctx, e lib.Entry) *row {
 	return r
 }
 
-// actions are the row's buttons; there's no file manager to show the
-// file in on phones, and no room for it on narrow windows.
+// actions are the row's buttons: reuse, share (or show in folder) and
+// delete.
 func (r *row) actions() giode.Element {
-	if core.Mobile || r.c.Compact() {
-		return giode.Row(giode.Styles{Gap: 2, Wrap: giode.WrapNoWrap}, r.reuse, r.remove)
-	}
-	return giode.Row(giode.Styles{Gap: 2, Wrap: giode.WrapNoWrap}, r.reuse, r.reveal, r.remove)
+	return giode.Row(giode.Styles{Gap: 2, Wrap: giode.WrapNoWrap}, r.reuse, r.share, r.remove)
 }
 
 func (r *row) element() giode.Element {

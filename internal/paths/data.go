@@ -1,5 +1,5 @@
-// Package paths locates Sonora's data folder and opens files and
-// folders in the platform's file manager.
+// Package paths locates Sonora's data folder and opens files, folders
+// and links with the default application.
 package paths
 
 import (
@@ -42,14 +42,4 @@ func Sub(parts ...string) string {
 	dir := filepath.Join(append([]string{Data()}, parts...)...)
 	os.MkdirAll(dir, 0o755)
 	return dir
-}
-
-// Downloads returns the user's Downloads folder, or the home folder.
-func Downloads() string {
-	home, _ := os.UserHomeDir()
-	d := filepath.Join(home, "Downloads")
-	if st, err := os.Stat(d); err == nil && st.IsDir() {
-		return d
-	}
-	return home
 }

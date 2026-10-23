@@ -58,7 +58,7 @@ func (p *Page) content() giode.Element {
 		}
 	}
 	els := []giode.Element{
-		pagehead.Head(p.c.Compact(), "Engines", "Install text-to-speech models with one click, or connect your own.", p.add),
+		pagehead.Head(giode.Compact(), "Engines", "Install text-to-speech models with one click, or connect your own.", p.add),
 	}
 	if len(ready) > 0 {
 		els = append(els, group("Installed", ready))
@@ -66,7 +66,7 @@ func (p *Page) content() giode.Element {
 	if len(rest) > 0 {
 		els = append(els, group("Available", rest))
 	}
-	return giode.Stack(giode.Styles{Width: -1, Gap: 26, Padding: giode.UniformInset(p.c.Gutter())}, els...)
+	return giode.Stack(giode.Styles{Width: -1, Gap: 26, Padding: giode.UniformInset(core.Gutter())}, els...)
 }
 
 func group(title string, cards []giode.Element) giode.Element {

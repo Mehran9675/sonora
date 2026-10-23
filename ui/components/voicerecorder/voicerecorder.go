@@ -111,6 +111,7 @@ func (r *Recorder) Element() giode.Element {
 	if r.rec == nil {
 		return giode.Box(giode.Styles{})
 	}
+	giode.HandleBack(func() { r.finish(false) }) // Back discards the take
 	elapsed := r.rec.Elapsed()
 	clock := fmt.Sprintf("%s / %s", core.Clock(elapsed), core.Clock(MaxLength))
 	hint := "Read naturally, a few sentences, in a quiet room."

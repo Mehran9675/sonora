@@ -51,7 +51,7 @@ func cloneBody(f *engineForm) giode.Element {
 		if m.Transcript == engines.CloneRequired {
 			label = "Transcript · required"
 		}
-		body = append(body, giode.Text(label, theme.Caption), f.transcriptArea.Element())
+		body = append(body, giode.Text(label, theme.Caption), giode.Box(giode.Styles{Width: -1}, f.transcript))
 	}
 	return giode.Stack(giode.Styles{Width: -1, Gap: 10}, body...)
 }

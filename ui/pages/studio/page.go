@@ -91,9 +91,10 @@ func (p *Page) form(rt *manager.Runtime) *engineForm {
 	return f
 }
 
-// SaveDraft stores the editor text (called on shutdown).
+// SaveDraft stores the editor text. It's safe from any goroutine, as
+// OnBackground on Android requires.
 func (p *Page) SaveDraft() {
-	text := p.editor.text()
+	text := p.editor.savedText()
 	p.c.Settings.Update(func(s *settings.Settings) { s.Draft = text })
 }
 
@@ -106,7 +107,7 @@ func (p *Page) Element() giode.Element {
 			p.addEngine)
 	}
 	p.c.Manager.LoadVoices(rt, false)
-	if p.c.Compact() {
+	if giode.Compact() {
 		return giode.Box(giode.Styles{Width: -1, Height: -1}, p.column)
 	}
 	return giode.Row(giode.Styles{Width: -1, Height: -1, Gap: 20, Padding: giode.UniformInset(24), Wrap: giode.WrapNoWrap},
@@ -125,7 +126,7 @@ func (p *Page) compactColumn() giode.Element {
 	if rt == nil {
 		return giode.Box(giode.Styles{})
 	}
-	g := p.c.Gutter()
+	g := core.Gutter()
 	return giode.Stack(giode.Styles{Width: -1, Gap: 14, Padding: giode.UniformInset(g)},
 		p.editor.element(rt, 240),
 		p.panel.compactElement(rt),

@@ -22,14 +22,14 @@ func section(title, subtitle string, rows ...giode.Element) giode.Element {
 // the right - or the control below the label on narrow screens.
 func (p *Page) setting(label, help string, control giode.Element) giode.Element {
 	textStyle := giode.Styles{FlexGrow: 1, Gap: 3}
-	if p.c.Compact() {
+	if giode.Compact() {
 		textStyle.FlexGrow = 0 // stacked: must not grow vertically
 	}
 	text := giode.Stack(textStyle,
 		giode.Text(label, giode.Styles{Color: "theme.text", FontSize: 14, FontWeight: giode.FontWeightMedium}),
 		giode.Text(help, theme.Caption),
 	)
-	if p.c.Compact() {
+	if giode.Compact() {
 		return giode.Stack(giode.Styles{Width: -1, Gap: 10}, text, giode.Box(giode.Styles{Width: -1}, control))
 	}
 	return giode.Row(giode.Styles{Width: -1, Gap: 16, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap},

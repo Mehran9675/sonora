@@ -70,7 +70,8 @@
       "label": "Seed",
       "type": "text",
       "placeholder": "42",
-      "help": "Same seed, same audio"
+      "help": "Same seed, same audio",
+      "keyboard": "number"
     }
   ]
 }
