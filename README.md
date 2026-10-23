@@ -60,7 +60,9 @@ first time you install a Python engine, Sonora downloads its toolchain (~30 MB) 
 
 - **Linux:** System voices need `espeak-ng` (`sudo apt install espeak-ng`); file dialogs
   use `zenity` or `kdialog` when available.
-- **macOS / Windows:** nothing extra.
+- **macOS:** the app isn't notarized by Apple yet, so the first launch is blocked. Run
+  `xattr -dr com.apple.quarantine /Applications/Sonora.app` once (or right-click → Open).
+- **Windows:** nothing extra.
 - **Optional:** `ffmpeg` lets Sonora accept MP3/OGG from API servers and command-line tools.
 
 ### Build from source

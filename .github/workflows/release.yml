@@ -94,6 +94,10 @@ jobs:
             <key>NSMicrophoneUsageDescription</key><string>Sonora does not record audio.</string>
           </dict></plist>
           PLIST
+              # Seal the bundle with an ad-hoc signature. Without it,
+              # macOS reports a downloaded copy as "damaged".
+              codesign --force --deep --sign - Sonora.app
+              codesign --verify --deep --strict --verbose=2 Sonora.app
               ditto -c -k --keepParent Sonora.app "../$name.zip" ;;
             *)
               tar -czf "../$name.tar.gz" sonora ;;
