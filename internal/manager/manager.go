@@ -12,6 +12,7 @@ import (
 	"github.com/mehran9675/sonora/internal/catalog"
 	"github.com/mehran9675/sonora/internal/engines"
 	"github.com/mehran9675/sonora/internal/engines/command"
+	"github.com/mehran9675/sonora/internal/engines/onnx"
 	"github.com/mehran9675/sonora/internal/engines/openai"
 	"github.com/mehran9675/sonora/internal/engines/python"
 	"github.com/mehran9675/sonora/internal/engines/system"
@@ -67,7 +68,13 @@ func (m *Manager) Reload() {
 		m.list = append(m.list, rt)
 		m.byID[id] = rt
 	}
-	// Phones can't run local programs or Python: only API engines.
+	// On-device engines run inside the app (builds with sherpa-onnx).
+	if onnx.Available {
+		for _, e := range onnx.All(paths.Data()) {
+			add(e)
+		}
+	}
+	// Phones can't run local programs or Python.
 	if !mobile {
 		add(system.New())
 		builtin, errs := catalog.LoadDir(filepath.Join(paths.Data(), "runtime", "engines"))

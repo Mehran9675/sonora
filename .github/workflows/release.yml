@@ -150,30 +150,55 @@ jobs:
 
       # Sign with the keystore in the ANDROID_KEYSTORE secret (base64)
       # when one is configured, so updates install over older versions.
-      # Without it gogio signs with a throwaway key.
+      # Without it the build is signed with a throwaway key.
       - name: Signing key
         env:
           KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+          KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
+          key="$RUNNER_TEMP/sonora.keystore"
           if [ -n "$KEYSTORE" ]; then
-            echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/sonora.keystore"
-            echo "SIGN_ARGS=-signkey $RUNNER_TEMP/sonora.keystore" >> "$GITHUB_ENV"
+            echo "$KEYSTORE" | base64 -d > "$key"
+            pass="$KEYSTORE_PASS"
+          else
+            pass="throwaway-$RANDOM$RANDOM"
+            keytool -genkey -keystore "$key" -storepass "$pass" -alias sonora \
+              -keyalg RSA -keysize 2048 -validity 10000 -noprompt -dname CN=Sonora
           fi
+          echo "::add-mask::$pass"
+          echo "SIGN_KEY=$key" >> "$GITHUB_ENV"
+          echo "GOGIO_SIGNPASS=$pass" >> "$GITHUB_ENV"
+
+      # sherpa-onnx runs the on-device engines (Kitten, Kokoro, Piper).
+      - name: Download sherpa-onnx
+        run: go run ./tools/fetchsherpa android
 
       - name: Build APK
-        env:
-          SIGN_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
           export ANDROID_NDK_ROOT="$ANDROID_HOME/ndk/$NDK_VERSION"
           version="${VERSION#v}"
-          pass=()
-          if [ -n "$SIGN_ARGS" ] && [ -n "$SIGN_PASS" ]; then pass=(-signpass "$SIGN_PASS"); fi
-          go run gioui.org/cmd/gogio@v0.10.3 -target android -arch arm64,arm,amd64 \
+          go run gioui.org/cmd/gogio@v0.10.3 -target android -arch arm64,arm,amd64 -tags sherpa \
             -appid com.sonora.app -name Sonora -icon assets/icon/icon.png \
             -version "${version}.${{ github.run_number }}" -minsdk 26 \
             -ldflags "-s -w -X github.com/mehran9675/sonora/ui/pages/settings.Version=${version}" \
-            $SIGN_ARGS "${pass[@]}" \
-            -o "sonora-${VERSION}-android.apk" ./cmd/sonora
+            -signkey "$SIGN_KEY" \
+            -o gogio.apk ./cmd/sonora
+
+      # gogio only packs libgio.so; add the libraries it links against,
+      # then align and sign the APK again.
+      - name: Add native libraries
+        run: |
+          tools="$ANDROID_HOME/build-tools/35.0.0"
+          stage="$RUNNER_TEMP/apk"
+          mkdir -p "$stage/lib"
+          cp -r third_party/sherpa-onnx/android/. "$stage/lib/"
+          zip -q -d gogio.apk 'META-INF/*'
+          (cd "$stage" && zip -q -r -D "$GITHUB_WORKSPACE/gogio.apk" lib)
+          unzip -l gogio.apk | grep 'lib/.*\.so$'
+          apk="sonora-${VERSION}-android.apk"
+          "$tools/zipalign" -p -f 4 gogio.apk "$apk"
+          "$tools/apksigner" sign --ks "$SIGN_KEY" --ks-pass env:GOGIO_SIGNPASS "$apk"
+          "$tools/apksigner" verify "$apk"
 
       - name: Attach to release
         env:

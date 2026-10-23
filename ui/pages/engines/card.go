@@ -172,7 +172,7 @@ func (cd *card) actions() giode.Element {
 	if rt.Engine.Loaded() && !rt.Busy() {
 		right = append(right, cd.eject)
 	}
-	if m.Kind == engines.KindPython || len(rt.Log) > 0 {
+	if m.NeedsInstall() || len(rt.Log) > 0 {
 		right = append(right, cd.logBtn)
 	}
 	if m.Homepage != "" {

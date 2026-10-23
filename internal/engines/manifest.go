@@ -9,6 +9,9 @@ type Kind string
 const (
 	// KindPython runs an adapter.py in a managed Python environment.
 	KindPython Kind = "python"
+	// KindOnDevice runs downloaded ONNX models inside the app (sherpa-onnx);
+	// it's how phones run models.
+	KindOnDevice Kind = "ondevice"
 	// KindOpenAI calls an OpenAI-compatible /v1/audio/speech endpoint.
 	KindOpenAI Kind = "openai"
 	// KindCommand runs a command-line program.
@@ -74,7 +77,7 @@ type Source struct {
 }
 
 // NeedsInstall reports whether the engine has an install step.
-func (m *Manifest) NeedsInstall() bool { return m.Kind == KindPython }
+func (m *Manifest) NeedsInstall() bool { return m.Kind == KindPython || m.Kind == KindOnDevice }
 
 // Option returns the option with the given id, or nil.
 func (m *Manifest) Option(id string) *Option {

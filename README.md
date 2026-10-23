@@ -11,12 +11,14 @@ Built in Go with [giode](https://github.com/Mehran9675/giode). Runs on Windows, 
 Linux and Android. The layout adapts to the window: narrow windows and phones get a
 single scrolling column with a bottom tab bar.
 
-**On Android** Sonora speaks through API servers — run a server such as
-[Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) on your computer, or use a cloud
-TTS API, and add it under *Engines → Add engine*. Phones can't run the Python models, so
-the one-click engines and voice cloning are desktop features. Clips are saved through the
-system file picker or sent to other apps with the share sheet; Back closes dialogs and
-returns to the Studio; your script is kept when you switch away.
+**On Android** models run on the phone itself, offline: install **Kitten TTS Lite**,
+**Kokoro** or **Piper** from the Engines page and Sonora downloads the model (30–130 MB)
+and runs it with [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx). API servers work
+too — run a server such as [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) on
+your computer, or use a cloud TTS API, and add it under *Engines → Add engine*. The Python
+engines and voice cloning are desktop features. Clips are saved through the system file
+picker or sent to other apps with the share sheet; Back closes dialogs and returns to the
+Studio; your script is kept when you switch away.
 
 ![Studio](docs/screenshots/studio.png)
 
@@ -57,6 +59,7 @@ returns to the Studio; your script is kept when you switch away.
 | **Coqui TTS** | XTTS-v2 or any of 100+ Coqui models by name | ✓ | CPU · GPU |
 | **Hugging Face models** | Any Transformers TTS model by ID (MMS, Bark, VITS…) | – | CPU · GPU |
 | **System voices** | Your OS's built-in voices, offline, instant | – | – |
+| **Kitten TTS Lite · Kokoro · Piper** *(on device)* | The same models running inside the app, no Python | – | Android |
 | **API server** *(add your own)* | OpenAI, Kokoro-FastAPI, LocalAI, Audio8's server… | – | remote |
 | **Command line** *(add your own)* | espeak-ng, piper CLI, `say`, anything that writes WAV | – | local |
 
@@ -122,7 +125,7 @@ ui/
   components/          one package per component (picker, waveform, playerbar, …)
   core/ theme/ icons/  shared context, palette & fonts, icon paths
 internal/
-  engines/             Engine interface + python/ openai/ command/ system/ backends
+  engines/             Engine interface + python/ openai/ command/ system/ onnx/ backends
   manager/             engine state for the UI, jobs, friendly errors
   catalog/             finds built-in engines and plugins
   pyenv/               uv toolchain, virtualenvs, downloads
@@ -133,6 +136,7 @@ python/
   engines/<id>/        engine.json + adapter.py for each built-in engine
 assets/                fonts and the app icon
 tools/makeicon/        draws the app icon
+tools/fetchsherpa/     downloads the sherpa-onnx libraries for on-device engines
 docs/                  architecture, plugin guide, screenshots
 ```
 
@@ -158,7 +162,21 @@ base64 -w0 sonora.keystore   # paste into the ANDROID_KEYSTORE secret
 To build the APK locally, install the Android SDK and NDK and run:
 
 ```sh
-go run gioui.org/cmd/gogio@v0.10.3 -target android -appid com.sonora.app -icon assets/icon/icon.png -o sonora.apk ./cmd/sonora
+go run ./tools/fetchsherpa android     # sherpa-onnx libraries into third_party/
+go run gioui.org/cmd/gogio@v0.10.3 -target android -tags sherpa -appid com.sonora.app \
+  -icon assets/icon/icon.png -o sonora.apk ./cmd/sonora
+```
+
+gogio packs only its own library, so then add `third_party/sherpa-onnx/android/<abi>/*.so`
+to the APK under `lib/<abi>/`, zipalign it and sign it again; the release workflow's
+*Add native libraries* step does exactly this.
+
+The on-device engines can also be built into the Linux desktop app for testing:
+
+```sh
+go run ./tools/fetchsherpa linux-x64
+go build -tags sherpa -o sonora ./cmd/sonora
+LD_LIBRARY_PATH=third_party/sherpa-onnx/linux-x64 ./sonora
 ```
 
 ## Development
@@ -183,5 +201,6 @@ go install github.com/tc-hib/go-winres@v0.3.3
 
 [giode](https://github.com/Mehran9675/giode) and [Gio](https://gioui.org) for the UI,
 [oto](https://github.com/ebitengine/oto) for audio, [uv](https://github.com/astral-sh/uv)
-for Python, [Inter](https://rsms.me/inter/) (SIL OFL) for type, and the authors of every
+for Python, [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) (Apache-2.0) and
+[ONNX Runtime](https://onnxruntime.ai) (MIT) for on-device models, [Inter](https://rsms.me/inter/) (SIL OFL) for type, and the authors of every
 model Sonora runs.

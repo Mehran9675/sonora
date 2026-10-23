@@ -11,7 +11,8 @@ app stays small, starts instantly, and one misbehaving model can't take the UI d
 │ engines/   Engine interface ─┬─ python   → worker.py ⇄ adapter.py     │
 │                              ├─ openai   → POST /v1/audio/speech      │
 │                              ├─ command  → any CLI writing a WAV      │
-│                              └─ system   → SAPI / say / eSpeak NG     │
+│                              ├─ system   → SAPI / say / eSpeak NG     │
+│                              └─ onnx     → sherpa-onnx, in process    │
 │ pyenv/     uv: downloads Python, one virtualenv per engine            │
 │ audio/     WAV codec, peaks, resampling, playback (oto)               │
 └───────────────────────────────────────────────────────────────────────┘
@@ -35,6 +36,19 @@ app stays small, starts instantly, and one misbehaving model can't take the UI d
 The Python sources and built-in engine definitions are embedded in the binary
 (`python/embed.go`) and unpacked to `<data>/runtime` at startup, so updates take effect
 on the next launch. User plugins live in `<data>/plugins`.
+
+## On-device engines
+
+`internal/engines/onnx` runs Kitten, Kokoro and Piper models inside the app through
+[sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx)'s C API (`onnx/sherpa`, cgo). It is
+compiled in only with the `sherpa` build tag, which the Android build uses; without it the
+package reports `Available = false` and the engines are hidden. `tools/fetchsherpa`
+downloads the prebuilt libraries into `third_party/sherpa-onnx/`.
+
+Models are sherpa-onnx's self-contained packages (model, tokens, espeak-ng data, voices),
+downloaded on first use to `<data>/models/ondevice/<package>/`. Each Piper voice is its own
+package; Kitten's model size is a load-scope option. The model stays in memory until
+Eject, and Stop cancels generation through sherpa-onnx's progress callback.
 
 ## UI
 
