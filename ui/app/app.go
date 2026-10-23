@@ -2,8 +2,10 @@
 package app
 
 import (
+	"fmt"
 	"image"
 	"log"
+	"os"
 
 	"github.com/mehran9675/giode"
 
@@ -35,26 +37,37 @@ func Run() error {
 		Toasts:   giode.Toaster().Placement(giode.ToastBottomRight),
 	}
 	var studioPage *studio.Page
-	c.App = giode.New(giode.Config{
-		Title:              "Sonora",
-		Icon:               assets.Icon,
-		Size:               image.Pt(1280, 820),
-		MinWidth:           980,
-		MinHeight:          640,
-		Resizable:          true,
-		Frameless:          true,
-		Center:             true,
-		Background:         "theme.background",
-		Logger:             log.Default(),
-		LogLevel:           giode.LogLevelWarning,
-		SingleInstanceLock: &giode.SingleInstanceLock{UniqueID: "com.sonora.app"},
+	cfg := giode.Config{
+		Title:      "Sonora",
+		Icon:       assets.Icon,
+		Size:       image.Pt(1280, 820),
+		MinWidth:   360, // narrow windows get the phone layout
+		MinHeight:  560,
+		Resizable:  true,
+		Frameless:  true,
+		Center:     true,
+		Background: "theme.background",
+		Logger:     log.Default(),
+		LogLevel:   giode.LogLevelWarning,
 		OnShutdown: func() {
 			if studioPage != nil {
 				studioPage.SaveDraft()
 			}
 			c.Manager.Shutdown()
 		},
-	})
+	}
+	// SONORA_WINDOW_SIZE=400x840 starts with that size, to try the
+	// phone layout on a desktop.
+	if w, h, ok := parseSize(os.Getenv("SONORA_WINDOW_SIZE")); ok {
+		cfg.Size = image.Pt(w, h)
+	}
+	if core.Mobile {
+		// The OS owns the window and runs one instance.
+		cfg.Frameless, cfg.Center = false, false
+	} else {
+		cfg.SingleInstanceLock = &giode.SingleInstanceLock{UniqueID: "com.sonora.app"}
+	}
+	c.App = giode.New(cfg)
 	c.Manager = manager.New(c.App.Post, store, c.Library)
 
 	applyTheme := func(mode string) {
@@ -82,4 +95,12 @@ func Run() error {
 	}, toggleTheme)
 
 	return c.App.Run(frame.Element)
+}
+
+// parseSize reads "WIDTHxHEIGHT".
+func parseSize(v string) (w, h int, ok bool) {
+	if _, err := fmt.Sscanf(v, "%dx%d", &w, &h); err != nil || w <= 0 || h <= 0 {
+		return 0, 0, false
+	}
+	return w, h, true
 }

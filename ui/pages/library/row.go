@@ -54,6 +54,15 @@ func newRow(c *core.Ctx, e lib.Entry) *row {
 	return r
 }
 
+// actions are the row's buttons; there's no file manager to show the
+// file in on phones, and no room for it on narrow windows.
+func (r *row) actions() giode.Element {
+	if core.Mobile || r.c.Compact() {
+		return giode.Row(giode.Styles{Gap: 2, Wrap: giode.WrapNoWrap}, r.reuse, r.remove)
+	}
+	return giode.Row(giode.Styles{Gap: 2, Wrap: giode.WrapNoWrap}, r.reuse, r.reveal, r.remove)
+}
+
 func (r *row) element() giode.Element {
 	e := r.e
 	card := theme.Card()
@@ -72,6 +81,6 @@ func (r *row) element() giode.Element {
 				giode.Text(core.Clock(e.Duration)+"  ·  "+core.Ago(e.Created), theme.Caption),
 			),
 		),
-		giode.Row(giode.Styles{Gap: 2, Wrap: giode.WrapNoWrap}, r.reuse, r.reveal, r.remove),
+		r.actions(),
 	)
 }

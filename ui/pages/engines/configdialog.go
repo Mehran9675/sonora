@@ -58,5 +58,5 @@ func (d *configDialog) content() giode.Element {
 		els = append(els, f.Element())
 	}
 	els = append(els, giode.Row(giode.Styles{Width: -1, Justify: giode.JustifyEnd}, d.done))
-	return giode.Stack(giode.Styles{Width: 520, Gap: 16}, els...)
+	return giode.Stack(giode.Styles{Width: -1, MaxWidth: 520, Gap: 16}, els...)
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/mehran9675/giode"
 	"github.com/mehran9675/giode/components/input"
+	"github.com/mehran9675/giode/styles/properties"
 
 	"github.com/mehran9675/sonora/internal/manager"
 	"github.com/mehran9675/sonora/ui/components/chip"
@@ -46,7 +47,9 @@ func newEditor(c *core.Ctx) *editor {
 func (e *editor) text() string     { return e.in.Text() }
 func (e *editor) setText(s string) { e.in.ChangeText(s) }
 
-func (e *editor) element(rt *manager.Runtime) giode.Element {
+// element lays out the script card; height 0 fills the space available,
+// a positive height fixes it (in the scrolling phone layout).
+func (e *editor) element(rt *manager.Runtime, height int) giode.Element {
 	text := e.in.Text()
 	words := len(strings.Fields(text))
 	secs := float64(words) / 2.6
@@ -57,6 +60,9 @@ func (e *editor) element(rt *manager.Runtime) giode.Element {
 	}
 	card := theme.Card()
 	card.FlexGrow, card.Width, card.Gap = 1, -1, 12
+	if height > 0 {
+		card.FlexGrow, card.Height = 0, properties.Height(height)
+	}
 	card.Padding = giode.Inset{Top: 16, Left: 24, Right: 16, Bottom: 16}
 	return giode.Stack(card,
 		giode.Row(giode.Styles{Width: -1, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap, Gap: 4},

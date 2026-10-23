@@ -1,4 +1,5 @@
-// Package navitem is a sidebar navigation entry.
+// Package navitem is a navigation entry: a row in the sidebar, or a
+// tab in the bottom bar on narrow screens.
 package navitem
 
 import (
@@ -10,7 +11,8 @@ import (
 
 // Item is a clickable sidebar row. Create it once.
 type Item struct {
-	p *giode.PressableElement
+	p       *giode.PressableElement
+	compact bool
 }
 
 // New returns an item showing icon and label; active reports whether
@@ -29,6 +31,13 @@ func New(icon, label string, active func() bool, badge func() string, onClick fu
 		iconColor := fg
 		if on {
 			iconColor = "theme.primary"
+		}
+		if it.compact {
+			// A bottom-bar tab: icon over a short label, no badge.
+			return giode.Stack(giode.Styles{
+				Width: -1, Gap: 4, Align: giode.AlignCenter, Padding: giode.SymmetricInset(4, 8),
+				BorderRadius: theme.RadiusSm + 2, Background: bg,
+			}, icons.Icon(icon, 20, iconColor), giode.Text(label, giode.Styles{Color: fg, FontSize: 11, FontWeight: giode.FontWeightMedium}))
 		}
 		row := []giode.Element{
 			icons.Icon(icon, 18, iconColor),
@@ -50,5 +59,14 @@ func New(icon, label string, active func() bool, badge func() string, onClick fu
 	return it
 }
 
-// Element returns the item for layout.
-func (it *Item) Element() giode.Element { return it.p }
+// Element returns the item as a sidebar row.
+func (it *Item) Element() giode.Element {
+	it.compact = false
+	return it.p
+}
+
+// Tab returns the item as an equal-width bottom-bar tab.
+func (it *Item) Tab() giode.Element {
+	it.compact = true
+	return giode.Box(giode.Styles{FlexGrow: 1}, it.p)
+}

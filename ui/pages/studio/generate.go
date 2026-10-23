@@ -18,6 +18,9 @@ func (p *Page) toggleGenerate() {
 		return
 	}
 	rt := p.engine()
+	if rt == nil {
+		return
+	}
 	f := p.form(rt)
 	reference := ""
 	if f.cloneMode && rt.Manifest().Clone != engines.CloneNone {

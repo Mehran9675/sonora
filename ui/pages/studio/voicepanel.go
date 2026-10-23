@@ -81,6 +81,16 @@ func (v *voicePanel) element(rt *manager.Runtime) giode.Element {
 	)
 }
 
+// compactElement is the same panel for the phone layout: full width,
+// no inner scrolling (the whole page scrolls).
+func (v *voicePanel) compactElement(rt *manager.Runtime) giode.Element {
+	v.rt = rt
+	card := theme.Card()
+	card.Width, card.Gap = -1, 0
+	card.Padding = giode.UniformInset(0)
+	return giode.Stack(card, v.content(), giode.Divider(giode.Styles{Color: "theme.border"}), v.footer())
+}
+
 func (v *voicePanel) content() giode.Element {
 	rt := v.rt
 	m := rt.Manifest()

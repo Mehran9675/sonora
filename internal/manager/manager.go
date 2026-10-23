@@ -38,11 +38,13 @@ type Manager struct {
 // run a function on the UI goroutine (giode's App.Post).
 func New(post func(func()), st *settings.Store, lib *library.Library) *Manager {
 	m := &Manager{post: post, settings: st, library: lib, byID: map[string]*Runtime{}}
-	script, err := catalog.Unpack(paths.Sub("runtime"))
-	if err != nil {
-		log.Printf("unpack runtime: %v", err)
+	if !mobile {
+		script, err := catalog.Unpack(paths.Sub("runtime"))
+		if err != nil {
+			log.Printf("unpack runtime: %v", err)
+		}
+		m.script = script
 	}
-	m.script = script
 	m.Reload()
 	return m
 }
@@ -65,14 +67,17 @@ func (m *Manager) Reload() {
 		m.list = append(m.list, rt)
 		m.byID[id] = rt
 	}
-	add(system.New())
-	builtin, errs := catalog.LoadDir(filepath.Join(paths.Data(), "runtime", "engines"))
-	plugins, perrs := catalog.LoadDir(paths.Sub("plugins"))
-	for _, err := range append(errs, perrs...) {
-		log.Printf("engine manifest: %v", err)
-	}
-	for _, man := range append(builtin, plugins...) {
-		add(python.New(man, paths.Data(), m.script, m.environment))
+	// Phones can't run local programs or Python: only API engines.
+	if !mobile {
+		add(system.New())
+		builtin, errs := catalog.LoadDir(filepath.Join(paths.Data(), "runtime", "engines"))
+		plugins, perrs := catalog.LoadDir(paths.Sub("plugins"))
+		for _, err := range append(errs, perrs...) {
+			log.Printf("engine manifest: %v", err)
+		}
+		for _, man := range append(builtin, plugins...) {
+			add(python.New(man, paths.Data(), m.script, m.environment))
+		}
 	}
 	for _, man := range m.settings.Get().Custom {
 		id := man.ID
@@ -81,6 +86,9 @@ func (m *Manager) Reload() {
 		case engines.KindOpenAI:
 			add(openai.New(withOptions(man, openai.Template), cfg))
 		case engines.KindCommand:
+			if mobile {
+				continue
+			}
 			add(command.New(withOptions(man, command.Template), cfg))
 		}
 	}

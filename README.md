@@ -7,8 +7,14 @@ like **Kitten TTS 2** and **Audio8 TTS** with one click, keeps every clip in a l
 and can drive almost any other TTS model: Python models through a small plugin, servers
 through the OpenAI-compatible speech API, and command-line programs through a template.
 
-Built in Go with [giode](https://github.com/Mehran9675/giode). Runs on Windows, macOS
-and Linux.
+Built in Go with [giode](https://github.com/Mehran9675/giode). Runs on Windows, macOS,
+Linux and Android. The layout adapts to the window: narrow windows and phones get a
+single scrolling column with a bottom tab bar.
+
+**On Android** Sonora speaks through API servers — run a server such as
+[Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) on your computer, or use a cloud
+TTS API, and add it under *Engines → Add engine*. Phones can't run the Python models, so
+the one-click engines, voice cloning and exporting files are desktop features.
 
 ![Studio](docs/screenshots/studio.png)
 
@@ -133,8 +139,25 @@ See [docs/architecture.md](docs/architecture.md) for how the pieces fit together
 ## Releasing
 
 Publishing a GitHub release runs [`.github/workflows/release.yml`](.github/workflows/release.yml),
-which builds Windows, macOS and Linux for both x86_64 and arm64 and attaches the archives
-(`.zip` for Windows and the macOS `.app`, `.tar.gz` for Linux) to the release.
+which builds Windows, macOS and Linux for both x86_64 and arm64 plus an Android APK, and
+attaches the archives (`.zip` for Windows and the macOS `.app`, `.tar.gz` for Linux,
+`.apk` for Android) to the release.
+
+Android updates only install over an earlier version signed with the same key. To sign
+with your own key, add the base64 of a keystore as the `ANDROID_KEYSTORE` repository
+secret and its password as `ANDROID_KEYSTORE_PASSWORD`; without them each build is signed
+with a throwaway key:
+
+```sh
+keytool -genkey -keystore sonora.keystore -alias sonora -keyalg RSA -keysize 2048 -validity 10000
+base64 -w0 sonora.keystore   # paste into the ANDROID_KEYSTORE secret
+```
+
+To build the APK locally, install the Android SDK and NDK and run:
+
+```sh
+go run gioui.org/cmd/gogio@v0.10.3 -target android -appid com.sonora.app -icon assets/icon/icon.png -o sonora.apk ./cmd/sonora
+```
 
 ## Development
 
@@ -142,6 +165,7 @@ which builds Windows, macOS and Linux for both x86_64 and arm64 and attaches the
 go test ./...          # unit + integration tests (the worker test uses python3 if present)
 GIODE_MCP=1 ./sonora   # exposes the UI over MCP (giode) for automated UI testing
 SONORA_HOME=/tmp/s ./sonora   # use a throwaway data folder
+SONORA_WINDOW_SIZE=400x840 ./sonora   # start with a phone-sized window
 ```
 
 The icon is drawn by code. After changing `tools/makeicon`, regenerate the PNGs and the

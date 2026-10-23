@@ -55,6 +55,16 @@ func NewSidebar(c *core.Ctx, onTheme func()) *Sidebar {
 	return s
 }
 
+// Tabs lays out the same navigation as a bottom bar for narrow screens.
+func (s *Sidebar) Tabs() giode.Element {
+	tabs := make([]giode.Element, len(s.items))
+	for i, it := range s.items {
+		tabs[i] = it.Tab()
+	}
+	return giode.Row(giode.Styles{Width: -1, Gap: 4, Wrap: giode.WrapNoWrap, Padding: giode.SymmetricInset(8, 6),
+		Background: "theme.surface"}, tabs...)
+}
+
 // Element lays out the sidebar.
 func (s *Sidebar) Element() giode.Element {
 	els := []giode.Element{logo(), giode.Box(giode.Styles{Height: 18})}

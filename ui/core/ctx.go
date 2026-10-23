@@ -21,7 +21,8 @@ type Ctx struct {
 	Toasts   *giode.ToasterElement
 	Now      *NowPlaying
 
-	page Page
+	page    Page
+	compact bool
 	// UseEngine selects an engine in the Studio (set by the Studio).
 	UseEngine func(id string)
 	// Reuse loads a library entry's text and settings into the Studio.
@@ -33,3 +34,19 @@ func (c *Ctx) Page() Page { return c.page }
 
 // Go switches pages.
 func (c *Ctx) Go(p Page) { c.page = p }
+
+// Compact reports whether the window is narrow (a phone, or a small
+// desktop window), so pages stack their parts in one column. The shell
+// sets it each frame from the available width.
+func (c *Ctx) Compact() bool { return c.compact }
+
+// SetCompact is called by the shell before laying out a page.
+func (c *Ctx) SetCompact(v bool) { c.compact = v }
+
+// Gutter is the page padding: tighter on narrow screens.
+func (c *Ctx) Gutter() int {
+	if c.compact {
+		return 16
+	}
+	return 28
+}

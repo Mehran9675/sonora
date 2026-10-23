@@ -124,19 +124,28 @@ func (b *Bar) Element() giode.Element {
 	card.FlexDirection, card.Align, card.Gap, card.Width = giode.FlexDirectionRow, giode.AlignCenter, 18, -1
 	card.Padding = giode.SymmetricInset(18, 14)
 	card.Wrap = giode.WrapNoWrap
-	actions := []giode.Element{}
-	if c.Now != nil {
-		actions = append(actions, b.save, b.reveal)
-	}
-	return giode.Row(card, append([]giode.Element{
-		b.play,
-		giode.Stack(giode.Styles{Width: 150, Gap: 3},
+	row := []giode.Element{b.play}
+	if c.Compact() {
+		// Narrow: give the waveform the room the title would take.
+		card.Gap, card.Padding = 12, giode.SymmetricInset(14, 12)
+	} else {
+		row = append(row, giode.Stack(giode.Styles{Width: 150, Gap: 3},
 			giode.Text(title, giode.Styles{Color: "theme.text", FontSize: 14, FontWeight: giode.FontWeightBold, TextOverflow: giode.TextOverflowEllipsis}),
 			giode.Text(sub, giode.Styles{Color: "theme.muted", FontSize: 12, TextOverflow: giode.TextOverflowEllipsis}),
-		),
+		))
+	}
+	row = append(row,
 		giode.Box(giode.Styles{FlexGrow: 1}, b.wave),
 		giode.Text(clock, giode.Styles{Color: "theme.secondary", FontSize: 12, FontFamily: theme.Mono}),
-	}, actions...)...)
+	)
+	// Saving and revealing need a desktop file dialog and file manager.
+	if c.Now != nil && !core.Mobile {
+		row = append(row, b.save)
+		if !c.Compact() {
+			row = append(row, b.reveal)
+		}
+	}
+	return giode.Row(card, row...)
 }
 
 func suggestName(title string) string {

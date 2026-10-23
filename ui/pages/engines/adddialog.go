@@ -119,7 +119,11 @@ func (d *addDialog) submit() {
 func (d *addDialog) content() giode.Element {
 	els := []giode.Element{
 		giode.Text("Add an engine", giode.Styles{Color: "theme.text", FontSize: 18, FontWeight: giode.FontWeightBold}),
-		d.tabs.Element(),
+	}
+	// Phones can't run local programs or Python, so only API servers
+	// are offered there.
+	if !core.Mobile {
+		els = append(els, d.tabs.Element())
 	}
 	switch d.kind {
 	case addPlugin:
@@ -146,7 +150,7 @@ func (d *addDialog) content() giode.Element {
 		}
 		els = append(els, giode.Row(giode.Styles{Width: -1, Gap: 8, Justify: giode.JustifyEnd}, d.cancel, d.add))
 	}
-	return giode.Stack(giode.Styles{Width: 520, Gap: 16}, els...)
+	return giode.Stack(giode.Styles{Width: -1, MaxWidth: 520, Gap: 16}, els...)
 }
 
 func dialogStyle() giode.Styles {

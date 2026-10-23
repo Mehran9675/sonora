@@ -21,6 +21,8 @@ func Data() string {
 				base = filepath.Join(home, "AppData", "Local")
 			}
 			dir = filepath.Join(base, "Sonora")
+		case "android", "ios":
+			dir = filepath.Join(mobileDataDir(), "sonora")
 		case "darwin":
 			dir = filepath.Join(home, "Library", "Application Support", "Sonora")
 		default:

@@ -101,6 +101,9 @@ func (cd *card) element() giode.Element {
 	m := rt.Manifest()
 	st := theme.Card()
 	st.Width, st.Height, st.Gap, st.Overflow = 318, cardHeight, 12, giode.OverflowHidden
+	if cd.c.Compact() {
+		st.Width = -1 // one card per row on a phone
+	}
 	header := giode.Row(giode.Styles{Width: -1, Height: 48, Gap: 12, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap},
 		badge.Engine(m, 44),
 		giode.Stack(giode.Styles{FlexGrow: 1, Gap: 4},

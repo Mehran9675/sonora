@@ -61,7 +61,7 @@ func (p *Picker) Open() {
 }
 
 func (p *Picker) content() giode.Element {
-	return giode.Stack(giode.Styles{Width: 460, Gap: 14},
+	return giode.Stack(giode.Styles{Width: -1, MaxWidth: 460, Gap: 14},
 		giode.Row(giode.Styles{Width: -1, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap},
 			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(p.title, theme.Heading)),
 			p.close,

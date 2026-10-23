@@ -120,3 +120,58 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "$VERSION" sonora-${VERSION}-${GOOS}-${GOARCH}.* --clobber
+
+  android:
+    name: android (arm64, arm, amd64)
+    runs-on: ubuntu-24.04
+    env:
+      VERSION: ${{ github.event.release.tag_name }}
+      NDK_VERSION: 27.2.12479018
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install Android platform and NDK
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;${NDK_VERSION}"
+
+      # Sign with the keystore in the ANDROID_KEYSTORE secret (base64)
+      # when one is configured, so updates install over older versions.
+      # Without it gogio signs with a throwaway key.
+      - name: Signing key
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+        run: |
+          if [ -n "$KEYSTORE" ]; then
+            echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/sonora.keystore"
+            echo "SIGN_ARGS=-signkey $RUNNER_TEMP/sonora.keystore" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build APK
+        env:
+          SIGN_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          export ANDROID_NDK_ROOT="$ANDROID_HOME/ndk/$NDK_VERSION"
+          version="${VERSION#v}"
+          pass=()
+          if [ -n "$SIGN_ARGS" ] && [ -n "$SIGN_PASS" ]; then pass=(-signpass "$SIGN_PASS"); fi
+          go run gioui.org/cmd/gogio@v0.10.3 -target android -arch arm64,arm,amd64 \
+            -appid com.sonora.app -name Sonora -icon assets/icon/icon.png \
+            -version "${version}.${{ github.run_number }}" -minsdk 26 \
+            -ldflags "-s -w -X github.com/mehran9675/sonora/ui/pages/settings.Version=${version}" \
+            $SIGN_ARGS "${pass[@]}" \
+            -o "sonora-${VERSION}-android.apk" ./cmd/sonora
+
+      - name: Attach to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$VERSION" "sonora-${VERSION}-android.apk" --clobber

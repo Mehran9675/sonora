@@ -40,7 +40,10 @@ type Page struct {
 
 // New builds the page; applyTheme switches the palette.
 func New(c *core.Ctx, applyTheme func(mode string)) *Page {
-	p := &Page{c: c, uvInfo: pyenv.UVVersion()}
+	p := &Page{c: c}
+	if !core.Mobile {
+		p.uvInfo = pyenv.UVVersion()
+	}
 	p.theme = segmented.New([]segmented.Option{{Value: "dark", Label: "Dark"}, {Value: "light", Label: "Light"}},
 		func() string { return c.Settings.Get().Theme }, applyTheme)
 	p.device = segmented.New([]segmented.Option{{Value: "auto", Label: "Automatic"}, {Value: "gpu", Label: "GPU"}, {Value: "cpu", Label: "CPU only"}},
@@ -90,28 +93,37 @@ func (p *Page) content() giode.Element {
 	if !convert.Available() {
 		ffmpeg = chip.Accent("Not found — only needed for MP3 from API servers", "theme.muted")
 	}
-	return giode.Stack(giode.Styles{Width: -1, Gap: 20, Padding: giode.UniformInset(28), MaxWidth: 900},
-		pagehead.Head("Settings", "Make Sonora yours."),
+	sections := []giode.Element{
+		pagehead.Head(p.c.Compact(), "Settings", "Make Sonora yours."),
 		section("Appearance", "How Sonora looks.",
-			setting("Theme", "Dark is easy on the eyes; light suits bright rooms.", p.theme.Element()),
+			p.setting("Theme", "Dark is easy on the eyes; light suits bright rooms.", p.theme.Element()),
 		),
-		section("Performance", "Where models run. GPUs are much faster for large models.",
-			setting("Compute device", "Automatic uses CUDA or Apple silicon when available.", p.device.Element()),
-			setting("Hugging Face token", "Only for gated or private models.", p.tokenArea.Element()),
-		),
-		section("Storage", "Engines, models and your clips live here.",
-			setting("Data folder", paths.Data(), p.data),
-			setting("Library", p.c.Library.Dir(), p.library),
-		),
-		section("Toolchain", "Sonora manages Python for you; nothing to install by hand.",
-			setting("Python manager (uv)", "Creates an isolated environment per engine.", toolchain),
-			setting("FFmpeg", "Converts compressed audio from some servers.", ffmpeg),
-		),
+	}
+	// Models run locally only on desktops; phones use API servers, so
+	// devices, folders and the Python toolchain don't apply there.
+	if !core.Mobile {
+		sections = append(sections,
+			section("Performance", "Where models run. GPUs are much faster for large models.",
+				p.setting("Compute device", "Automatic uses CUDA or Apple silicon when available.", p.device.Element()),
+				p.setting("Hugging Face token", "Only for gated or private models.", p.tokenArea.Element()),
+			),
+			section("Storage", "Engines, models and your clips live here.",
+				p.setting("Data folder", paths.Data(), p.data),
+				p.setting("Library", p.c.Library.Dir(), p.library),
+			),
+			section("Toolchain", "Sonora manages Python for you; nothing to install by hand.",
+				p.setting("Python manager (uv)", "Creates an isolated environment per engine.", toolchain),
+				p.setting("FFmpeg", "Converts compressed audio from some servers.", ffmpeg),
+			),
+		)
+	}
+	sections = append(sections,
 		section("About", "Sonora "+Version+" · "+runtime.GOOS+"/"+runtime.GOARCH,
 			giode.Text("Built with giode, a Go UI library on Gio. Engines are open-source projects by their authors; "+
 				"check each model's license before commercial use.", giode.Styles{Color: "theme.secondary", FontSize: 13, LineHeight: 20}),
 		),
 	)
+	return giode.Stack(giode.Styles{Width: -1, Gap: 20, Padding: giode.UniformInset(p.c.Gutter()), MaxWidth: 900}, sections...)
 }
 
 // Element lays out the page.

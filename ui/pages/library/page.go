@@ -73,8 +73,8 @@ func (p *Page) list() giode.Element {
 
 // Element lays out the page.
 func (p *Page) Element() giode.Element {
-	return giode.Stack(giode.Styles{Width: -1, Height: -1, Gap: 20, Padding: giode.UniformInset(28)},
-		pagehead.Head("Library", "Your generated audio, newest first.", p.find.Element()),
+	return giode.Stack(giode.Styles{Width: -1, Height: -1, Gap: 20, Padding: giode.UniformInset(p.c.Gutter())},
+		pagehead.Head(p.c.Compact(), "Library", "Your generated audio, newest first.", p.find.Element()),
 		giode.Box(giode.Styles{Width: -1, FlexGrow: 1}, p.scroll),
 		p.player.Element(),
 	)
