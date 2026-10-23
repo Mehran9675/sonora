@@ -1,0 +1,76 @@
+{
+  "id": "audio8",
+  "name": "Audio8 TTS",
+  "vendor": "Audio8",
+  "description": "0.6B multilingual model with zero-shot voice cloning across 11 languages (English, Chinese, Cantonese, Japanese, Korean, German, French, Spanish, Italian, Dutch, Polish). Preview release.",
+  "tags": [
+    "Voice cloning",
+    "11 languages",
+    "Preview"
+  ],
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/Edge0-AI/Audio8_TTS",
+  "size": "≈ 4 GB with PyTorch + model",
+  "accent": [
+    "#22d3ee",
+    "#6366f1"
+  ],
+  "kind": "python",
+  "python": "3.11",
+  "source": {
+    "url": "https://github.com/Edge0-AI/Audio8_TTS/archive/refs/heads/master.zip"
+  },
+  "install": [
+    [
+      "-r",
+      "{src}/requirements.txt"
+    ],
+    [
+      "huggingface_hub"
+    ]
+  ],
+  "clone": "optional",
+  "transcript": "required",
+  "voices": [
+    {
+      "id": "",
+      "name": "Model default",
+      "group": "Built-in"
+    }
+  ],
+  "hint": "Audio8 is tuned for short inputs; long text is split into sentences automatically.",
+  "options": [
+    {
+      "id": "model",
+      "label": "Checkpoint",
+      "type": "text",
+      "default": "Audio8/Audio8-TTS-Preview-0.6b",
+      "help": "Hugging Face ID or local folder"
+    },
+    {
+      "id": "temperature",
+      "label": "Temperature",
+      "type": "number",
+      "min": 0.1,
+      "max": 1.5,
+      "step": 0.05,
+      "default": 0.8
+    },
+    {
+      "id": "top_p",
+      "label": "Top-p",
+      "type": "number",
+      "min": 0.5,
+      "max": 1,
+      "step": 0.01,
+      "default": 0.95
+    },
+    {
+      "id": "seed",
+      "label": "Seed",
+      "type": "text",
+      "placeholder": "42",
+      "help": "Same seed, same audio"
+    }
+  ]
+}

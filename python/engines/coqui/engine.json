@@ -1,0 +1,32 @@
+{
+  "id": "coqui",
+  "name": "Coqui TTS",
+  "vendor": "Coqui / Idiap",
+  "description": "The Coqui toolkit: XTTS-v2 multilingual voice cloning by default, or any of its 100+ models (VITS, Tacotron, YourTTS, Bark…) by name.",
+  "tags": ["Voice cloning", "Any Coqui model", "17 languages"],
+  "license": "MPL-2.0 · XTTS-v2 weights under CPML (non-commercial)",
+  "homepage": "https://github.com/idiap/coqui-ai-TTS",
+  "size": "≈ 4 GB with PyTorch + 1.8 GB XTTS model",
+  "accent": ["#38bdf8", "#22c55e"],
+  "kind": "python",
+  "python": "3.11",
+  "install": [["coqui-tts"]],
+  "clone": "optional",
+  "speed": true,
+  "options": [
+    {"id": "model", "label": "Model", "type": "text", "scope": "load",
+     "default": "tts_models/multilingual/multi-dataset/xtts_v2",
+     "suggestions": ["tts_models/multilingual/multi-dataset/xtts_v2", "tts_models/en/ljspeech/vits", "tts_models/en/vctk/vits", "tts_models/multilingual/multi-dataset/your_tts"]},
+    {"id": "language", "label": "Language", "type": "select", "default": "en",
+     "choices": [
+       {"value": "en", "label": "English"}, {"value": "es", "label": "Spanish"}, {"value": "fr", "label": "French"},
+       {"value": "de", "label": "German"}, {"value": "it", "label": "Italian"}, {"value": "pt", "label": "Portuguese"},
+       {"value": "pl", "label": "Polish"}, {"value": "tr", "label": "Turkish"}, {"value": "ru", "label": "Russian"},
+       {"value": "nl", "label": "Dutch"}, {"value": "cs", "label": "Czech"}, {"value": "ar", "label": "Arabic"},
+       {"value": "zh-cn", "label": "Chinese"}, {"value": "hu", "label": "Hungarian"}, {"value": "ko", "label": "Korean"},
+       {"value": "ja", "label": "Japanese"}, {"value": "hi", "label": "Hindi"}
+     ]},
+    {"id": "agree_cpml", "label": "I accept the Coqui Public Model License for XTTS", "type": "bool", "scope": "load", "default": false,
+     "help": "Required by XTTS-v2 (non-commercial use). coqui.ai/cpml"}
+  ]
+}

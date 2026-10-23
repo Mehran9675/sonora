@@ -1,0 +1,21 @@
+{
+  "id": "transformers",
+  "name": "Hugging Face Models",
+  "vendor": "Any 🤗 Transformers model",
+  "description": "Run any text-to-speech model on the Hugging Face Hub that works with the Transformers pipeline: Meta MMS (1,100+ languages), Bark, VITS and more. Enter a model ID and go.",
+  "tags": ["Any model", "1,100+ languages"],
+  "license": "Varies by model",
+  "homepage": "https://huggingface.co/models?pipeline_tag=text-to-speech&library=transformers",
+  "size": "≈ 3 GB with PyTorch + model",
+  "accent": ["#fbbf24", "#f59e0b"],
+  "kind": "python",
+  "python": "3.11",
+  "install": [["transformers>=4.45,<5", "torch", "accelerate", "sentencepiece", "scipy", "numpy"]],
+  "voices": [{"id": "", "name": "Model default", "group": "Built-in"}],
+  "options": [
+    {"id": "model", "label": "Model ID", "type": "text", "scope": "load", "default": "facebook/mms-tts-eng",
+     "suggestions": ["facebook/mms-tts-eng", "facebook/mms-tts-fra", "facebook/mms-tts-deu", "facebook/mms-tts-spa", "suno/bark-small", "kakao-enterprise/vits-ljs"],
+     "help": "Any text-to-speech model ID from huggingface.co"},
+    {"id": "voice_preset", "label": "Voice preset (Bark)", "type": "text", "placeholder": "v2/en_speaker_6"}
+  ]
+}

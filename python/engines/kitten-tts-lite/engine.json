@@ -1,0 +1,28 @@
+{
+  "id": "kitten-tts-lite",
+  "name": "Kitten TTS Lite",
+  "vendor": "KittenML",
+  "description": "The original ultra-light Kitten models (15–80M parameters, 25–80 MB). Eight expressive English voices with adjustable speed. Fast on any CPU, no GPU or PyTorch needed.",
+  "tags": ["Tiny", "CPU", "English"],
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/KittenML/KittenTTS",
+  "size": "≈ 150 MB",
+  "accent": ["#facc15", "#f97316"],
+  "kind": "python",
+  "python": "3.11",
+  "install": [
+    ["--no-deps", "kittenml"],
+    ["onnxruntime", "espeakng_loader", "phonemizer", "soundfile", "numpy", "huggingface_hub", "kitten-text-processing"]
+  ],
+  "speed": true,
+  "default_voice": "Jasper",
+  "options": [
+    {"id": "model", "label": "Model", "type": "select", "scope": "load", "default": "KittenML/kitten-tts-mini-0.8",
+     "choices": [
+       {"value": "KittenML/kitten-tts-mini-0.8", "label": "Mini · 80M"},
+       {"value": "KittenML/kitten-tts-micro-0.8", "label": "Micro · 40M"},
+       {"value": "KittenML/kitten-tts-nano-0.8-int8", "label": "Nano · 15M"}
+     ]},
+    {"id": "clean_text", "label": "Expand numbers & dates", "type": "bool", "default": true}
+  ]
+}

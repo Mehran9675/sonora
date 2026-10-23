@@ -1,0 +1,37 @@
+// Package icons holds the outline icon set (24×24 path data in the
+// style of Lucide) and a helper to render them.
+package icons
+
+// Path data for every icon the app uses.
+const (
+	Play        = "M6 3.5v17a.8.8 0 0 0 1.2.7l13.6-8.5a.8.8 0 0 0 0-1.4L7.2 2.8a.8.8 0 0 0-1.2.7z"
+	Pause       = "M7 4h3v16H7z M14 4h3v16h-3z"
+	Stop        = "M6 6h12v12H6z"
+	Sparkles    = "M11 3l1.9 5.6 5.6 1.9-5.6 1.9L11 18l-1.9-5.6-5.6-1.9 5.6-1.9z M19 3v4 M17 5h4 M19 17v4 M17 19h4"
+	Waves       = "M2 10v3 M6 6v11 M10 3v18 M14 8v7 M18 5v13 M22 10v3"
+	Library     = "M16 6l4 14 M12 6v14 M8 8v12 M4 4v16"
+	Chip        = "M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M9 9h6v6H9z M9 1v3 M15 1v3 M9 20v3 M15 20v3 M20 9h3 M20 14h3 M1 9h3 M1 14h3"
+	Sliders     = "M21 4h-7 M10 4H3 M21 12h-9 M8 12H3 M21 20h-5 M12 20H3 M14 2v4 M8 10v4 M16 18v4"
+	Download    = "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3"
+	Upload      = "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M17 8l-5-5-5 5 M12 3v12"
+	Folder      = "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9L9.6 3.9A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"
+	Trash       = "M3 6h18 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6 M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+	Plus        = "M12 5v14 M5 12h14"
+	Close       = "M18 6L6 18 M6 6l12 12"
+	Check       = "M20 6L9 17l-5-5"
+	Search      = "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3"
+	Sun         = "M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M12 2v2 M12 20v2 M4.9 4.9l1.4 1.4 M17.7 17.7l1.4 1.4 M2 12h2 M20 12h2 M6.3 17.7l-1.4 1.4 M19.1 4.9l-1.4 1.4"
+	Moon        = "M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"
+	Mic         = "M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z M19 10v2a7 7 0 0 1-14 0v-2 M12 19v3"
+	ChevronDown = "M6 9l6 6 6-6"
+	External    = "M15 3h6v6 M10 14L21 3 M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+	Terminal    = "M4 17l6-6-6-6 M12 19h8"
+	Globe       = "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z M2 12h20 M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+	Package     = "M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7z M3.3 7L12 12l8.7-5 M12 22V12"
+	Refresh     = "M4 12a8 8 0 0 1 14-5.3 M20 12a8 8 0 0 1-14 5.3 M18 3v4h-4 M6 21v-4h4"
+	Alert       = "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z M12 8v4 M12 16h.01"
+	Reuse       = "M9 14L4 9l5-5 M4 9h10.5a5.5 5.5 0 0 1 0 11H11"
+	Speaker     = "M11 5L6 9H2v6h4l5 4V5z M15.5 8.5a5 5 0 0 1 0 7 M19 5a10 10 0 0 1 0 14"
+	Clock       = "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z M12 6v6l4 2"
+	FileAudio   = "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M10 12v6 M7 14v2 M13 13v4 M16 15v0"
+)

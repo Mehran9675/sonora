@@ -1,0 +1,278 @@
+{
+  "id": "kokoro",
+  "name": "Kokoro",
+  "vendor": "hexgrad",
+  "description": "Tiny 82M model with a big reputation: natural, clear voices across American and British English plus Spanish, French, Hindi, Italian and Portuguese. Fast on CPU.",
+  "tags": [
+    "54 voices",
+    "Fast",
+    "CPU"
+  ],
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/hexgrad/kokoro",
+  "size": "≈ 2.5 GB with PyTorch + 330 MB model",
+  "accent": [
+    "#34d399",
+    "#0ea5e9"
+  ],
+  "kind": "python",
+  "python": "3.11",
+  "install": [
+    [
+      "kokoro>=0.9.4",
+      "soundfile",
+      "espeakng_loader"
+    ]
+  ],
+  "speed": true,
+  "default_voice": "af_heart",
+  "voices": [
+    {
+      "id": "af_heart",
+      "name": "Heart",
+      "group": "American English",
+      "description": "Female"
+    },
+    {
+      "id": "af_alloy",
+      "name": "Alloy",
+      "group": "American English",
+      "description": "Female"
+    },
+    {
+      "id": "af_aoede",
+      "name": "Aoede",
+      "group": "American English",
+      "description": "Female"
+    },
+    {
+      "id": "af_bella",
+      "name": "Bella",
+      "group": "American English",
+      "description": "Female"
+    },
+    {
+      "id": "af_jessica",
+      "name": "Jessica",
+      "group": "American English",
+      "description": "Female"
+    },
+    {
+      "id": "af_kore",
+      "name": "Kore",
+      "group": "American English",
+      "description": "Female"
+    },
+    {
+      "id": "af_nicole",
+      "name": "Nicole",
+      "group": "American English",
+      "description": "Female"
+    },
+    {
+      "id": "af_nova",
+      "name": "Nova",
+      "group": "American English",
+      "description": "Female"
+    },
+    {
+      "id": "af_river",
+      "name": "River",
+      "group": "American English",
+      "description": "Female"
+    },
+    {
+      "id": "af_sarah",
+      "name": "Sarah",
+      "group": "American English",
+      "description": "Female"
+    },
+    {
+      "id": "af_sky",
+      "name": "Sky",
+      "group": "American English",
+      "description": "Female"
+    },
+    {
+      "id": "am_adam",
+      "name": "Adam",
+      "group": "American English",
+      "description": "Male"
+    },
+    {
+      "id": "am_echo",
+      "name": "Echo",
+      "group": "American English",
+      "description": "Male"
+    },
+    {
+      "id": "am_eric",
+      "name": "Eric",
+      "group": "American English",
+      "description": "Male"
+    },
+    {
+      "id": "am_fenrir",
+      "name": "Fenrir",
+      "group": "American English",
+      "description": "Male"
+    },
+    {
+      "id": "am_liam",
+      "name": "Liam",
+      "group": "American English",
+      "description": "Male"
+    },
+    {
+      "id": "am_michael",
+      "name": "Michael",
+      "group": "American English",
+      "description": "Male"
+    },
+    {
+      "id": "am_onyx",
+      "name": "Onyx",
+      "group": "American English",
+      "description": "Male"
+    },
+    {
+      "id": "am_puck",
+      "name": "Puck",
+      "group": "American English",
+      "description": "Male"
+    },
+    {
+      "id": "am_santa",
+      "name": "Santa",
+      "group": "American English",
+      "description": "Male"
+    },
+    {
+      "id": "bf_alice",
+      "name": "Alice",
+      "group": "British English",
+      "description": "Female"
+    },
+    {
+      "id": "bf_emma",
+      "name": "Emma",
+      "group": "British English",
+      "description": "Female"
+    },
+    {
+      "id": "bf_isabella",
+      "name": "Isabella",
+      "group": "British English",
+      "description": "Female"
+    },
+    {
+      "id": "bf_lily",
+      "name": "Lily",
+      "group": "British English",
+      "description": "Female"
+    },
+    {
+      "id": "bm_daniel",
+      "name": "Daniel",
+      "group": "British English",
+      "description": "Male"
+    },
+    {
+      "id": "bm_fable",
+      "name": "Fable",
+      "group": "British English",
+      "description": "Male"
+    },
+    {
+      "id": "bm_george",
+      "name": "George",
+      "group": "British English",
+      "description": "Male"
+    },
+    {
+      "id": "bm_lewis",
+      "name": "Lewis",
+      "group": "British English",
+      "description": "Male"
+    },
+    {
+      "id": "ef_dora",
+      "name": "Dora",
+      "group": "Spanish",
+      "description": "Female"
+    },
+    {
+      "id": "em_alex",
+      "name": "Alex",
+      "group": "Spanish",
+      "description": "Male"
+    },
+    {
+      "id": "em_santa",
+      "name": "Santa",
+      "group": "Spanish",
+      "description": "Male"
+    },
+    {
+      "id": "ff_siwis",
+      "name": "Siwis",
+      "group": "French",
+      "description": "Female"
+    },
+    {
+      "id": "hf_alpha",
+      "name": "Alpha",
+      "group": "Hindi",
+      "description": "Female"
+    },
+    {
+      "id": "hf_beta",
+      "name": "Beta",
+      "group": "Hindi",
+      "description": "Female"
+    },
+    {
+      "id": "hm_omega",
+      "name": "Omega",
+      "group": "Hindi",
+      "description": "Male"
+    },
+    {
+      "id": "hm_psi",
+      "name": "Psi",
+      "group": "Hindi",
+      "description": "Male"
+    },
+    {
+      "id": "if_sara",
+      "name": "Sara",
+      "group": "Italian",
+      "description": "Female"
+    },
+    {
+      "id": "im_nicola",
+      "name": "Nicola",
+      "group": "Italian",
+      "description": "Male"
+    },
+    {
+      "id": "pf_dora",
+      "name": "Dora",
+      "group": "Brazilian Portuguese",
+      "description": "Female"
+    },
+    {
+      "id": "pm_alex",
+      "name": "Alex",
+      "group": "Brazilian Portuguese",
+      "description": "Male"
+    },
+    {
+      "id": "pm_santa",
+      "name": "Santa",
+      "group": "Brazilian Portuguese",
+      "description": "Male"
+    }
+  ],
+  "options": []
+}
