@@ -13,6 +13,7 @@ import (
 	"github.com/mehran9675/sonora/internal/pyenv"
 	st "github.com/mehran9675/sonora/internal/settings"
 	"github.com/mehran9675/sonora/ui/components/chip"
+	"github.com/mehran9675/sonora/ui/components/focusarea"
 	"github.com/mehran9675/sonora/ui/components/pagehead"
 	"github.com/mehran9675/sonora/ui/components/segmented"
 	"github.com/mehran9675/sonora/ui/core"
@@ -25,15 +26,16 @@ var Version = "dev"
 
 // Page is the Settings screen. Create it once.
 type Page struct {
-	c       *core.Ctx
-	scroll  *scroll.Scroll
-	theme   *segmented.Control
-	device  *segmented.Control
-	token   *input.Input
-	data    *giode.ButtonElement
-	library *giode.ButtonElement
-	uv      *giode.ButtonElement
-	uvInfo  string
+	c         *core.Ctx
+	scroll    *scroll.Scroll
+	theme     *segmented.Control
+	device    *segmented.Control
+	token     *input.Input
+	tokenArea *focusarea.Area
+	data      *giode.ButtonElement
+	library   *giode.ButtonElement
+	uv        *giode.ButtonElement
+	uvInfo    string
 }
 
 // New builds the page; applyTheme switches the palette.
@@ -51,6 +53,7 @@ func New(c *core.Ctx, applyTheme func(mode string)) *Page {
 	p.token = giode.Input.Text("hf_…", theme.Field()).Password(true).Label("Hugging Face token").
 		OnChange(func(v string) { c.Settings.Update(func(s *st.Settings) { s.HFToken = v }) })
 	p.token.SetText(c.Settings.Get().HFToken)
+	p.tokenArea = focusarea.New(p.token, giode.Styles{Width: -1})
 	outline := giode.Styles{Color: "theme.text", Background: "theme.border", BorderColor: "theme.border", FontSize: 13,
 		Padding: giode.SymmetricInset(14, 8), BorderRadius: theme.RadiusSm}
 	p.data = giode.Button("Open data folder", outline).Variant(giode.VariantOutlined).
@@ -94,7 +97,7 @@ func (p *Page) content() giode.Element {
 		),
 		section("Performance", "Where models run. GPUs are much faster for large models.",
 			setting("Compute device", "Automatic uses CUDA or Apple silicon when available.", p.device.Element()),
-			setting("Hugging Face token", "Only for gated or private models.", giode.Box(giode.Styles{Width: -1}, p.token)),
+			setting("Hugging Face token", "Only for gated or private models.", p.tokenArea.Element()),
 		),
 		section("Storage", "Engines, models and your clips live here.",
 			setting("Data folder", paths.Data(), p.data),

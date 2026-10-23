@@ -63,7 +63,9 @@ func (r *row) element() giode.Element {
 	return giode.Row(card,
 		r.play,
 		giode.Stack(giode.Styles{FlexGrow: 1, Gap: 8},
-			giode.Text(e.Text, giode.Styles{Color: "theme.text", FontSize: 14, MaxLines: 2, TextOverflow: giode.TextOverflowEllipsis, LineHeight: 20}),
+			// Two lines are always reserved so every card has the same height.
+			giode.Box(giode.Styles{Width: -1, Height: 40, Overflow: giode.OverflowHidden},
+				giode.Text(e.Text, giode.Styles{Color: "theme.text", FontSize: 14, MaxLines: 2, TextOverflow: giode.TextOverflowEllipsis, LineHeight: 20})),
 			giode.Row(giode.Styles{Gap: 8, Align: giode.AlignCenter},
 				chip.Chip(e.EngineName),
 				chip.Chip(e.VoiceName),

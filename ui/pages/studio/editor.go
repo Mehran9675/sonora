@@ -10,6 +10,7 @@ import (
 
 	"github.com/mehran9675/sonora/internal/manager"
 	"github.com/mehran9675/sonora/ui/components/chip"
+	"github.com/mehran9675/sonora/ui/components/focusarea"
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
@@ -18,6 +19,7 @@ import (
 // editor is the script card.
 type editor struct {
 	in     *input.Input
+	area   *focusarea.Area
 	sample *giode.ButtonElement
 	clear  *giode.ButtonElement
 	next   int
@@ -29,6 +31,7 @@ func newEditor(c *core.Ctx) *editor {
 		BorderColor: "transparent", Padding: giode.UniformInset(0), Color: "theme.text", FontSize: 17, Width: -1,
 	}).Multiline(true).Label("Script")
 	e.in.SetText(c.Settings.Get().Draft)
+	e.area = focusarea.New(e.in, giode.Styles{Width: -1, Height: -1, FlexGrow: 1, Padding: giode.Inset{Right: 8}, Overflow: giode.OverflowHidden})
 	ghost := giode.Styles{Color: "theme.muted", Background: "theme.text", FontSize: 13, Padding: giode.SymmetricInset(10, 6), BorderRadius: 8}
 	e.sample = giode.Button("Try a sample", ghost).Variant(giode.VariantGhost).
 		Icon(icons.Icon(icons.Sparkles, 15, "")).OnClick(func() {
@@ -60,7 +63,7 @@ func (e *editor) element(rt *manager.Runtime) giode.Element {
 			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text("Script", theme.Heading)),
 			e.sample, e.clear,
 		),
-		giode.Box(giode.Styles{Width: -1, FlexGrow: 1, Padding: giode.Inset{Right: 8}, Overflow: giode.OverflowHidden}, e.in),
+		e.area.Element(),
 		giode.Divider(giode.Styles{Color: "theme.border"}),
 		giode.Row(giode.Styles{Width: -1, Align: giode.AlignCenter, Gap: 8, Wrap: giode.WrapNoWrap}, footer...),
 	)

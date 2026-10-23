@@ -8,6 +8,7 @@ import (
 	"github.com/mehran9675/giode/components/input"
 	"github.com/mehran9675/giode/components/scroll"
 
+	"github.com/mehran9675/sonora/ui/components/focusarea"
 	"github.com/mehran9675/sonora/ui/components/overlay"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
@@ -23,6 +24,7 @@ type Picker struct {
 	onPick   func(Item)
 
 	search *input.Input
+	find   *focusarea.Area
 	scroll *scroll.Scroll
 	rows   *giode.KeyedCache[string, *giode.PressableElement]
 	close  *giode.ButtonElement
@@ -36,6 +38,7 @@ func New(title string, items func() []Item, selected func() string, onPick func(
 	field := theme.Field()
 	field.Padding = giode.SymmetricInset(12, 10)
 	p.search = giode.Input.Text("Search…", field)
+	p.find = focusarea.New(p.search, giode.Styles{FlexGrow: 1})
 	p.rows = giode.NewKeyedCache[string, *giode.PressableElement]()
 	p.scroll = giode.Scroll(p.list, giode.Styles{ScrollBar: giode.ScrollBar{ThumbColor: "theme.text/0.2", Width: 6}})
 	p.close = giode.Button("", giode.Styles{Color: "theme.muted", Background: "theme.text", Padding: giode.UniformInset(6), BorderRadius: 8}).
@@ -64,7 +67,7 @@ func (p *Picker) content() giode.Element {
 			p.close,
 		),
 		giode.Row(giode.Styles{Width: -1, Align: giode.AlignCenter, Gap: 8, Wrap: giode.WrapNoWrap},
-			giode.Box(giode.Styles{FlexGrow: 1}, p.search),
+			p.find.Element(),
 		),
 		giode.Box(giode.Styles{Width: -1, Height: 380}, p.scroll),
 	)

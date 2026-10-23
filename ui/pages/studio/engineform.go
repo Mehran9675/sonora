@@ -13,8 +13,10 @@ import (
 	"github.com/mehran9675/sonora/internal/manager"
 	"github.com/mehran9675/sonora/internal/settings"
 	"github.com/mehran9675/sonora/internal/sysdlg"
+	"github.com/mehran9675/sonora/ui/components/focusarea"
 	"github.com/mehran9675/sonora/ui/components/optionfield"
 	"github.com/mehran9675/sonora/ui/components/picker"
+	"github.com/mehran9675/sonora/ui/components/segmented"
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
@@ -30,10 +32,14 @@ type engineForm struct {
 	voiceTrigger *picker.Trigger
 	speed        *slider.Slider
 
-	reference  string
-	refPick    *giode.ButtonElement
-	refClear   *giode.ButtonElement
-	transcript *input.Input
+	// cloneMode is set when the user chose "Clone a voice".
+	cloneMode      bool
+	modes          *segmented.Control
+	reference      string
+	refPick        *giode.ButtonElement
+	refClear       *giode.ButtonElement
+	transcript     *input.Input
+	transcriptArea *focusarea.Area
 }
 
 func newEngineForm(c *core.Ctx, rt *manager.Runtime) *engineForm {
@@ -61,9 +67,6 @@ func newEngineForm(c *core.Ctx, rt *manager.Runtime) *engineForm {
 		if rt.VoicesBusy {
 			return "Loading voices…", "Starting " + m.Name
 		}
-		if f.reference != "" {
-			return "Cloned voice", filepath.Base(f.reference)
-		}
 		v := f.voice()
 		detail := v.Group
 		if v.Description != "" {
@@ -74,7 +77,7 @@ func newEngineForm(c *core.Ctx, rt *manager.Runtime) *engineForm {
 		return giode.Box(giode.Styles{Width: 30, Height: 30, BorderRadius: 99, Background: "theme.primary/0.15",
 			Align: giode.AlignCenter, Justify: giode.JustifyCenter}, icons.Icon(icons.Mic, 15, "theme.primary"))
 	}, func() {
-		if !rt.VoicesBusy && f.reference == "" {
+		if !rt.VoicesBusy {
 			f.voices.Open()
 		}
 	})
@@ -92,6 +95,16 @@ func newEngineForm(c *core.Ctx, rt *manager.Runtime) *engineForm {
 	f.refClear = giode.Button("", giode.Styles{Color: "theme.muted", Background: "theme.text", Padding: giode.UniformInset(5), BorderRadius: 8}).
 		Variant(giode.VariantGhost).Icon(icons.Icon(icons.Close, 14, "")).OnClick(func() { f.reference = "" })
 	f.transcript = giode.Input.Text("What is said in the recording", theme.Field()).Label("Reference transcript")
+	f.transcriptArea = focusarea.New(f.transcript, giode.Styles{Width: -1})
+	f.cloneMode = m.Clone == engines.CloneRequired
+	f.modes = segmented.New([]segmented.Option{{Value: "voice", Label: "Built-in voice"}, {Value: "clone", Label: "Clone a voice"}},
+		func() string {
+			if f.cloneMode {
+				return "clone"
+			}
+			return "voice"
+		},
+		func(v string) { f.cloneMode = v == "clone" })
 	return f
 }
 

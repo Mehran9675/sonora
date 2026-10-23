@@ -7,12 +7,14 @@ import (
 	"github.com/mehran9675/giode/components/input"
 
 	"github.com/mehran9675/sonora/internal/engines"
+	"github.com/mehran9675/sonora/ui/components/focusarea"
 	"github.com/mehran9675/sonora/ui/theme"
 )
 
 // text is a single-line input with optional suggestion chips.
 type text struct {
 	in   *input.Input
+	area *focusarea.Area
 	sugg []*giode.PressableElement
 }
 
@@ -27,6 +29,7 @@ func newText(opt engines.Option, st Store) *text {
 	if opt.Type == engines.OptionSecret {
 		t.in.Password(true)
 	}
+	t.area = focusarea.New(t.in, giode.Styles{Width: -1})
 	t.in.SetText(fmt.Sprint(valueOr(st.Get(opt.ID), valueOr(opt.Default, ""))))
 	for _, s := range opt.Suggestions {
 		s := s
@@ -44,14 +47,14 @@ func newText(opt engines.Option, st Store) *text {
 
 func (t *text) Element() giode.Element {
 	if len(t.sugg) == 0 {
-		return giode.Box(giode.Styles{Width: -1}, t.in)
+		return t.area.Element()
 	}
 	chips := make([]giode.Element, len(t.sugg))
 	for i, s := range t.sugg {
 		chips[i] = s
 	}
 	return giode.Stack(giode.Styles{Width: -1, Gap: 8},
-		giode.Box(giode.Styles{Width: -1}, t.in),
+		t.area.Element(),
 		giode.Row(giode.Styles{Width: -1, Gap: 6}, chips...),
 	)
 }

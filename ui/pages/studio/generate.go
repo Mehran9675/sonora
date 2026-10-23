@@ -1,6 +1,10 @@
 package studio
 
 import (
+	"errors"
+	"strings"
+
+	"github.com/mehran9675/sonora/internal/engines"
 	"github.com/mehran9675/sonora/internal/library"
 	"github.com/mehran9675/sonora/internal/manager"
 	"github.com/mehran9675/sonora/internal/settings"
@@ -15,13 +19,25 @@ func (p *Page) toggleGenerate() {
 	}
 	rt := p.engine()
 	f := p.form(rt)
+	reference := ""
+	if f.cloneMode && rt.Manifest().Clone != engines.CloneNone {
+		if f.reference == "" {
+			c.Error(errors.New("Choose a recording of the voice to clone"))
+			return
+		}
+		if rt.Manifest().Transcript == engines.CloneRequired && strings.TrimSpace(f.transcript.Text()) == "" {
+			c.Error(errors.New(rt.Manifest().Name + " needs the transcript of the recording"))
+			return
+		}
+		reference = f.reference
+	}
 	text := p.editor.text()
 	c.Settings.Update(func(s *settings.Settings) { s.Draft = text })
 	in := manager.Input{
 		Text:          text,
 		Voice:         f.voice(),
 		Speed:         f.speedValue(),
-		Reference:     f.reference,
+		Reference:     reference,
 		ReferenceText: f.transcript.Text(),
 	}
 	c.Manager.Generate(rt, in, func(e library.Entry, err error) {

@@ -2,12 +2,10 @@ package studio
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/mehran9675/giode"
 	"github.com/mehran9675/giode/components/scroll"
 
-	"github.com/mehran9675/sonora/internal/engines"
 	"github.com/mehran9675/sonora/internal/manager"
 	"github.com/mehran9675/sonora/ui/components/badge"
 	"github.com/mehran9675/sonora/ui/components/chip"
@@ -80,10 +78,7 @@ func (v *voicePanel) content() giode.Element {
 	}
 	ready := rt.State == manager.StateReady || rt.State == manager.StateWorking
 	if ready {
-		els = append(els, section("Voice", f.voiceTrigger.Element()))
-		if m.Clone != engines.CloneNone {
-			els = append(els, v.cloning(f))
-		}
+		els = append(els, section("Voice", voiceChoice(f)))
 		if m.Speed {
 			els = append(els, giode.Stack(giode.Styles{Width: -1, Gap: 8},
 				giode.Row(giode.Styles{Width: -1, Wrap: giode.WrapNoWrap},
@@ -106,35 +101,6 @@ func syncSlider(f *engineForm) giode.Element {
 		f.speed.SetValue(speedToSlider(f.speedValue()))
 	}
 	return giode.Box(giode.Styles{Width: -1}, f.speed)
-}
-
-// cloning is the reference-recording section.
-func (v *voicePanel) cloning(f *engineForm) giode.Element {
-	m := v.rt.Manifest()
-	title := "Clone a voice"
-	if m.Clone == engines.CloneOptional {
-		title += " · optional"
-	}
-	body := []giode.Element{giode.Text("Use 5–30 seconds of one person speaking clearly.", theme.Caption)}
-	if f.reference == "" {
-		body = append(body, f.refPick)
-	} else {
-		body = append(body, giode.Row(giode.Styles{Width: -1, Gap: 10, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap,
-			Padding: giode.SymmetricInset(12, 8), Background: "theme.primary/0.1", BorderRadius: theme.RadiusSm + 2},
-			icons.Icon(icons.FileAudio, 18, "theme.primary"),
-			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(filepath.Base(f.reference),
-				giode.Styles{Color: "theme.text", FontSize: 13, TextOverflow: giode.TextOverflowEllipsis})),
-			f.refClear,
-		))
-		if m.Transcript != engines.CloneNone {
-			label := "Transcript (optional — auto-detected)"
-			if m.Transcript == engines.CloneRequired {
-				label = "Transcript (required)"
-			}
-			body = append(body, giode.Text(label, theme.Caption), giode.Box(giode.Styles{Width: -1}, f.transcript))
-		}
-	}
-	return section(title, giode.Stack(giode.Styles{Width: -1, Gap: 10}, body...))
 }
 
 // callout explains engines that can't generate yet.
