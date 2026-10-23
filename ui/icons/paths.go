@@ -33,5 +33,6 @@ const (
 	Reuse       = "M9 14L4 9l5-5 M4 9h10.5a5.5 5.5 0 0 1 0 11H11"
 	Speaker     = "M11 5L6 9H2v6h4l5 4V5z M15.5 8.5a5 5 0 0 1 0 7 M19 5a10 10 0 0 1 0 14"
 	Clock       = "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z M12 6v6l4 2"
+	Eject       = "M5 19h14 M12 4l7 10H5z"
 	FileAudio   = "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M10 12v6 M7 14v2 M13 13v4 M16 15v0"
 )

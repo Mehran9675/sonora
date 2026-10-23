@@ -7,6 +7,7 @@ import (
 	"github.com/mehran9675/giode/components/scroll"
 
 	"github.com/mehran9675/sonora/internal/manager"
+	"github.com/mehran9675/sonora/ui/components/logdialog"
 	"github.com/mehran9675/sonora/ui/components/pagehead"
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
@@ -21,6 +22,7 @@ type Page struct {
 	add    *giode.ButtonElement
 	adder  *addDialog
 	config *configDialog
+	logs   *logdialog.Dialog
 }
 
 // New builds the page.
@@ -28,6 +30,7 @@ func New(c *core.Ctx) *Page {
 	p := &Page{c: c, cards: map[*manager.Runtime]*card{}}
 	p.adder = newAddDialog(c)
 	p.config = newConfigDialog(c)
+	p.logs = logdialog.New()
 	p.add = giode.Button("Add engine", giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
 		Padding: giode.SymmetricInset(14, 9), BorderRadius: theme.RadiusSm + 2}).
 		Icon(icons.Icon(icons.Plus, 16, "")).OnClick(p.adder.show)
@@ -38,7 +41,7 @@ func New(c *core.Ctx) *Page {
 func (p *Page) card(rt *manager.Runtime) *card {
 	cd := p.cards[rt]
 	if cd == nil {
-		cd = newCard(p.c, rt, p.config)
+		cd = newCard(p.c, rt, p.config, p.logs)
 		p.cards[rt] = cd
 	}
 	return cd

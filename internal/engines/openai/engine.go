@@ -32,6 +32,7 @@ func (e *Engine) Installed() bool                               { return true }
 func (e *Engine) Install(context.Context, engines.Logger) error { return nil }
 func (e *Engine) Uninstall() error                              { return nil }
 func (e *Engine) Close()                                        {}
+func (e *Engine) Loaded() bool                                  { return false }
 
 func (e *Engine) url(path string) string {
 	return strings.TrimRight(e.config().String("base_url"), "/") + path

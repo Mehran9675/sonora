@@ -17,6 +17,7 @@ import (
 	"github.com/mehran9675/sonora/ui/components/optionfield"
 	"github.com/mehran9675/sonora/ui/components/picker"
 	"github.com/mehran9675/sonora/ui/components/segmented"
+	"github.com/mehran9675/sonora/ui/components/voicerecorder"
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
@@ -37,6 +38,8 @@ type engineForm struct {
 	modes          *segmented.Control
 	reference      string
 	refPick        *giode.ButtonElement
+	refPlay        *giode.PressableElement
+	recorder       *voicerecorder.Recorder
 	refClear       *giode.ButtonElement
 	transcript     *input.Input
 	transcriptArea *focusarea.Area
@@ -90,10 +93,29 @@ func newEngineForm(c *core.Ctx, rt *manager.Runtime) *engineForm {
 
 	small := giode.Styles{Color: "theme.text", Background: "theme.border", BorderColor: "theme.border", FontSize: 13,
 		Padding: giode.SymmetricInset(12, 7), BorderRadius: theme.RadiusSm}
-	f.refPick = giode.Button("Choose recording…", small).Variant(giode.VariantOutlined).
+	f.refPick = giode.Button("Choose file…", small).Variant(giode.VariantOutlined).
 		Icon(icons.Icon(icons.Upload, 15, "")).OnClick(f.pickReference)
 	f.refClear = giode.Button("", giode.Styles{Color: "theme.muted", Background: "theme.text", Padding: giode.UniformInset(5), BorderRadius: 8}).
 		Variant(giode.VariantGhost).Icon(icons.Icon(icons.Close, 14, "")).OnClick(func() { f.reference = "" })
+	f.recorder = voicerecorder.New(c, func(path string) {
+		f.reference = path
+		f.transcript.SetText("")
+		c.Success("Recording saved — it will be used as the voice")
+	})
+	f.refPlay = giode.Pressable(func(s giode.PressState) giode.Element {
+		icon := icons.Solid(icons.Play, 12, "theme.primary")
+		if c.IsPlaying(f.reference) {
+			icon = icons.Solid(icons.Pause, 12, "theme.primary")
+		}
+		bg := "theme.primary/0.14"
+		if s.Hovered {
+			bg = "theme.primary/0.26"
+		}
+		return giode.Box(giode.Styles{Width: 28, Height: 28, BorderRadius: 99, Background: bg,
+			Align: giode.AlignCenter, Justify: giode.JustifyCenter}, icon)
+	}).Label("Play recording").OnClick(func(giode.ClickEvent) {
+		c.PlayPause(f.reference, "Voice sample", filepath.Base(f.reference))
+	})
 	f.transcript = giode.Input.Text("What is said in the recording", theme.Field()).Label("Reference transcript")
 	f.transcriptArea = focusarea.New(f.transcript, giode.Styles{Width: -1})
 	f.cloneMode = m.Clone == engines.CloneRequired

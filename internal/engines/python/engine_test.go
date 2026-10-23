@@ -84,6 +84,14 @@ func TestWorkerRoundTrip(t *testing.T) {
 		t.Fatalf("clip: %v, %v", clip, err)
 	}
 
+	if !e.Loaded() {
+		t.Fatal("the model should be loaded after a request")
+	}
+	e.Close()
+	if e.Loaded() {
+		t.Fatal("Close must unload the model")
+	}
+
 	req.Text = "fail"
 	if err := e.Synthesize(ctx, req, log); err == nil || !strings.Contains(err.Error(), "asked to fail") {
 		t.Fatalf("adapter errors must come back: %v", err)

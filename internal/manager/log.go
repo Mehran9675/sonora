@@ -1,15 +1,11 @@
 package manager
 
 import (
-	"regexp"
-	"strconv"
 	"sync"
 	"time"
 )
 
 const maxLog = 400
-
-var percent = regexp.MustCompile(`(\d{1,3}(?:\.\d+)?)\s?%`)
 
 // logSink batches log lines from background goroutines and applies
 // them to the runtime on the UI goroutine at most ten times a second,
@@ -42,17 +38,26 @@ func (s *logSink) flush() {
 	s.mu.Unlock()
 	s.post(func() {
 		rt := s.rt
-		rt.Log = append(rt.Log, lines...)
+		for _, l := range lines {
+			rt.Log = appendLine(rt.Log, l)
+		}
 		if len(rt.Log) > maxLog {
 			rt.Log = rt.Log[len(rt.Log)-maxLog:]
 		}
-		last := lines[len(lines)-1]
-		rt.Status = last
-		rt.Progress = -1
-		if m := percent.FindStringSubmatch(last); m != nil {
-			if v, err := strconv.ParseFloat(m[1], 64); err == nil && v <= 100 {
-				rt.Progress = float32(v / 100)
-			}
-		}
+		rt.Status, rt.Progress = tidy(lines[len(lines)-1])
 	})
+}
+
+// appendLine adds l to the log, replacing the previous line when both
+// are updates of the same progress bar, so a download shows as one
+// line rather than hundreds.
+func appendLine(log []string, l string) []string {
+	if n := len(log); n > 0 {
+		prev, cur := tqdmLine.FindStringSubmatch(log[n-1]), tqdmLine.FindStringSubmatch(l)
+		if prev != nil && cur != nil && prev[1] == cur[1] {
+			log[n-1] = l
+			return log
+		}
+	}
+	return append(log, l)
 }

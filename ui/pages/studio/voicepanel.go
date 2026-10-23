@@ -2,6 +2,7 @@ package studio
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/mehran9675/giode"
 	"github.com/mehran9675/giode/components/scroll"
@@ -10,6 +11,7 @@ import (
 	"github.com/mehran9675/sonora/ui/components/badge"
 	"github.com/mehran9675/sonora/ui/components/chip"
 	"github.com/mehran9675/sonora/ui/components/picker"
+	"github.com/mehran9675/sonora/ui/components/progressbar"
 	"github.com/mehran9675/sonora/ui/components/statuspill"
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
@@ -25,6 +27,7 @@ type voicePanel struct {
 	install  *giode.ButtonElement
 	manage   *giode.ButtonElement
 	generate *giode.ButtonElement
+	eject    *giode.ButtonElement
 	rt       *manager.Runtime // engine shown this frame
 }
 
@@ -52,6 +55,16 @@ func newVoicePanel(p *Page) *voicePanel {
 		FontSize: 13, Padding: giode.SymmetricInset(14, 8), BorderRadius: theme.RadiusSm}).
 		Variant(giode.VariantOutlined).OnClick(func() { c.Go(core.PageEngines) })
 	v.generate = giode.Button("Generate", giode.Styles{}).OnClick(p.toggleGenerate)
+	v.eject = giode.Button("Eject", giode.Styles{Color: "theme.muted", Background: "theme.text", FontSize: 12,
+		Padding: giode.SymmetricInset(8, 4), BorderRadius: theme.RadiusSm}).Variant(giode.VariantGhost).
+		Icon(icons.Icon(icons.Eject, 13, "")).OnClick(func() {
+		rt := v.rt
+		if err := c.Manager.Eject(rt); err != nil {
+			c.Error(err)
+			return
+		}
+		c.Info(rt.Manifest().Name + " unloaded — memory freed")
+	})
 	v.scroll = giode.Scroll(v.content, giode.Styles{ScrollBar: giode.ScrollBar{ThumbColor: "theme.text/0.15", Width: 5}})
 	return v
 }
@@ -72,7 +85,7 @@ func (v *voicePanel) content() giode.Element {
 	rt := v.rt
 	m := rt.Manifest()
 	f := v.p.form(rt)
-	els := []giode.Element{section("Engine", v.engine.Element())}
+	els := []giode.Element{section("Engine", v.engineSection())}
 	if callout := v.callout(); callout != nil {
 		els = append(els, callout)
 	}
@@ -122,7 +135,7 @@ func (v *voicePanel) callout() giode.Element {
 	case manager.StateInstalling:
 		body = append(body,
 			giode.Text("Installing "+m.Name+"…", giode.Styles{Color: "theme.text", FontSize: 13, FontWeight: giode.FontWeightBold}),
-			progressBar(rt.Progress),
+			progressbar.New(rt.Progress),
 			giode.Text(rt.Status, giode.Styles{Color: "theme.muted", FontSize: 12, TextOverflow: giode.TextOverflowEllipsis}),
 		)
 	case manager.StateUnavailable:
@@ -154,10 +167,18 @@ func (v *voicePanel) footer() giode.Element {
 	var status giode.Element
 	switch {
 	case busy:
-		status = giode.Row(giode.Styles{Width: -1, Gap: 8, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap},
+		job := c.Manager.Job
+		line := giode.Row(giode.Styles{Width: -1, Gap: 8, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap},
 			giode.Spinner(giode.Styles{Width: 14, Height: 14, Color: "theme.primary"}),
-			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(c.Manager.Job.Runtime.Status,
-				giode.Styles{Color: "theme.muted", FontSize: 12, TextOverflow: giode.TextOverflowEllipsis})))
+			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(job.Runtime.Status,
+				giode.Styles{Color: "theme.muted", FontSize: 12, TextOverflow: giode.TextOverflowEllipsis})),
+			giode.Text(core.Clock(time.Since(job.Started)), giode.Styles{Color: "theme.muted", FontSize: 12, FontFamily: theme.Mono}),
+		)
+		if job.Runtime.Progress >= 0 {
+			status = giode.Stack(giode.Styles{Width: -1, Gap: 8}, progressbar.New(job.Runtime.Progress), line)
+		} else {
+			status = line
+		}
 	case rt.Err != "" && rt.State == manager.StateReady:
 		status = giode.Text(firstLine(rt.Err), giode.Styles{Color: "theme.danger", FontSize: 12, MaxLines: 3})
 	case !ready:
@@ -171,16 +192,24 @@ func (v *voicePanel) footer() giode.Element {
 	)
 }
 
-func section(title string, body giode.Element) giode.Element {
-	return giode.Stack(giode.Styles{Width: -1, Gap: 8}, giode.Text(title, theme.Overline), body)
+// engineSection is the engine picker, plus an Eject control while the
+// engine's model is held in memory.
+func (v *voicePanel) engineSection() giode.Element {
+	if !v.rt.Engine.Loaded() || v.rt.Busy() {
+		return v.engine.Element()
+	}
+	return giode.Stack(giode.Styles{Width: -1, Gap: 6},
+		v.engine.Element(),
+		giode.Row(giode.Styles{Width: -1, Gap: 8, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap, Padding: giode.Inset{Left: 4}},
+			giode.Box(giode.Styles{Width: 8, Height: 8, BorderRadius: 99, Background: "theme.success"}),
+			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text("Model loaded in memory", theme.Caption)),
+			v.eject,
+		),
+	)
 }
 
-func progressBar(v float32) giode.Element {
-	if v < 0 {
-		return giode.Box(giode.Styles{Width: -1, Height: 6, BorderRadius: 99, Background: "theme.text/0.08"},
-			giode.Box(giode.Styles{WidthPct: 35, Height: 6, BorderRadius: 99, BackgroundGradient: theme.Brand(90)}))
-	}
-	return giode.Progress(v, giode.Styles{Width: -1, Height: 6, Background: "theme.text/0.08", Color: "theme.primary", BorderRadius: 99})
+func section(title string, body giode.Element) giode.Element {
+	return giode.Stack(giode.Styles{Width: -1, Gap: 8}, giode.Text(title, theme.Overline), body)
 }
 
 func firstLine(s string) string {

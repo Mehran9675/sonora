@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"sync"
+	"sync/atomic"
 
 	"github.com/mehran9675/sonora/internal/engines"
 	"github.com/mehran9675/sonora/internal/pyenv"
@@ -20,10 +21,13 @@ type Engine struct {
 	script string // worker.py
 	env    func() engines.Environment
 
-	mu     sync.Mutex
-	w      *worker
-	loaded engines.Values
-	voices []engines.Voice
+	mu sync.Mutex
+	w  *worker
+	// current mirrors w for Loaded, which must not wait on mu while a
+	// model is loading.
+	current atomic.Pointer[worker]
+	loaded  engines.Values
+	voices  []engines.Voice
 }
 
 // New returns the engine for m, installed under dataDir/engines/<id>
@@ -75,6 +79,7 @@ func (e *Engine) ensure(ctx context.Context, opts engines.Values, log engines.Lo
 		e.voices = append(e.voices, engines.Voice{ID: v.ID, Name: v.Name, Group: v.Group, Description: v.Description})
 	}
 	e.w, e.loaded = w, opts
+	e.current.Store(w)
 	log(e.m.Name + " is ready.")
 	return w, nil
 }
@@ -103,8 +108,19 @@ func (e *Engine) Synthesize(ctx context.Context, req engines.Request, log engine
 	return err
 }
 
+// Loaded reports whether a worker with a loaded model is running.
+func (e *Engine) Loaded() bool {
+	w := e.current.Load()
+	return w != nil && w.alive()
+}
+
 // Close stops the worker, freeing the model's memory.
 func (e *Engine) Close() {
+	if w := e.current.Swap(nil); w != nil {
+		// Stop it first, so a Close during a long load or generation
+		// doesn't wait for the lock that work holds.
+		w.close()
+	}
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	if e.w != nil {

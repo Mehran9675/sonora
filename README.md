@@ -22,8 +22,12 @@ and Linux.
   creates a private environment per engine, picks the right PyTorch for your GPU, and
   shows progress and logs while it installs. Nothing to configure.
 - **Studio.** A large script editor, searchable voice picker, speed control and every
-  engine setting rendered as proper controls. Voice cloning from a recording for engines
-  that support it.
+  engine setting rendered as proper controls.
+- **Voice cloning.** On engines that can clone (Kitten TTS 2, Audio8, Chatterbox, Coqui),
+  switch to *Clone a voice* and record yourself right in the app — live level meter,
+  auto-stop at 30 s, silence trimmed — or pick an audio file.
+- **Memory control.** A model stays loaded between generations for speed; **Eject** stops
+  its Python process and frees the RAM (or VRAM) whenever you want it back.
 - **Player.** A waveform you can click to seek, play/pause, save as WAV, show in folder.
 - **Library.** Every clip is kept with its text, engine and voice. Search, replay, export,
   or load a clip's settings back into the Studio.
@@ -62,6 +66,7 @@ first time you install a Python engine, Sonora downloads its toolchain (~30 MB) 
   use `zenity` or `kdialog` when available.
 - **macOS:** the app isn't notarized by Apple yet, so the first launch is blocked. Run
   `xattr -dr com.apple.quarantine /Applications/Sonora.app` once (or right-click → Open).
+  macOS asks for microphone access the first time you record a voice.
 - **Windows:** nothing extra.
 - **Optional:** `ffmpeg` lets Sonora accept MP3/OGG from API servers and command-line tools.
 
@@ -113,11 +118,13 @@ internal/
   manager/             engine state for the UI, jobs, friendly errors
   catalog/             finds built-in engines and plugins
   pyenv/               uv toolchain, virtualenvs, downloads
-  audio/               clip ops, wav/, playback/, convert/
+  audio/               clip ops, wav/, playback/, record/, convert/
   library/ settings/ paths/ sysdlg/
 python/
   runtime/             worker.py + the `sonora` helper package
   engines/<id>/        engine.json + adapter.py for each built-in engine
+assets/                fonts and the app icon
+tools/makeicon/        draws the app icon
 docs/                  architecture, plugin guide, screenshots
 ```
 
@@ -135,6 +142,15 @@ which builds Windows, macOS and Linux for both x86_64 and arm64 and attaches the
 go test ./...          # unit + integration tests (the worker test uses python3 if present)
 GIODE_MCP=1 ./sonora   # exposes the UI over MCP (giode) for automated UI testing
 SONORA_HOME=/tmp/s ./sonora   # use a throwaway data folder
+```
+
+The icon is drawn by code. After changing `tools/makeicon`, regenerate the PNGs and the
+Windows resources:
+
+```sh
+go run ./tools/makeicon assets/icon
+go install github.com/tc-hib/go-winres@v0.3.3
+(cd cmd/sonora && go-winres make --in winres/winres.json --arch amd64,arm64)
 ```
 
 ## Credits

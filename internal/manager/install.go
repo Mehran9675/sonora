@@ -45,6 +45,17 @@ func (m *Manager) Cancel(rt *Runtime) {
 	}
 }
 
+// Eject unloads the engine's model and stops its helper process,
+// freeing the memory it used. The model loads again on next use.
+func (m *Manager) Eject(rt *Runtime) error {
+	if rt.Busy() {
+		return errors.New("wait for " + rt.Manifest().Name + " to finish first")
+	}
+	rt.Engine.Close()
+	rt.Status = "Model unloaded"
+	return nil
+}
+
 // Uninstall removes an installed engine.
 func (m *Manager) Uninstall(rt *Runtime) error {
 	if rt.Busy() {

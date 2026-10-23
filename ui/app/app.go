@@ -7,6 +7,7 @@ import (
 
 	"github.com/mehran9675/giode"
 
+	"github.com/mehran9675/sonora/assets"
 	"github.com/mehran9675/sonora/internal/audio/playback"
 	"github.com/mehran9675/sonora/internal/library"
 	"github.com/mehran9675/sonora/internal/manager"
@@ -36,6 +37,7 @@ func Run() error {
 	var studioPage *studio.Page
 	c.App = giode.New(giode.Config{
 		Title:              "Sonora",
+		Icon:               assets.Icon,
 		Size:               image.Pt(1280, 820),
 		MinWidth:           980,
 		MinHeight:          640,

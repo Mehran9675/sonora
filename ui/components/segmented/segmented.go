@@ -42,7 +42,8 @@ func New(opts []Option, selected func() string, onChange func(string)) *Control 
 			if on {
 				st.BoxShadow = giode.BoxShadow{Y: 1, Blur: 4, Color: "#00000030"}
 			}
-			return giode.Row(st, giode.Text(o.Label, giode.Styles{Color: fg, FontSize: 13, FontWeight: giode.FontWeightMedium}))
+			return giode.Row(st, giode.Text(o.Label, giode.Styles{Color: fg, FontSize: 13, FontWeight: giode.FontWeightMedium,
+				TextAlign: giode.TextAlignCenter, TextOverflow: giode.TextOverflowEllipsis}))
 		}, giode.Styles{FlexGrow: 1}).Label(o.Label).OnClick(func(giode.ClickEvent) { onChange(o.Value) }))
 	}
 	return c

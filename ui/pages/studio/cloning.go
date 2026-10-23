@@ -6,7 +6,6 @@ import (
 	"github.com/mehran9675/giode"
 
 	"github.com/mehran9675/sonora/internal/engines"
-	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
 )
 
@@ -31,14 +30,17 @@ func voiceChoice(f *engineForm) giode.Element {
 // its transcript.
 func cloneBody(f *engineForm) giode.Element {
 	m := f.rt.Manifest()
-	body := []giode.Element{giode.Text("Use 5–30 seconds of one person speaking clearly, with no music or noise. "+
-		"WAV, MP3, FLAC, OGG or M4A.", giode.Styles{Color: "theme.muted", FontSize: 12, LineHeight: 17})}
-	if f.reference == "" {
-		body = append(body, f.refPick)
-	} else {
+	body := []giode.Element{giode.Text("Record yourself or pick a file: 5–30 seconds of one person speaking clearly, "+
+		"with no music or noise.", giode.Styles{Color: "theme.muted", FontSize: 12, LineHeight: 17})}
+	switch {
+	case f.recorder.Recording():
+		body = append(body, f.recorder.Element())
+	case f.reference == "":
+		body = append(body, giode.Row(giode.Styles{Width: -1, Gap: 8}, f.recorder.Button(), f.refPick))
+	default:
 		body = append(body, giode.Row(giode.Styles{Width: -1, Gap: 10, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap,
-			Padding: giode.SymmetricInset(12, 8), Background: "theme.primary/0.1", BorderRadius: theme.RadiusSm + 2},
-			icons.Icon(icons.FileAudio, 18, "theme.primary"),
+			Padding: giode.SymmetricInset(10, 8), Background: "theme.primary/0.1", BorderRadius: theme.RadiusSm + 2},
+			f.refPlay,
 			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(filepath.Base(f.reference),
 				giode.Styles{Color: "theme.text", FontSize: 13, TextOverflow: giode.TextOverflowEllipsis})),
 			f.refClear,

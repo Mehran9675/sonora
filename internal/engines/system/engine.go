@@ -50,6 +50,7 @@ func (e *Engine) Installed() bool                               { return e.b.ava
 func (e *Engine) Install(context.Context, engines.Logger) error { return nil }
 func (e *Engine) Uninstall() error                              { return nil }
 func (e *Engine) Close()                                        {}
+func (e *Engine) Loaded() bool                                  { return false }
 
 func (e *Engine) Voices(ctx context.Context, _ engines.Values, _ engines.Logger) ([]engines.Voice, error) {
 	return e.b.voices(ctx)

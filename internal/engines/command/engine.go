@@ -31,6 +31,7 @@ func (e *Engine) Installed() bool                               { return true }
 func (e *Engine) Install(context.Context, engines.Logger) error { return nil }
 func (e *Engine) Uninstall() error                              { return nil }
 func (e *Engine) Close()                                        {}
+func (e *Engine) Loaded() bool                                  { return false }
 
 // Voices returns the configured voice list.
 func (e *Engine) Voices(context.Context, engines.Values, engines.Logger) ([]engines.Voice, error) {

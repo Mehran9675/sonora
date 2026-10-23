@@ -77,8 +77,18 @@ jobs:
               7z a "../$name.zip" sonora.exe ;;
             darwin)
               app=Sonora.app/Contents
-              mkdir -p "$app/MacOS"
+              mkdir -p "$app/MacOS" "$app/Resources"
               mv sonora "$app/MacOS/Sonora"
+              # Build AppIcon.icns from the 1024px icon.
+              iconset=AppIcon.iconset
+              mkdir -p "$iconset"
+              src=../assets/icon/icon-macos.png
+              for s in 16 32 128 256 512; do
+                sips -z $s $s "$src" --out "$iconset/icon_${s}x${s}.png" >/dev/null
+                sips -z $((s*2)) $((s*2)) "$src" --out "$iconset/icon_${s}x${s}@2x.png" >/dev/null
+              done
+              iconutil -c icns "$iconset" -o "$app/Resources/AppIcon.icns"
+              rm -rf "$iconset"
               cat > "$app/Info.plist" <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -87,11 +97,12 @@ jobs:
             <key>CFBundleDisplayName</key><string>Sonora</string>
             <key>CFBundleIdentifier</key><string>com.sonora.app</string>
             <key>CFBundleExecutable</key><string>Sonora</string>
+            <key>CFBundleIconFile</key><string>AppIcon</string>
             <key>CFBundlePackageType</key><string>APPL</string>
             <key>CFBundleShortVersionString</key><string>${VERSION#v}</string>
             <key>LSMinimumSystemVersion</key><string>11.0</string>
             <key>NSHighResolutionCapable</key><true/>
-            <key>NSMicrophoneUsageDescription</key><string>Sonora does not record audio.</string>
+            <key>NSMicrophoneUsageDescription</key><string>Sonora records a sample of your voice when you choose to clone it.</string>
           </dict></plist>
           PLIST
               # Seal the bundle with an ad-hoc signature. Without it,
@@ -100,7 +111,8 @@ jobs:
               codesign --verify --deep --strict --verbose=2 Sonora.app
               ditto -c -k --keepParent Sonora.app "../$name.zip" ;;
             *)
-              tar -czf "../$name.tar.gz" sonora ;;
+              cp ../assets/icon/icon.png sonora.png
+              tar -czf "../$name.tar.gz" sonora sonora.png ;;
           esac
 
       - name: Attach to release

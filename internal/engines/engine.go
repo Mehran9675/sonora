@@ -19,6 +19,8 @@ type Engine interface {
 	Voices(ctx context.Context, opts Values, log Logger) ([]Voice, error)
 	// Synthesize writes req.Output as a WAV file.
 	Synthesize(ctx context.Context, req Request, log Logger) error
+	// Loaded reports whether a model is held in memory.
+	Loaded() bool
 	// Close releases loaded models and helper processes.
 	Close()
 }
