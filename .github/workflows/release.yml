@@ -1,0 +1,106 @@
+name: release
+
+# Builds Sonora for every platform when a GitHub release is published
+# and attaches the archives to that release.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.goos }}-${{ matrix.goarch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-24.04,     goos: linux,   goarch: amd64, native: true }
+          - { os: ubuntu-24.04-arm, goos: linux,   goarch: arm64, native: true }
+          - { os: macos-15,         goos: darwin,  goarch: arm64, native: true }
+          - { os: macos-15,         goos: darwin,  goarch: amd64, native: false }
+          - { os: windows-latest,   goos: windows, goarch: amd64, native: true }
+          - { os: windows-latest,   goos: windows, goarch: arm64, native: false }
+    runs-on: ${{ matrix.os }}
+    env:
+      GOOS: ${{ matrix.goos }}
+      GOARCH: ${{ matrix.goarch }}
+      VERSION: ${{ github.event.release.tag_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install Linux dependencies
+        if: matrix.goos == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc pkg-config libwayland-dev libx11-dev libx11-xcb-dev \
+            libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev \
+            libxcursor-dev libvulkan-dev libasound2-dev
+
+      # Gio needs cgo on macOS; clang builds the Intel binary on Apple silicon.
+      - name: Configure macOS cross-compiler
+        if: matrix.goos == 'darwin' && !matrix.native
+        run: |
+          echo "CGO_ENABLED=1" >> "$GITHUB_ENV"
+          echo "CC=clang -arch x86_64" >> "$GITHUB_ENV"
+          echo "CGO_CFLAGS=-arch x86_64 -mmacosx-version-min=11.0" >> "$GITHUB_ENV"
+          echo "CGO_LDFLAGS=-arch x86_64 -mmacosx-version-min=11.0" >> "$GITHUB_ENV"
+
+      - name: Test
+        if: matrix.native
+        run: go test ./...
+
+      - name: Build
+        shell: bash
+        run: |
+          ldflags="-s -w -X github.com/mehran9675/sonora/ui/pages/settings.Version=${VERSION#v}"
+          bin=sonora
+          if [ "$GOOS" = windows ]; then
+            ldflags="$ldflags -H windowsgui"
+            bin=sonora.exe
+          fi
+          mkdir -p dist
+          go build -trimpath -ldflags "$ldflags" -o "dist/$bin" ./cmd/sonora
+
+      - name: Package
+        shell: bash
+        run: |
+          name="sonora-${VERSION}-${GOOS}-${GOARCH}"
+          cd dist
+          case "$GOOS" in
+            windows)
+              7z a "../$name.zip" sonora.exe ;;
+            darwin)
+              app=Sonora.app/Contents
+              mkdir -p "$app/MacOS"
+              mv sonora "$app/MacOS/Sonora"
+              cat > "$app/Info.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>CFBundleName</key><string>Sonora</string>
+            <key>CFBundleDisplayName</key><string>Sonora</string>
+            <key>CFBundleIdentifier</key><string>com.sonora.app</string>
+            <key>CFBundleExecutable</key><string>Sonora</string>
+            <key>CFBundlePackageType</key><string>APPL</string>
+            <key>CFBundleShortVersionString</key><string>${VERSION#v}</string>
+            <key>LSMinimumSystemVersion</key><string>11.0</string>
+            <key>NSHighResolutionCapable</key><true/>
+            <key>NSMicrophoneUsageDescription</key><string>Sonora does not record audio.</string>
+          </dict></plist>
+          PLIST
+              ditto -c -k --keepParent Sonora.app "../$name.zip" ;;
+            *)
+              tar -czf "../$name.tar.gz" sonora ;;
+          esac
+
+      - name: Attach to release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$VERSION" sonora-${VERSION}-${GOOS}-${GOARCH}.* --clobber

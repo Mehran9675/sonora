@@ -55,7 +55,7 @@ shows it; check it before commercial use.
 
 ### Download
 
-Grab the build for your OS from the CI artifacts / releases and run it. That's it: the
+Grab the archive for your OS and CPU from the [Releases](https://github.com/Mehran9675/sonora/releases) page and run it. That's it: the
 first time you install a Python engine, Sonora downloads its toolchain (~30 MB) by itself.
 
 - **Linux:** System voices need `espeak-ng` (`sudo apt install espeak-ng`); file dialogs
@@ -120,6 +120,12 @@ docs/                  architecture, plugin guide, screenshots
 ```
 
 See [docs/architecture.md](docs/architecture.md) for how the pieces fit together.
+
+## Releasing
+
+Publishing a GitHub release runs [`.github/workflows/release.yml`](.github/workflows/release.yml),
+which builds Windows, macOS and Linux for both x86_64 and arm64 and attaches the archives
+(`.zip` for Windows and the macOS `.app`, `.tar.gz` for Linux) to the release.
 
 ## Development
 
