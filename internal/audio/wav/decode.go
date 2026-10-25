@@ -68,6 +68,7 @@ func Decode(data []byte) (*audio.Clip, error) {
 func chunks(r *bytes.Reader) (format, []byte, error) {
 	var f format
 	var pcm []byte
+	var err error
 	haveFmt := false
 	for {
 		var h [8]byte
@@ -90,15 +91,8 @@ func chunks(r *bytes.Reader) (format, []byte, error) {
 		}
 		switch id {
 		case "fmt ":
-			if len(body) < 16 {
-				return f, nil, errors.New("bad fmt chunk")
-			}
-			f.tag = binary.LittleEndian.Uint16(body[0:2])
-			f.channels = binary.LittleEndian.Uint16(body[2:4])
-			f.rate = binary.LittleEndian.Uint32(body[4:8])
-			f.bits = binary.LittleEndian.Uint16(body[14:16])
-			if f.tag == 0xFFFE && len(body) >= 26 { // WAVE_FORMAT_EXTENSIBLE
-				f.tag = binary.LittleEndian.Uint16(body[24:26])
+			if f, err = parseFmt(body); err != nil {
+				return f, nil, err
 			}
 			haveFmt = true
 		case "data":
@@ -109,6 +103,22 @@ func chunks(r *bytes.Reader) (format, []byte, error) {
 		return f, nil, errors.New("WAV file has no audio")
 	}
 	return f, pcm, nil
+}
+
+// parseFmt reads a "fmt " chunk.
+func parseFmt(body []byte) (format, error) {
+	var f format
+	if len(body) < 16 {
+		return f, errors.New("bad fmt chunk")
+	}
+	f.tag = binary.LittleEndian.Uint16(body[0:2])
+	f.channels = binary.LittleEndian.Uint16(body[2:4])
+	f.rate = binary.LittleEndian.Uint32(body[4:8])
+	f.bits = binary.LittleEndian.Uint16(body[14:16])
+	if f.tag == 0xFFFE && len(body) >= 26 { // WAVE_FORMAT_EXTENSIBLE
+		f.tag = binary.LittleEndian.Uint16(body[24:26])
+	}
+	return f, nil
 }
 
 func sample(f format, b []byte) (float32, error) {

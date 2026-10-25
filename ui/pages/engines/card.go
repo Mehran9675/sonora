@@ -56,6 +56,11 @@ func newCard(c *core.Ctx, rt *manager.Runtime, cfg *configDialog, logs *logdialo
 	cd.use = giode.Button("Use in Studio", primary).Icon(icons.Icon(icons.Sparkles, 15, "")).OnClick(func() {
 		c.UseEngine(m.ID)
 	})
+	if m.Transcribes() {
+		cd.use = giode.Button("Transcribe", primary).Icon(icons.Icon(icons.Captions, 15, "")).OnClick(func() {
+			c.UseTranscriber(m.ID)
+		})
+	}
 	cd.logBtn = giode.Button("", ghost).Variant(giode.VariantGhost).Icon(icons.Icon(icons.Terminal, 15, "")).
 		OnClick(func() { logs.Show(rt) })
 	cd.remove = giode.Button("", ghost).Variant(giode.VariantGhost).Icon(icons.Icon(icons.Trash, 15, "")).OnClick(func() {

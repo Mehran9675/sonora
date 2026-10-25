@@ -36,13 +36,13 @@ func TestGenerate(t *testing.T) {
 			t.Fatalf("%s: %v", dir, err)
 		}
 		var last float32
-		samples, rate, err := tts.Generate("Hello from Sonora. This runs on the device.", 0, 1, func(p float32) bool { last = p; return true })
+		samples, rate, err := tts.Generate("Hello from Sonora. This runs on the device.", Params{Speed: 1}, func(p float32) bool { last = p; return true })
 		if err != nil || rate <= 0 || len(samples) < rate {
 			t.Fatalf("%s: %d samples at %d Hz, %v", dir, len(samples), rate, err)
 		}
 		t.Logf("%s: %.1fs at %d Hz, %d speakers, last progress %.2f", dir, float64(len(samples))/float64(rate), rate, tts.NumSpeakers(), last)
 		// Stopping from the progress callback ends generation.
-		if _, _, err := tts.Generate("One. Two. Three. Four.", 0, 1, func(float32) bool { return false }); err != ErrStopped {
+		if _, _, err := tts.Generate("One. Two. Three. Four.", Params{Speed: 1}, func(float32) bool { return false }); err != ErrStopped {
 			t.Fatalf("%s: stop: %v", dir, err)
 		}
 		tts.Close()

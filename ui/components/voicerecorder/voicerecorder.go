@@ -1,9 +1,8 @@
-// Package voicerecorder records the user's voice from the microphone
-// for cloning: Record, a live meter and timer, Stop.
+// Package voicerecorder records from the microphone - a voice to clone,
+// or speech to transcribe: Record, a live meter and timer, Stop.
 package voicerecorder
 
 import (
-	"errors"
 	"fmt"
 	"path/filepath"
 	"time"
@@ -25,10 +24,21 @@ const (
 	MinLength = 5 * time.Second
 )
 
+// Options set what a recorder is for. The zero value records a voice
+// for cloning.
+type Options struct {
+	Min, Max time.Duration // defaults: MinLength, MaxLength
+	Dir      string        // where takes are saved; default ReferencesDir
+	Name     string        // file name prefix; default "recording"
+	// Hint shows while recording, Ready once the take is long enough.
+	Hint, Ready string
+}
+
 // Recorder is stateful; create one per form.
 type Recorder struct {
 	c      *core.Ctx
 	onDone func(path string)
+	opts   Options
 
 	rec    *record.Recorder
 	timer  *time.Timer
@@ -38,9 +48,33 @@ type Recorder struct {
 	cancel *giode.ButtonElement
 }
 
-// New returns a recorder that calls onDone with the saved WAV file.
+// New returns a recorder for cloning that calls onDone with the saved
+// WAV file.
 func New(c *core.Ctx, onDone func(path string)) *Recorder {
-	r := &Recorder{c: c, onDone: onDone}
+	return NewWith(c, Options{}, onDone)
+}
+
+// NewWith returns a recorder configured by opts.
+func NewWith(c *core.Ctx, opts Options, onDone func(path string)) *Recorder {
+	if opts.Min == 0 {
+		opts.Min = MinLength
+	}
+	if opts.Max == 0 {
+		opts.Max = MaxLength
+	}
+	if opts.Dir == "" {
+		opts.Dir = core.ReferencesDir()
+	}
+	if opts.Name == "" {
+		opts.Name = "recording"
+	}
+	if opts.Hint == "" {
+		opts.Hint = "Read naturally, a few sentences, in a quiet room."
+	}
+	if opts.Ready == "" {
+		opts.Ready = "Sounds good — press Stop when you're done."
+	}
+	r := &Recorder{c: c, onDone: onDone, opts: opts}
 	r.meter = &levelmeter.Meter{Color: "theme.danger", Levels: func() []float32 {
 		if r.rec == nil {
 			return nil
@@ -72,7 +106,7 @@ func (r *Recorder) begin() {
 		return
 	}
 	r.rec = rec
-	r.timer = time.AfterFunc(MaxLength, func() { r.c.App.Post(func() { r.finish(true) }) })
+	r.timer = time.AfterFunc(r.opts.Max, func() { r.c.App.Post(func() { r.finish(true) }) })
 }
 
 // finish closes the microphone and, when keep is set, saves the take.
@@ -90,10 +124,10 @@ func (r *Recorder) finish(keep bool) {
 		if !keep {
 			return nil
 		}
-		if elapsed < MinLength || clip.Duration() < 3*time.Second {
-			return errors.New("That recording is too short; speak for at least 5 seconds")
+		if elapsed < r.opts.Min || clip.Duration() < r.opts.Min*6/10 {
+			return fmt.Errorf("That recording is too short; speak for at least %d seconds", int(r.opts.Min.Seconds()))
 		}
-		path = filepath.Join(core.ReferencesDir(), "recording-"+time.Now().Format("20060102-150405")+".wav")
+		path = filepath.Join(r.opts.Dir, r.opts.Name+"-"+time.Now().Format("20060102-150405")+".wav")
 		return wav.Write(path, clip)
 	}, func(err error) {
 		if err != nil {
@@ -113,10 +147,10 @@ func (r *Recorder) Element() giode.Element {
 	}
 	giode.HandleBack(func() { r.finish(false) }) // Back discards the take
 	elapsed := r.rec.Elapsed()
-	clock := fmt.Sprintf("%s / %s", core.Clock(elapsed), core.Clock(MaxLength))
-	hint := "Read naturally, a few sentences, in a quiet room."
-	if elapsed >= MinLength {
-		hint = "Sounds good — press Stop when you're done."
+	clock := fmt.Sprintf("%s / %s", core.Clock(elapsed), core.Clock(r.opts.Max))
+	hint := r.opts.Hint
+	if elapsed >= r.opts.Min {
+		hint = r.opts.Ready
 	}
 	return giode.Stack(giode.Styles{Width: -1, Gap: 10, Padding: giode.UniformInset(12),
 		Background: "theme.danger/0.08", BorderRadius: theme.RadiusMd, BorderWidth: 1, BorderColor: "theme.danger/0.3"},

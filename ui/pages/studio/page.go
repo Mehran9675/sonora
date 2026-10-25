@@ -6,6 +6,7 @@ import (
 	"github.com/mehran9675/giode"
 	"github.com/mehran9675/giode/components/scroll"
 
+	"github.com/mehran9675/sonora/internal/engines"
 	"github.com/mehran9675/sonora/internal/library"
 	"github.com/mehran9675/sonora/internal/manager"
 	"github.com/mehran9675/sonora/internal/settings"
@@ -46,6 +47,10 @@ func New(c *core.Ctx) *Page {
 		p.selectEngine(id)
 		c.Go(core.PageStudio)
 	}
+	c.Speak = func(text string) {
+		p.editor.setText(text)
+		c.Go(core.PageStudio)
+	}
 	c.Reuse = func(e library.Entry) {
 		p.editor.setText(e.Text)
 		if c.Manager.Get(e.EngineID) != nil {
@@ -59,15 +64,15 @@ func New(c *core.Ctx) *Page {
 }
 
 // engine returns the selected engine, falling back to the first ready
-// one, or nil when there are no engines at all.
+// one, or nil when there are no voice engines at all.
 func (p *Page) engine() *manager.Runtime {
-	if rt := p.c.Manager.Get(p.c.Settings.Get().Engine); rt != nil {
+	if rt := p.c.Manager.Get(p.c.Settings.Get().Engine); rt != nil && !rt.Manifest().Transcribes() {
 		return rt
 	}
-	if ready := p.c.Manager.Ready(); len(ready) > 0 {
+	if ready := p.c.Manager.ReadyFor(engines.TaskSpeak); len(ready) > 0 {
 		return ready[0]
 	}
-	if all := p.c.Manager.Engines(); len(all) > 0 {
+	if all := p.c.Manager.EnginesFor(engines.TaskSpeak); len(all) > 0 {
 		return all[0]
 	}
 	return nil

@@ -25,8 +25,10 @@ func Write(path string, c *audio.Clip) error {
 	binary.Write(&buf, le, uint16(16))
 	buf.WriteString("data")
 	binary.Write(&buf, le, dataLen)
-	for _, s := range c.Samples {
-		binary.Write(&buf, le, int16(max(-1, min(1, s))*32767))
+	pcm := make([]byte, dataLen)
+	for i, s := range c.Samples {
+		le.PutUint16(pcm[2*i:], uint16(int16(max(-1, min(1, s))*32767)))
 	}
+	buf.Write(pcm)
 	return os.WriteFile(path, buf.Bytes(), 0o644)
 }

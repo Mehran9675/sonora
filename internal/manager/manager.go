@@ -1,6 +1,7 @@
 // Package manager connects engines to the UI: it builds the engine
-// list, runs installs, voice loading and generation in the background,
-// and publishes their progress as Runtime values on the UI goroutine.
+// list, runs installs, voice loading, generation and transcription in
+// the background, and publishes their progress as Runtime values on the
+// UI goroutine.
 package manager
 
 import (
@@ -19,26 +20,30 @@ import (
 	"github.com/mehran9675/sonora/internal/library"
 	"github.com/mehran9675/sonora/internal/paths"
 	"github.com/mehran9675/sonora/internal/settings"
+	"github.com/mehran9675/sonora/internal/transcripts"
 )
 
 // Manager owns every engine's Runtime.
 type Manager struct {
-	post     func(func())
-	settings *settings.Store
-	library  *library.Library
-	script   string
+	post        func(func())
+	settings    *settings.Store
+	library     *library.Library
+	transcripts *transcripts.Store
+	script      string
 
 	list []*Runtime
 	byID map[string]*Runtime
 
-	// Job is the generation in progress, if any.
-	Job *Job
+	// Job is the generation in progress, if any; TranscribeJob the
+	// transcription. One of each can run at a time.
+	Job           *Job
+	TranscribeJob *Job
 }
 
 // New unpacks the Python runtime and builds the engine list. post must
 // run a function on the UI goroutine (giode's App.Post).
-func New(post func(func()), st *settings.Store, lib *library.Library) *Manager {
-	m := &Manager{post: post, settings: st, library: lib, byID: map[string]*Runtime{}}
+func New(post func(func()), st *settings.Store, lib *library.Library, ts *transcripts.Store) *Manager {
+	m := &Manager{post: post, settings: st, library: lib, transcripts: ts, byID: map[string]*Runtime{}}
 	if !mobile {
 		script, err := catalog.Unpack(paths.Sub("runtime"))
 		if err != nil {
@@ -92,6 +97,8 @@ func (m *Manager) Reload() {
 		switch man.Kind {
 		case engines.KindOpenAI:
 			add(openai.New(withOptions(man, openai.Template), cfg))
+		case engines.KindOpenAITranscribe:
+			add(openai.NewTranscriber(withOptions(man, openai.TranscribeTemplate), cfg))
 		case engines.KindCommand:
 			if mobile {
 				continue
@@ -136,10 +143,26 @@ func (m *Manager) Engines() []*Runtime { return m.list }
 // Get returns the engine with id, or nil.
 func (m *Manager) Get(id string) *Runtime { return m.byID[id] }
 
-// Ready returns the engines that can generate now.
-func (m *Manager) Ready() []*Runtime {
+// EnginesFor returns the engines that do task, in display order.
+func (m *Manager) EnginesFor(task engines.Task) []*Runtime {
 	var out []*Runtime
 	for _, rt := range m.list {
+		if rt.Manifest().Task == task {
+			out = append(out, rt)
+		}
+	}
+	return out
+}
+
+// Ready returns the engines that can work now.
+func (m *Manager) Ready() []*Runtime { return ready(m.list) }
+
+// ReadyFor returns the engines that can do task now.
+func (m *Manager) ReadyFor(task engines.Task) []*Runtime { return ready(m.EnginesFor(task)) }
+
+func ready(list []*Runtime) []*Runtime {
+	var out []*Runtime
+	for _, rt := range list {
 		if rt.State == StateReady || rt.State == StateWorking {
 			out = append(out, rt)
 		}

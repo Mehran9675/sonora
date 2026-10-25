@@ -8,35 +8,77 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/mehran9675/sonora/internal/engines"
 )
 
+// extraPath is where a model's extra file from url is kept.
+func extraPath(dir, url string) string { return filepath.Join(dir, path.Base(url)) }
+
+// fetchExtra downloads a single file unless it is already there.
+func fetchExtra(ctx context.Context, dir, url string, log engines.Logger) error {
+	dst := extraPath(dir, url)
+	if _, err := os.Stat(dst); err == nil {
+		return nil
+	}
+	resp, err := get(ctx, url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	tmp := dst + ".partial"
+	body := &progressReader{r: resp.Body, total: resp.ContentLength, label: "Downloading " + path.Base(url), log: log}
+	if err := writeFile(tmp, body); err != nil {
+		os.Remove(tmp)
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		return err
+	}
+	return os.Rename(tmp, dst)
+}
+
+// get starts a download, failing on anything but 200 OK.
+func get(ctx context.Context, url string) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
+		return nil, fmt.Errorf("download %s: %s", path.Base(url), resp.Status)
+	}
+	return resp, nil
+}
+
 // fetch downloads and unpacks a model package into dir/<id>, unless it
-// is already there. Unpacking goes to a temporary folder that is
-// renamed when complete, so an interrupted download never looks
-// installed.
+// is already there, along with the extra files it needs. Unpacking goes
+// to a temporary folder that is renamed when complete, so an
+// interrupted download never looks installed.
 func fetch(ctx context.Context, dir string, m model, log engines.Logger) (string, error) {
+	for _, url := range m.Extra {
+		if err := fetchExtra(ctx, dir, url, log); err != nil {
+			return "", err
+		}
+	}
 	dst := filepath.Join(dir, m.ID)
 	if _, err := os.Stat(dst); err == nil {
 		return dst, nil
 	}
 	tmp := dst + ".partial"
 	os.RemoveAll(tmp)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, m.url(), nil)
-	if err != nil {
-		return "", err
-	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := get(ctx, m.url())
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("download %s: %s", m.ID, resp.Status)
-	}
 	body := &progressReader{r: resp.Body, total: resp.ContentLength, label: "Downloading " + m.Label, log: log}
 	// Download and unpack in one pass; the bzip2 stream is decoded as it
 	// arrives.
@@ -55,7 +97,7 @@ func fetch(ctx context.Context, dir string, m model, log engines.Logger) (string
 		}
 		// Archives hold <id>/...; drop that top folder.
 		_, rest, ok := strings.Cut(filepath.ToSlash(h.Name), "/")
-		if !ok || rest == "" {
+		if !ok || rest == "" || !m.keep(rest) {
 			continue
 		}
 		out := filepath.Join(tmp, filepath.FromSlash(rest))

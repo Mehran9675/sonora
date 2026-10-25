@@ -13,11 +13,13 @@ import (
 	"github.com/mehran9675/sonora/internal/manager"
 	"github.com/mehran9675/sonora/internal/paths"
 	"github.com/mehran9675/sonora/internal/settings"
+	"github.com/mehran9675/sonora/internal/transcripts"
 	"github.com/mehran9675/sonora/ui/core"
 	enginespage "github.com/mehran9675/sonora/ui/pages/engines"
 	librarypage "github.com/mehran9675/sonora/ui/pages/library"
 	settingspage "github.com/mehran9675/sonora/ui/pages/settings"
 	"github.com/mehran9675/sonora/ui/pages/studio"
+	"github.com/mehran9675/sonora/ui/pages/transcribe"
 	"github.com/mehran9675/sonora/ui/shell"
 	"github.com/mehran9675/sonora/ui/theme"
 )
@@ -29,10 +31,11 @@ func Run() error {
 	theme.Apply(store.Get().Theme)
 
 	c := &core.Ctx{
-		Settings: store,
-		Library:  library.Open(paths.Sub("library")),
-		Player:   playback.New(),
-		Toasts:   giode.Toaster().Placement(giode.ToastBottomRight),
+		Settings:    store,
+		Library:     library.Open(paths.Sub("library")),
+		Transcripts: transcripts.Open(paths.Sub("transcripts")),
+		Player:      playback.New(),
+		Toasts:      giode.Toaster().Placement(giode.ToastBottomRight),
 	}
 	var studioPage *studio.Page
 	cfg := giode.Config{
@@ -68,7 +71,7 @@ func Run() error {
 		cfg.SingleInstanceLock = &giode.SingleInstanceLock{UniqueID: "com.sonora.app"}
 	}
 	c.App = giode.New(cfg)
-	c.Manager = manager.New(c.App.Post, store, c.Library)
+	c.Manager = manager.New(c.App.Post, store, c.Library, c.Transcripts)
 
 	applyTheme := func(mode string) {
 		store.Update(func(s *settings.Settings) { s.Theme = mode })
@@ -84,14 +87,16 @@ func Run() error {
 	}
 
 	studioPage = studio.New(c)
+	transcribePage := transcribe.New(c)
 	libraryPage := librarypage.New(c)
 	enginesPage := enginespage.New(c)
 	settingsPage := settingspage.New(c, applyTheme)
 	frame := shell.New(c, map[core.Page]func() giode.Element{
-		core.PageStudio:   studioPage.Element,
-		core.PageLibrary:  libraryPage.Element,
-		core.PageEngines:  enginesPage.Element,
-		core.PageSettings: settingsPage.Element,
+		core.PageStudio:     studioPage.Element,
+		core.PageTranscribe: transcribePage.Element,
+		core.PageLibrary:    libraryPage.Element,
+		core.PageEngines:    enginesPage.Element,
+		core.PageSettings:   settingsPage.Element,
 	}, toggleTheme)
 
 	return c.App.Run(frame.Element)

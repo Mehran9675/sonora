@@ -13,6 +13,10 @@ func (m *Manager) LoadVoices(rt *Runtime, force bool) {
 		return
 	}
 	man := rt.Manifest()
+	if man.Transcribes() {
+		rt.VoicesLoaded = true
+		return
+	}
 	if len(man.Voices) > 0 {
 		rt.Voices, rt.VoicesLoaded = man.Voices, true
 		return

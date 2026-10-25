@@ -18,17 +18,26 @@ import (
 // without a dialog service (a Linux system without the XDG portal)
 // gets the file in its Downloads folder instead.
 func (c *Ctx) SaveClip(path, title string) {
+	c.save(clipName(title, ".wav"), func() (io.ReadCloser, error) { return os.Open(path) })
+}
+
+// SaveText saves text as a file, suggesting name, the same way.
+func (c *Ctx) SaveText(name, text string) {
+	c.save(name, func() (io.ReadCloser, error) { return io.NopCloser(strings.NewReader(text)), nil })
+}
+
+func (c *Ctx) save(name string, open func() (io.ReadCloser, error)) {
 	var fallback string
 	c.Background(func() error {
-		w, err := c.App.SaveFile(context.Background(), clipName(title))
+		w, err := c.App.SaveFile(context.Background(), name)
 		if err != nil && !errors.Is(err, giode.ErrCanceled) && !Mobile {
-			fallback = filepath.Join(downloadsDir(), clipName(title))
+			fallback = filepath.Join(downloadsDir(), name)
 			w, err = os.Create(fallback)
 		}
 		if err != nil {
 			return err
 		}
-		in, err := os.Open(path)
+		in, err := open()
 		if err != nil {
 			w.Close()
 			return err
@@ -77,8 +86,11 @@ func ShareIcon() string {
 	return icons.Folder
 }
 
+// FileName suggests a file name for an export titled title.
+func FileName(title, ext string) string { return clipName(title, ext) }
+
 // clipName suggests a file name for an exported clip.
-func clipName(title string) string {
+func clipName(title, ext string) string {
 	clean := strings.Map(func(r rune) rune {
 		if strings.ContainsRune(`<>:"/\|?*`, r) {
 			return '-'
@@ -88,5 +100,22 @@ func clipName(title string) string {
 	if clean == "" {
 		clean = "speech"
 	}
-	return "Sonora - " + clean + ".wav"
+	if len([]rune(clean)) > 60 {
+		clean = string([]rune(clean)[:60])
+	}
+	return "Sonora - " + clean + ext
+}
+
+// ShareText hands text to another app through the share sheet on
+// phones, or copies it to the clipboard on desktops.
+func (c *Ctx) ShareText(text, title string) {
+	c.Background(func() error {
+		return c.App.Share(context.Background(), giode.ShareText{Text: text, Subject: title, Title: title})
+	}, func(err error) {
+		if err != nil {
+			c.Error(err)
+		} else if !Mobile {
+			c.Success("Copied to the clipboard")
+		}
+	})
 }

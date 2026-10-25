@@ -1,22 +1,31 @@
 # Sonora
 
-**A desktop studio for text-to-speech models — no code, no terminal, no Python setup.**
+**A speech studio — text to speech and speech to text — with no code, no terminal, no Python setup.**
 
-Type some text, pick an engine and a voice, press **Generate**. Sonora installs models
-like **Kitten TTS 2** and **Audio8 TTS** with one click, keeps every clip in a library,
-and can drive almost any other TTS model: Python models through a small plugin, servers
-through the OpenAI-compatible speech API, and command-line programs through a template.
+Type some text (or open a document), pick an engine and a voice, press **Generate**. Or
+pick a recording (or record one), press **Transcribe**, and get the text back with
+timestamps. Sonora installs models like **Kitten TTS 2**, **IndexTTS** and **Whisper** with
+one click, keeps every clip and transcript, and can drive almost any other speech model:
+Python models through a small plugin, servers through the OpenAI-compatible speech and
+transcription APIs, and command-line programs through a template.
 
 Built in Go with [giode](https://github.com/Mehran9675/giode). Runs on Windows, macOS,
 Linux and Android. The layout adapts to the window: narrow windows and phones get a
 single scrolling column with a bottom tab bar.
 
 **On Android** models run on the phone itself, offline: install **Kitten TTS Lite**,
-**Kokoro** or **Piper** from the Engines page and Sonora downloads the model (30–130 MB)
-and runs it with [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx). API servers work
-too — run a server such as [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) on
-your computer, or use a cloud TTS API, and add it under *Engines → Add engine*. The Python
-engines and voice cloning are desktop features. Clips are saved through the system file
+**Kokoro**, **Piper** or **ZipVoice** to speak, and **Whisper**, **Parakeet** or
+**SenseVoice** to transcribe, from the Engines page. Sonora downloads the model (30 MB for
+the smallest, about 600 MB for the largest) and runs it with
+[sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx). ZipVoice clones a voice from a
+recording right on the phone; Kokoro has a full-precision model and Piper high-quality
+voices for phones with memory to spare; Whisper goes up to Large v3 Turbo. API servers
+work too — run a server such as [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI)
+on your computer, or use a cloud speech or transcription API, and add it under
+*Engines → Add engine*. The Python engines (IndexTTS, Chatterbox, faster-whisper…) are
+desktop only: they need PyTorch or CTranslate2, which don't run on Android. Phones read
+WAV, MP3, FLAC and Ogg Vorbis audio; other formats (M4A, Opus, video) need ffmpeg, which
+desktops can use when it's installed. Clips are saved through the system file
 picker or sent to other apps with the share sheet; Back closes dialogs and returns to the
 Studio; your script is kept when you switch away.
 
@@ -32,8 +41,14 @@ Studio; your script is kept when you switch away.
   creates a private environment per engine, picks the right PyTorch for your GPU, and
   shows progress and logs while it installs. Nothing to configure.
 - **Studio.** A large script editor, searchable voice picker, speed control and every
-  engine setting rendered as proper controls.
-- **Voice cloning.** On engines that can clone (Kitten TTS 2, Audio8, Chatterbox, Coqui),
+  engine setting rendered as proper controls. **Open file** loads the script from a
+  document: text, Markdown, subtitles (SRT, WebVTT), HTML, Word, OpenDocument, EPUB, PDF
+  or RTF.
+- **Transcribe.** Pick an audio or video file, or record up to 15 minutes, choose the
+  language (or let it be detected) and get an editable transcript with timestamps.
+  Translate into English, copy, share, save as text or SRT subtitles, or send it to the
+  Studio to be spoken. Every transcript is kept with its audio.
+- **Voice cloning.** On engines that can clone (Kitten TTS 2, Audio8, IndexTTS, Chatterbox, Coqui, ZipVoice),
   switch to *Clone a voice* and record yourself right in the app — live level meter,
   auto-stop at 30 s, silence trimmed — or pick an audio file.
 - **Memory control.** A model stays loaded between generations for speed; **Eject** stops
@@ -52,6 +67,7 @@ Studio; your script is kept when you switch away.
 | --- | --- | --- | --- |
 | **Kitten TTS 2** (KittenML) | 47 voices, 20 languages, emotion tags | ✓ | CPU · GPU · Apple silicon |
 | **Audio8 TTS** (Audio8) | 0.6B multilingual, 11 languages | ✓ | CPU · GPU |
+| **IndexTTS** (Bilibili) | Expressive zero-shot cloning, emotion control; 2.5 speaks 5 languages | ✓ | GPU recommended |
 | **Kitten TTS Lite** | 15–80M models, tiny and fast | – | CPU |
 | **Kokoro** | Natural voices in 8 languages, 82M | – | CPU · GPU |
 | **Chatterbox** (Resemble AI) | Strong cloning, emotion control | ✓ | GPU recommended |
@@ -60,8 +76,20 @@ Studio; your script is kept when you switch away.
 | **Hugging Face models** | Any Transformers TTS model by ID (MMS, Bark, VITS…) | – | CPU · GPU |
 | **System voices** | Your OS's built-in voices, offline, instant | – | – |
 | **Kitten TTS Lite · Kokoro · Piper** *(on device)* | The same models running inside the app, no Python | – | Android |
+| **ZipVoice** *(on device)* | Cloning from a recording and its transcript, English and Chinese | ✓ | Android |
 | **API server** *(add your own)* | OpenAI, Kokoro-FastAPI, LocalAI, Audio8's server… | – | remote |
 | **Command line** *(add your own)* | espeak-ng, piper CLI, `say`, anything that writes WAV | – | local |
+
+Speech to text:
+
+| Engine | What it's good at | Runs on |
+| --- | --- | --- |
+| **Whisper** (OpenAI, via faster-whisper) | ~100 languages, timestamps, translation to English; Tiny to Large v3 | CPU · NVIDIA GPU |
+| **Hugging Face speech recognition** | Any Transformers ASR model by ID (Whisper variants, Moonshine, wav2vec 2.0, MMS…) | CPU · GPU |
+| **Whisper** *(on device)* | Tiny, Base, Small or Large v3 Turbo inside the app | Android |
+| **Parakeet** (NVIDIA) *(on device)* | Fast and accurate, English + 24 European languages, punctuated | Android |
+| **SenseVoice** *(on device)* | Very fast Chinese, Cantonese, English, Japanese, Korean | Android |
+| **Transcription API** *(add your own)* | OpenAI, Groq, a local Whisper server… | remote |
 
 Each model has its own license (some, like XTTS-v2, are non-commercial). The engine card
 shows it; check it before commercial use.

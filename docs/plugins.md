@@ -1,7 +1,7 @@
 # Writing an engine plugin
 
-Any Python text-to-speech model can become a Sonora engine without touching the app's
-code. A plugin is a folder with two files:
+Any Python speech model - text to speech or speech to text - can become a Sonora engine
+without touching the app's code. A plugin is a folder with two files:
 
 ```
 <data folder>/plugins/my-engine/
@@ -56,6 +56,9 @@ folder**, drop your folder in, and press **Reload engines**. Your engine appears
 | `transcript` | Whether the reference recording's transcript is `"optional"` or `"required"`. |
 | `voices` | A fixed voice list. Leave it out to report voices from `load()` instead. |
 | `hint` | A tip shown under the editor. |
+| `task` | `"transcribe"` for a speech-to-text engine (see below); leave it out for text to speech. |
+| `translate` | Speech-to-text engines: `true` offers *Translate into English*. |
+| `languages` | Speech-to-text engines: the language codes it understands, `""` meaning it can detect the language. Leave it out for "any". |
 | `options` | Settings rendered as controls: `select` (segments for ≤ 3 choices, a searchable list beyond), `number` (slider over `min`–`max`), `text` (with optional `suggestions`, and `keyboard`: `url`, `number`, `email` or `phone` for the on-screen keyboard on touch screens), `secret`, `bool`. `scope: "load"` means changing it reloads the model. |
 
 ## adapter.py
@@ -111,3 +114,29 @@ Two more kinds need no code at all and are added from **Engines → Add engine**
   `espeak-ng -w {output} -v {voice} -f {text_file}`. Placeholders: `{text}`, `{text_file}`,
   `{output}`, `{voice}`, `{speed}`, `{length_scale}`, `{wpm}`. Without `{output}` the
   program's standard output is read as audio (WAV, or anything ffmpeg can convert).
+
+## Speech-to-text engines
+
+Set `"task": "transcribe"` in engine.json and define `transcribe` instead of
+`synthesize`:
+
+```python
+class Engine:
+    def __init__(self, ctx):
+        self.ctx = ctx
+
+    def load(self, options):
+        ...  # load the model
+        return {}
+
+    def transcribe(self, req):
+        # req["audio"] is a 16 kHz mono WAV, req["language"] an ISO code or "" to
+        # detect, req["translate"] a bool, req["options"] the engine's settings.
+        self.ctx.progress(0.5, "Transcribing…")
+        return {"text": "Hello world.", "language": "en",
+                "segments": [{"start": 0.0, "end": 1.2, "text": "Hello world."}]}
+```
+
+Segments are optional; they give SRT exports their timings. See
+[`python/engines/faster-whisper`](../python/engines/faster-whisper) for a complete
+engine.

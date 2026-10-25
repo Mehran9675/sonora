@@ -7,6 +7,7 @@ import (
 
 	"github.com/mehran9675/giode"
 
+	"github.com/mehran9675/sonora/internal/manager"
 	"github.com/mehran9675/sonora/ui/components/navitem"
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
@@ -28,6 +29,12 @@ func NewSidebar(c *core.Ctx, onTheme func()) *Sidebar {
 			func() bool { return c.Page() == p }, badge, func() { c.Go(p) }))
 	}
 	nav(icons.Waves, "Studio", core.PageStudio, nil)
+	nav(icons.Captions, "Transcribe", core.PageTranscribe, func() string {
+		if n := len(c.Transcripts.Entries()); n > 0 {
+			return fmt.Sprint(n)
+		}
+		return ""
+	})
 	nav(icons.Library, "Library", core.PageLibrary, func() string {
 		if n := len(c.Library.Entries()); n > 0 {
 			return fmt.Sprint(n)
@@ -99,13 +106,17 @@ func logo() giode.Element {
 func (s *Sidebar) engineSummary() giode.Element {
 	ready := len(s.c.Manager.Ready())
 	msg := fmt.Sprintf("%d engine%s ready", ready, plural(ready))
-	if j := s.c.Manager.Job; j != nil {
-		msg = "Generating with " + j.Runtime.Manifest().Name
-	}
-	for _, rt := range s.c.Manager.Engines() {
-		if rt.Busy() && s.c.Manager.Job == nil {
+	m := s.c.Manager
+	for _, rt := range m.Engines() {
+		if rt.Busy() && rt.State == manager.StateInstalling {
 			msg = "Installing " + rt.Manifest().Name
 		}
+	}
+	if j := m.TranscribeJob; j != nil {
+		msg = "Transcribing with " + j.Runtime.Manifest().Name
+	}
+	if j := m.Job; j != nil {
+		msg = "Generating with " + j.Runtime.Manifest().Name
 	}
 	return giode.Row(giode.Styles{Width: -1, Gap: 10, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap,
 		Padding: giode.UniformInset(12), Margin: giode.Inset{Bottom: 6},

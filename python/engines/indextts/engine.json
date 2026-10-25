@@ -1,0 +1,46 @@
+{
+  "id": "indextts",
+  "name": "IndexTTS",
+  "vendor": "Bilibili",
+  "description": "Bilibili's zero-shot model: clones a voice from one short recording, with emotion control and natural prosody. IndexTTS-2.5 speaks Chinese, English, Japanese, Spanish and Arabic.",
+  "tags": ["Voice cloning", "Emotion control", "GPU recommended"],
+  "license": "Bilibili IndexTTS license (commercial use needs permission)",
+  "homepage": "https://github.com/index-tts/index-tts",
+  "size": "≈ 10 GB with PyTorch + models",
+  "accent": ["#00aeec", "#fb7299"],
+  "kind": "python",
+  "python": "3.11",
+  "source": {
+    "url": "https://github.com/index-tts/index-tts/archive/refs/heads/main.zip"
+  },
+  "install": [["{src}"], ["huggingface_hub"]],
+  "clone": "required",
+  "speed": true,
+  "voices": [{"id": "", "name": "Your recording", "group": "Cloned"}],
+  "hint": "IndexTTS speaks in the voice of your recording; 5–15 s of clean speech works best.",
+  "options": [
+    {"id": "version", "label": "Model", "type": "select", "scope": "load", "default": "2.5",
+     "help": "Downloads the first time it's used (≈ 6 GB).",
+     "choices": [{"value": "2.5", "label": "IndexTTS-2.5"}, {"value": "2", "label": "IndexTTS-2"}]},
+    {"id": "half", "label": "Half precision", "type": "bool", "scope": "load", "default": true,
+     "help": "Faster and lighter on a GPU; ignored on the CPU."},
+    {"id": "language", "label": "Language", "type": "select", "default": "en",
+     "help": "IndexTTS-2.5 only; IndexTTS-2 detects Chinese and English by itself.",
+     "choices": [
+       {"value": "en", "label": "English"}, {"value": "zh", "label": "Chinese"},
+       {"value": "ja", "label": "Japanese"}, {"value": "es", "label": "Spanish"},
+       {"value": "ar", "label": "Arabic"}
+     ]},
+    {"id": "emotion", "label": "Emotion", "type": "select", "default": "",
+     "choices": [
+       {"value": "", "label": "Like the recording"}, {"value": "happy", "label": "Happy"},
+       {"value": "angry", "label": "Angry"}, {"value": "sad", "label": "Sad"},
+       {"value": "afraid", "label": "Afraid"}, {"value": "disgusted", "label": "Disgusted"},
+       {"value": "melancholic", "label": "Melancholic"}, {"value": "surprised", "label": "Surprised"},
+       {"value": "calm", "label": "Calm"}
+     ]},
+    {"id": "intensity", "label": "Emotion strength", "type": "number", "min": 0.05, "max": 1, "step": 0.05, "default": 0.6},
+    {"id": "random", "label": "Random sampling", "type": "bool", "default": false,
+     "help": "More varied delivery, a less exact voice match."}
+  ]
+}
