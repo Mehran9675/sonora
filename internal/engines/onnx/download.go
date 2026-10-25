@@ -13,26 +13,24 @@ import (
 	"strings"
 
 	"github.com/mehran9675/sonora/internal/engines"
-	"github.com/mehran9675/sonora/internal/engines/onnx/sherpa"
 )
 
-// vocoderPath is where the ZipVoice vocoder is kept, shared by all
-// ZipVoice models.
-func vocoderPath(dir string) string { return filepath.Join(dir, path.Base(vocos)) }
+// extraPath is where a model's extra file from url is kept.
+func extraPath(dir, url string) string { return filepath.Join(dir, path.Base(url)) }
 
-// fetchVocoder downloads the ZipVoice vocoder unless it is already there.
-func fetchVocoder(ctx context.Context, dir string, log engines.Logger) error {
-	dst := vocoderPath(dir)
+// fetchExtra downloads a single file unless it is already there.
+func fetchExtra(ctx context.Context, dir, url string, log engines.Logger) error {
+	dst := extraPath(dir, url)
 	if _, err := os.Stat(dst); err == nil {
 		return nil
 	}
-	resp, err := get(ctx, vocos)
+	resp, err := get(ctx, url)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 	tmp := dst + ".partial"
-	body := &progressReader{r: resp.Body, total: resp.ContentLength, label: "Downloading the vocoder", log: log}
+	body := &progressReader{r: resp.Body, total: resp.ContentLength, label: "Downloading " + path.Base(url), log: log}
 	if err := writeFile(tmp, body); err != nil {
 		os.Remove(tmp)
 		if ctx.Err() != nil {
@@ -61,12 +59,12 @@ func get(ctx context.Context, url string) (*http.Response, error) {
 }
 
 // fetch downloads and unpacks a model package into dir/<id>, unless it
-// is already there, along with the vocoder a ZipVoice model needs.
-// Unpacking goes to a temporary folder that is renamed when complete,
-// so an interrupted download never looks installed.
+// is already there, along with the extra files it needs. Unpacking goes
+// to a temporary folder that is renamed when complete, so an
+// interrupted download never looks installed.
 func fetch(ctx context.Context, dir string, m model, log engines.Logger) (string, error) {
-	if m.Family == sherpa.ZipVoice {
-		if err := fetchVocoder(ctx, dir, log); err != nil {
+	for _, url := range m.Extra {
+		if err := fetchExtra(ctx, dir, url, log); err != nil {
 			return "", err
 		}
 	}
@@ -99,7 +97,7 @@ func fetch(ctx context.Context, dir string, m model, log engines.Logger) (string
 		}
 		// Archives hold <id>/...; drop that top folder.
 		_, rest, ok := strings.Cut(filepath.ToSlash(h.Name), "/")
-		if !ok || rest == "" {
+		if !ok || rest == "" || !m.keep(rest) {
 			continue
 		}
 		out := filepath.Join(tmp, filepath.FromSlash(rest))

@@ -1,0 +1,32 @@
+{
+  "id": "faster-whisper",
+  "name": "Whisper",
+  "vendor": "OpenAI · faster-whisper",
+  "task": "transcribe",
+  "description": "OpenAI's Whisper through faster-whisper: accurate transcripts in about 100 languages with timestamps, and translation into English. Fast on the CPU, faster on an NVIDIA GPU.",
+  "tags": ["99 languages", "Timestamps", "Translate"],
+  "license": "MIT",
+  "homepage": "https://github.com/SYSTRAN/faster-whisper",
+  "size": "≈ 300 MB + 75 MB–3 GB model",
+  "accent": ["#10b981", "#0d9488"],
+  "kind": "python",
+  "python": "3.11",
+  "install": [["faster-whisper>=1.1"]],
+  "translate": true,
+  "options": [
+    {"id": "model", "label": "Model", "type": "select", "scope": "load", "default": "large-v3-turbo",
+     "help": "Downloads the first time it's used. Turbo is nearly as accurate as Large and much faster.",
+     "choices": [
+       {"value": "tiny", "label": "Tiny · 75 MB"}, {"value": "base", "label": "Base · 145 MB"},
+       {"value": "small", "label": "Small · 480 MB"}, {"value": "medium", "label": "Medium · 1.5 GB"},
+       {"value": "large-v3-turbo", "label": "Large v3 Turbo · 1.6 GB"}, {"value": "large-v3", "label": "Large v3 · 3 GB"},
+       {"value": "distil-large-v3", "label": "Distil Large v3 (English) · 1.5 GB"}
+     ]},
+    {"id": "vad", "label": "Skip silence", "type": "bool", "default": true,
+     "help": "Finds the speech first; faster, and avoids made-up text in silent parts."},
+    {"id": "beam_size", "label": "Beam size", "type": "number", "min": 1, "max": 10, "step": 1, "default": 5,
+     "help": "Higher is a little more accurate and slower."},
+    {"id": "prompt", "label": "Vocabulary hint", "type": "text", "placeholder": "Names, jargon, spelling…",
+     "help": "Words that appear in the recording, to spell them right."}
+  ]
+}

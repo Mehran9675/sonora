@@ -19,18 +19,31 @@ import (
 )
 
 const (
-	addAPI     = "api"
-	addCommand = "command"
-	addPlugin  = "plugin"
+	addAPI        = "api"
+	addTranscribe = "transcribe"
+	addCommand    = "command"
+	addPlugin     = "plugin"
 )
+
+// addKinds maps the dialog's tabs to the engines they create.
+var addKinds = map[string]struct {
+	kind     engines.Kind
+	name     string
+	template func(id, name string) *engines.Manifest
+}{
+	addAPI:        {engines.KindOpenAI, "API engine", openai.Template},
+	addTranscribe: {engines.KindOpenAITranscribe, "Transcription API", openai.TranscribeTemplate},
+	addCommand:    {engines.KindCommand, "Command engine", command.Template},
+}
 
 // addDialog creates API and command engines and explains plugins.
 type addDialog struct {
-	c    *core.Ctx
-	open bool
-	kind string
-	tabs *segmented.Control
-	name *input.Input
+	c          *core.Ctx
+	open       bool
+	kind       string
+	tabs       *segmented.Control
+	mobileTabs *segmented.Control
+	name       *input.Input
 
 	forms map[string]*setupForm
 
@@ -56,15 +69,21 @@ func newSetupForm(m *engines.Manifest) *setupForm {
 
 func newAddDialog(c *core.Ctx) *addDialog {
 	d := &addDialog{c: c, kind: addAPI}
+	selected, change := func() string { return d.kind }, func(v string) { d.kind = v }
 	d.tabs = segmented.New([]segmented.Option{
-		{Value: addAPI, Label: "API server"},
+		{Value: addAPI, Label: "Voice API"},
+		{Value: addTranscribe, Label: "Transcription API"},
 		{Value: addCommand, Label: "Command line"},
 		{Value: addPlugin, Label: "Python plugin"},
-	}, func() string { return d.kind }, func(v string) { d.kind = v })
+	}, selected, change)
+	d.mobileTabs = segmented.New([]segmented.Option{
+		{Value: addAPI, Label: "Voice API"},
+		{Value: addTranscribe, Label: "Transcription API"},
+	}, selected, change)
 	d.name = giode.Input.Text("Name, e.g. “Kokoro server”", theme.Field()).Label("Engine name")
-	d.forms = map[string]*setupForm{
-		addAPI:     newSetupForm(openai.Template("", "")),
-		addCommand: newSetupForm(command.Template("", "")),
+	d.forms = map[string]*setupForm{}
+	for k, a := range addKinds {
+		d.forms[k] = newSetupForm(a.template("", ""))
 	}
 	outline := giode.Styles{Color: "theme.text", Background: "theme.border", BorderColor: "theme.border", FontSize: 13,
 		Padding: giode.SymmetricInset(14, 9), BorderRadius: theme.RadiusSm + 2}
@@ -90,22 +109,17 @@ func (d *addDialog) show() {
 
 func (d *addDialog) submit() {
 	name := strings.TrimSpace(d.name.Text())
-	kind := engines.KindOpenAI
-	if d.kind == addCommand {
-		kind = engines.KindCommand
-	}
+	a := addKinds[d.kind]
 	if name == "" {
-		name = map[engines.Kind]string{engines.KindOpenAI: "API engine", engines.KindCommand: "Command engine"}[kind]
+		name = a.name
 	}
 	form := d.forms[d.kind]
 	values := engines.Values{}
 	for k, v := range form.values {
 		values[k] = v
 	}
-	id := d.c.Manager.AddCustom(kind, name, values)
-	d.forms[d.kind] = newSetupForm(map[string]*engines.Manifest{
-		addAPI: openai.Template("", ""), addCommand: command.Template("", ""),
-	}[d.kind])
+	id := d.c.Manager.AddCustom(a.kind, name, values)
+	d.forms[d.kind] = newSetupForm(a.template("", ""))
 	d.open = false
 	d.c.Success("Added " + name)
 	if rt := d.c.Manager.Get(id); rt != nil {
@@ -119,13 +133,15 @@ func (d *addDialog) content() giode.Element {
 	}
 	// Phones can't run local programs or Python, so only API servers
 	// are offered there.
-	if !core.Mobile {
+	if core.Mobile {
+		els = append(els, d.mobileTabs.Element())
+	} else {
 		els = append(els, d.tabs.Element())
 	}
 	switch d.kind {
 	case addPlugin:
 		els = append(els,
-			giode.Text("Any Python text-to-speech model can become a Sonora engine. Put a folder with an engine.json "+
+			giode.Text("Any Python speech model - text to speech or speech to text - can become a Sonora engine. Put a folder with an engine.json "+
 				"and an adapter.py into the plugins folder, then reload. Sonora installs its packages into a private "+
 				"environment, just like the built-in engines.", giode.Styles{Color: "theme.secondary", FontSize: 13, LineHeight: 20}),
 			giode.Box(giode.Styles{Width: -1, Padding: giode.UniformInset(12), Background: "theme.background", BorderRadius: theme.RadiusSm},
@@ -134,10 +150,11 @@ func (d *addDialog) content() giode.Element {
 			giode.Row(giode.Styles{Width: -1, Gap: 8, Justify: giode.JustifyEnd}, d.folder, d.reload),
 		)
 	default:
-		help := "Connect to anything that speaks OpenAI's /v1/audio/speech API: OpenAI, Kokoro-FastAPI, LocalAI, the Audio8 server…"
-		if d.kind == addCommand {
-			help = "Run a text-to-speech program installed on this computer. Sonora fills in the placeholders and plays the WAV it writes."
-		}
+		help := map[string]string{
+			addAPI:        "Connect to anything that speaks OpenAI's /v1/audio/speech API: OpenAI, Kokoro-FastAPI, LocalAI, the Audio8 server…",
+			addTranscribe: "Transcribe through anything that speaks OpenAI's /v1/audio/transcriptions API: OpenAI, Groq, a local Whisper server such as Speaches…",
+			addCommand:    "Run a text-to-speech program installed on this computer. Sonora fills in the placeholders and plays the WAV it writes.",
+		}[d.kind]
 		els = append(els,
 			giode.Text(help, giode.Styles{Color: "theme.secondary", FontSize: 13, LineHeight: 20}),
 			giode.Stack(giode.Styles{Width: -1, Gap: 8}, giode.Text("Name", theme.Overline), giode.Box(giode.Styles{Width: -1}, d.name)),

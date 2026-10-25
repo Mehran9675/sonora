@@ -1,32 +1,66 @@
-// Package onnx runs text-to-speech models inside the app with
-// sherpa-onnx: downloaded Kitten, Kokoro, Piper and ZipVoice models on
-// the CPU, with no Python. It's what Android uses; desktop builds include it
-// when built with the "sherpa" tag.
+// Package onnx runs speech models inside the app with sherpa-onnx, on
+// the CPU and with no Python: text to speech with Kitten, Kokoro, Piper
+// and ZipVoice, speech to text with Whisper, Parakeet and SenseVoice.
+// It's what Android uses; desktop builds include it when built with the
+// "sherpa" tag.
 package onnx
 
-import "github.com/mehran9675/sonora/internal/engines/onnx/sherpa"
+import (
+	"strings"
 
-// release is where sherpa-onnx publishes its ready-to-run model packages.
-const release = "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/"
+	"github.com/mehran9675/sonora/internal/engines/onnx/sherpa"
+)
 
-// vocos is the vocoder ZipVoice models need, a separate download.
-const vocos = "https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx"
+// releases is where sherpa-onnx publishes its ready-to-run models.
+const releases = "https://github.com/k2-fsa/sherpa-onnx/releases/download/"
+
+const (
+	// vocos is the vocoder ZipVoice models need, a separate download.
+	vocos = releases + "vocoder-models/vocos_24khz.onnx"
+	// sileroVAD finds the speech in recordings before recognition.
+	sileroVAD = releases + "asr-models/silero_vad.onnx"
+)
 
 // model is one downloadable package.
 type model struct {
-	ID     string // package name; the archive is release+ID+".tar.bz2"
+	ID     string // package name; the archive is <release>/<ID>.tar.bz2
 	Label  string
 	Size   string
 	Family sherpa.Family
+	// Release is the release holding the package: "tts-models" when
+	// empty.
+	Release string
 	// Lexicon lists lexicon files inside the package (Kokoro).
 	Lexicon string
 	// Dict is the dictionary folder inside the package (Kokoro).
 	Dict string
 	// Steps is the number of flow-matching steps (ZipVoice).
 	Steps int
+	// Int8 unpacks only the int8 models of a package that ships both.
+	Int8 bool
+	// Extra are single files the model also needs, downloaded once
+	// next to the packages and shared.
+	Extra []string
 }
 
-func (m model) url() string { return release + m.ID + ".tar.bz2" }
+func (m model) url() string {
+	rel := m.Release
+	if rel == "" {
+		rel = "tts-models"
+	}
+	return releases + rel + "/" + m.ID + ".tar.bz2"
+}
+
+// keep reports whether a file of the package is unpacked.
+func (m model) keep(name string) bool {
+	if strings.HasPrefix(name, "test_wavs/") {
+		return false
+	}
+	if m.Int8 && strings.HasSuffix(name, ".onnx") && !strings.HasSuffix(name, ".int8.onnx") {
+		return false
+	}
+	return true
+}
 
 var (
 	kittenModels = []model{
@@ -47,9 +81,9 @@ var (
 	// include the shared 52 MB vocoder.
 	zipvoiceModels = []model{
 		{ID: "sherpa-onnx-zipvoice-distill-int8-zh-en-emilia", Label: "Compact · int8", Size: "156 MB",
-			Family: sherpa.ZipVoice, Lexicon: "lexicon.txt", Steps: 4},
+			Family: sherpa.ZipVoice, Lexicon: "lexicon.txt", Steps: 4, Extra: []string{vocos}},
 		{ID: "sherpa-onnx-zipvoice-distill-fp32-zh-en-emilia", Label: "Full quality · fp32", Size: "508 MB",
-			Family: sherpa.ZipVoice, Lexicon: "lexicon.txt", Steps: 4},
+			Family: sherpa.ZipVoice, Lexicon: "lexicon.txt", Steps: 4, Extra: []string{vocos}},
 	}
 )
 

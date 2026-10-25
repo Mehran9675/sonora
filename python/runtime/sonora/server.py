@@ -16,6 +16,8 @@ def serve(channel, adapter):
                 result = adapter.load(req.get("options") or {}) or {}
             elif cmd == "synthesize":
                 result = adapter.synthesize(req.get("request") or {}) or {}
+            elif cmd == "transcribe":
+                result = adapter.transcribe(req.get("request") or {}) or {}
             else:
                 raise ValueError(f"unknown command {cmd!r}")
             channel.send(id=rid, ok=True, result=result)

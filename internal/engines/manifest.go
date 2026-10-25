@@ -1,6 +1,6 @@
-// Package engines defines what a text-to-speech engine is: its
-// manifest (name, install recipe, capabilities, options) and the
-// Engine interface every backend implements.
+// Package engines defines what a speech engine is - text to speech or
+// speech to text: its manifest (name, install recipe, capabilities,
+// options) and the Engine interface every backend implements.
 package engines
 
 // Kind selects the backend that runs an engine.
@@ -14,6 +14,9 @@ const (
 	KindOnDevice Kind = "ondevice"
 	// KindOpenAI calls an OpenAI-compatible /v1/audio/speech endpoint.
 	KindOpenAI Kind = "openai"
+	// KindOpenAITranscribe calls an OpenAI-compatible
+	// /v1/audio/transcriptions endpoint.
+	KindOpenAITranscribe Kind = "openai-transcribe"
 	// KindCommand runs a command-line program.
 	KindCommand Kind = "command"
 	// KindSystem uses the operating system's built-in voices.
@@ -44,6 +47,8 @@ type Manifest struct {
 	// Accent is a two-color gradient for the engine's badge.
 	Accent []string `json:"accent,omitempty"`
 	Kind   Kind     `json:"kind"`
+	// Task is what the engine does: speak (default) or transcribe.
+	Task Task `json:"task,omitempty"`
 
 	// Python engines.
 	Python  string            `json:"python,omitempty"`
@@ -57,6 +62,12 @@ type Manifest struct {
 	Transcript Clone `json:"transcript,omitempty"`
 	// Speed is true when the engine honors a speaking-rate multiplier.
 	Speed bool `json:"speed,omitempty"`
+	// Speech-to-text engines: Languages lists the language codes the
+	// engine understands, "" standing for detecting it (empty: every
+	// language in engines.Languages); Translate is set when it can turn
+	// speech into English text.
+	Languages []string `json:"languages,omitempty"`
+	Translate bool     `json:"translate,omitempty"`
 	// Voices is a fixed voice list; empty means the engine reports
 	// its voices once loaded.
 	Voices       []Voice  `json:"voices,omitempty"`
@@ -75,6 +86,9 @@ type Manifest struct {
 type Source struct {
 	URL string `json:"url"`
 }
+
+// Transcribes reports whether the engine turns speech into text.
+func (m *Manifest) Transcribes() bool { return m.Task == TaskTranscribe }
 
 // NeedsInstall reports whether the engine has an install step.
 func (m *Manifest) NeedsInstall() bool { return m.Kind == KindPython || m.Kind == KindOnDevice }

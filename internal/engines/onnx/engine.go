@@ -50,6 +50,9 @@ func All(dataDir string) []engines.Engine {
 			return piperModel(voice)
 		}},
 		&Engine{m: zipvoiceManifest(), dir: dir, pick: byOption(zipvoiceModels), models: zipvoiceModels},
+		newRecognizer(whisperManifest(), dir, whisperModels),
+		newRecognizer(parakeetManifest(), dir, []model{parakeetModel}),
+		newRecognizer(senseVoiceManifest(), dir, []model{senseVoiceModel}),
 	}
 }
 
@@ -87,11 +90,16 @@ func (e *Engine) Install(ctx context.Context, log engines.Logger) error {
 // Uninstall unloads and deletes every package this engine downloaded.
 func (e *Engine) Uninstall() error {
 	e.Close()
+	return removeModels(e.dir, e.models)
+}
+
+// removeModels deletes downloaded packages and their extra files.
+func removeModels(dir string, models []model) error {
 	var paths []string
-	for _, m := range e.models {
-		paths = append(paths, filepath.Join(e.dir, m.ID))
-		if m.Family == sherpa.ZipVoice {
-			paths = append(paths, vocoderPath(e.dir))
+	for _, m := range models {
+		paths = append(paths, filepath.Join(dir, m.ID))
+		for _, url := range m.Extra {
+			paths = append(paths, extraPath(dir, url))
 		}
 	}
 	for _, p := range paths {
@@ -144,7 +152,7 @@ func (e *Engine) load(ctx context.Context, m model, log engines.Logger) (*sherpa
 		return nil, err
 	}
 	if m.Family == sherpa.ZipVoice {
-		cfg.Vocoder = vocoderPath(e.dir)
+		cfg.Vocoder = extraPath(e.dir, vocos)
 	}
 	log("Loading " + e.m.Name + "…")
 	tts, err := sherpa.New(cfg)

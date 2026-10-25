@@ -1,6 +1,8 @@
 package studio
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -11,6 +13,7 @@ import (
 	"github.com/mehran9675/giode/styles/properties"
 
 	"github.com/mehran9675/sonora/internal/manager"
+	"github.com/mehran9675/sonora/internal/textfile"
 	"github.com/mehran9675/sonora/ui/components/chip"
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
@@ -20,6 +23,7 @@ import (
 // editor is the script card.
 type editor struct {
 	in     *input.Input
+	open   *giode.ButtonElement
 	sample *giode.ButtonElement
 	clear  *giode.ButtonElement
 	next   int
@@ -50,7 +54,41 @@ func newEditor(c *core.Ctx) *editor {
 	})
 	e.clear = giode.Button("Clear", ghost).Variant(giode.VariantGhost).
 		Icon(icons.Icon(icons.Trash, 15, "")).OnClick(func() { e.in.ChangeText("") })
+	e.open = giode.Button("Open file", ghost).Variant(giode.VariantGhost).
+		Icon(icons.Icon(icons.FileText, 15, "")).OnClick(func() { e.openFile(c) })
 	return e
+}
+
+// openFile replaces the script with the text of a document the user
+// picks: text, Markdown, subtitles, HTML, Word, OpenDocument, EPUB, PDF
+// or RTF.
+func (e *editor) openFile(c *core.Ctx) {
+	var text, name string
+	c.Background(func() error {
+		r, err := c.App.OpenFile(context.Background(), giode.FileFilter{Extensions: textfile.Extensions})
+		if err != nil && !errors.Is(err, giode.ErrCanceled) {
+			return fmt.Errorf("couldn't open a file picker on this system (%v)", err)
+		}
+		if err != nil {
+			return err
+		}
+		defer r.Close()
+		name = core.PickedName(r)
+		text, err = textfile.Read(name, r)
+		return err
+	}, func(err error) {
+		if err != nil {
+			c.Error(err)
+			return
+		}
+		e.in.ChangeText(text)
+		words := len(strings.Fields(text))
+		msg := fmt.Sprintf("Loaded %d words", words)
+		if name != "" {
+			msg += " from " + name
+		}
+		c.Success(msg)
+	})
 }
 
 func (e *editor) text() string     { return e.in.Text() }
@@ -80,10 +118,21 @@ func (e *editor) element(rt *manager.Runtime, height int) giode.Element {
 		card.FlexGrow, card.Height = 0, properties.Height(height)
 	}
 	card.Padding = giode.Inset{Top: 16, Left: 24, Right: 16, Bottom: 16}
+	// A phone has room for the buttons' icons only.
+	if giode.Compact() {
+		card.Padding.Left = 18
+		e.open.Label("")
+		e.sample.Label("")
+		e.clear.Label("")
+	} else {
+		e.open.Label("Open file")
+		e.sample.Label("Try a sample")
+		e.clear.Label("Clear")
+	}
 	return giode.Stack(card,
 		giode.Row(giode.Styles{Width: -1, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap, Gap: 4},
 			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text("Script", theme.Heading)),
-			e.sample, e.clear,
+			e.open, e.sample, e.clear,
 		),
 		giode.Box(giode.Styles{Width: -1, FlexGrow: 1, Padding: giode.Inset{Right: 8}, Overflow: giode.OverflowHidden}, e.in),
 		giode.Divider(giode.Styles{Color: "theme.border"}),

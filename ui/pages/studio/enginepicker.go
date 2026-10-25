@@ -1,13 +1,14 @@
 package studio
 
 import (
+	"github.com/mehran9675/sonora/internal/engines"
 	"github.com/mehran9675/sonora/internal/manager"
 	"github.com/mehran9675/sonora/ui/components/picker"
 	"github.com/mehran9675/sonora/ui/components/statuspill"
 	"github.com/mehran9675/sonora/ui/core"
 )
 
-// enginePicker lists every engine, ready ones first.
+// enginePicker lists every text-to-speech engine, ready ones first.
 type enginePicker struct {
 	*picker.Picker
 }
@@ -15,7 +16,7 @@ type enginePicker struct {
 func newEnginePicker(c *core.Ctx, onPick func(id string)) *enginePicker {
 	items := func() []picker.Item {
 		var ready, other []picker.Item
-		for _, rt := range c.Manager.Engines() {
+		for _, rt := range c.Manager.EnginesFor(engines.TaskSpeak) {
 			m := rt.Manifest()
 			label, _ := statuspill.Describe(rt)
 			it := picker.Item{ID: m.ID, Label: m.Name, Detail: joinNonEmpty(m.Vendor, label)}

@@ -5,6 +5,7 @@ type Page int
 
 const (
 	PageStudio Page = iota
+	PageTranscribe
 	PageLibrary
 	PageEngines
 	PageSettings

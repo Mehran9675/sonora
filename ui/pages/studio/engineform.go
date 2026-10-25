@@ -1,14 +1,10 @@
 package studio
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/mehran9675/giode"
 	"github.com/mehran9675/giode/components/input"
@@ -171,7 +167,7 @@ func (f *engineForm) speedValue() float64 {
 	return 1
 }
 
-// pickReference asks for a recording and copies it into the engine's
+// pickReference asks for a recording and copies it into the references
 // folder so the library entry keeps working if the original moves.
 func (f *engineForm) pickReference() {
 	var picked string
@@ -185,7 +181,7 @@ func (f *engineForm) pickReference() {
 			return err
 		}
 		defer r.Close()
-		picked, err = saveReference(r)
+		picked, err = core.SavePicked(r, core.ReferencesDir(), "voice")
 		return err
 	}, func(err error) {
 		if err != nil {
@@ -194,51 +190,6 @@ func (f *engineForm) pickReference() {
 		}
 		f.reference = picked
 	})
-}
-
-// saveReference copies a picked recording into the references folder,
-// so library entries keep working if the original moves. The system
-// picker on Android hands over a stream without a file name, so the
-// extension is then taken from the audio format itself.
-func saveReference(r io.Reader) (string, error) {
-	name := ""
-	if n, ok := r.(interface{ Name() string }); ok {
-		name = filepath.Base(n.Name())
-	}
-	head := make([]byte, 12)
-	n, _ := io.ReadFull(r, head)
-	head = head[:n]
-	if name == "" || filepath.Ext(name) == "" {
-		name = "voice-" + time.Now().Format("20060102-150405") + audioExt(head)
-	}
-	dst := filepath.Join(core.ReferencesDir(), name)
-	out, err := os.Create(dst)
-	if err != nil {
-		return "", err
-	}
-	defer out.Close()
-	if _, err := out.Write(head); err != nil {
-		return "", err
-	}
-	_, err = io.Copy(out, r)
-	return dst, err
-}
-
-// audioExt guesses a file extension from the first bytes of audio.
-func audioExt(head []byte) string {
-	switch {
-	case bytes.HasPrefix(head, []byte("RIFF")):
-		return ".wav"
-	case bytes.HasPrefix(head, []byte("fLaC")):
-		return ".flac"
-	case bytes.HasPrefix(head, []byte("OggS")):
-		return ".ogg"
-	case len(head) >= 8 && string(head[4:8]) == "ftyp":
-		return ".m4a"
-	case bytes.HasPrefix(head, []byte("ID3")), len(head) >= 2 && head[0] == 0xFF && head[1]&0xE0 == 0xE0:
-		return ".mp3"
-	}
-	return ".wav"
 }
 
 func sliderToSpeed(v float32) float64 { return float64(int((0.5+float64(v)*1.5)*20+0.5)) / 20 }

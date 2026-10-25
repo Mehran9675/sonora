@@ -1,0 +1,21 @@
+{
+  "id": "transformers-asr",
+  "name": "Hugging Face Speech Recognition",
+  "vendor": "Any 🤗 Transformers model",
+  "task": "transcribe",
+  "description": "Run any speech recognition model on the Hugging Face Hub that works with the Transformers pipeline: Whisper variants, Moonshine, wav2vec 2.0, MMS (1,100+ languages) and more. Enter a model ID and go.",
+  "tags": ["Any model", "Timestamps"],
+  "license": "Varies by model",
+  "homepage": "https://huggingface.co/models?pipeline_tag=automatic-speech-recognition&library=transformers",
+  "size": "≈ 3 GB with PyTorch + model",
+  "accent": ["#fbbf24", "#f59e0b"],
+  "kind": "python",
+  "python": "3.11",
+  "install": [["transformers>=4.45,<5", "torch", "accelerate", "sentencepiece", "soundfile", "numpy"]],
+  "translate": true,
+  "options": [
+    {"id": "model", "label": "Model ID", "type": "text", "scope": "load", "default": "openai/whisper-large-v3-turbo",
+     "suggestions": ["openai/whisper-large-v3-turbo", "openai/whisper-small", "distil-whisper/distil-large-v3.5", "UsefulSensors/moonshine-base", "facebook/wav2vec2-base-960h"],
+     "help": "Any automatic-speech-recognition model ID from huggingface.co"}
+  ]
+}

@@ -1,14 +1,17 @@
 // Package engines is the Engines screen: every engine as a card with
-// one-click install, logs and configuration, plus adding new ones.
+// one-click install, logs and configuration, plus adding new ones,
+// with voice (text-to-speech) and transcription engines on two tabs.
 package engines
 
 import (
 	"github.com/mehran9675/giode"
 	"github.com/mehran9675/giode/components/scroll"
 
+	"github.com/mehran9675/sonora/internal/engines"
 	"github.com/mehran9675/sonora/internal/manager"
 	"github.com/mehran9675/sonora/ui/components/logdialog"
 	"github.com/mehran9675/sonora/ui/components/pagehead"
+	"github.com/mehran9675/sonora/ui/components/segmented"
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
@@ -23,6 +26,8 @@ type Page struct {
 	adder  *addDialog
 	config *configDialog
 	logs   *logdialog.Dialog
+	task   engines.Task
+	tabs   *segmented.Control
 }
 
 // New builds the page.
@@ -35,6 +40,14 @@ func New(c *core.Ctx) *Page {
 		Padding: giode.SymmetricInset(14, 9), BorderRadius: theme.RadiusSm + 2}).
 		Icon(icons.Icon(icons.Plus, 16, "")).OnClick(p.adder.show)
 	p.scroll = giode.Scroll(p.content, giode.Styles{ScrollBar: giode.ScrollBar{ThumbColor: "theme.text/0.15", Width: 6}})
+	p.tabs = segmented.New([]segmented.Option{
+		{Value: string(engines.TaskSpeak), Label: "Text to speech"},
+		{Value: string(engines.TaskTranscribe), Label: "Speech to text"},
+	}, func() string { return string(p.task) }, func(v string) { p.task = engines.Task(v) })
+	c.ShowEngines = func(task engines.Task) {
+		p.task = task
+		c.Go(core.PageEngines)
+	}
 	return p
 }
 
@@ -49,7 +62,7 @@ func (p *Page) card(rt *manager.Runtime) *card {
 
 func (p *Page) content() giode.Element {
 	var ready, rest []giode.Element
-	for _, rt := range p.c.Manager.Engines() {
+	for _, rt := range p.c.Manager.EnginesFor(p.task) {
 		el := p.card(rt).element()
 		if rt.State == manager.StateReady || rt.State == manager.StateWorking {
 			ready = append(ready, el)
@@ -57,8 +70,13 @@ func (p *Page) content() giode.Element {
 			rest = append(rest, el)
 		}
 	}
+	subtitle := "Install voice models with one click, or connect your own."
+	if p.task == engines.TaskTranscribe {
+		subtitle = "Install speech recognition models with one click, or connect a transcription API."
+	}
 	els := []giode.Element{
-		pagehead.Head(giode.Compact(), "Engines", "Install text-to-speech models with one click, or connect your own.", p.add),
+		pagehead.Head(giode.Compact(), "Engines", subtitle, p.add),
+		giode.Box(giode.Styles{Width: -1, MaxWidth: 420}, p.tabs.Element()),
 	}
 	if len(ready) > 0 {
 		els = append(els, group("Installed", ready))

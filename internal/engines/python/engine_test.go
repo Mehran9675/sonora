@@ -32,6 +32,11 @@ class Engine:
             w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000)
             w.writeframes(b"\x00\x00" * 160 * len(req["text"]))
         return {}
+    def transcribe(self, req):
+        with wave.open(req["audio"]) as w:
+            secs = w.getnframes() / w.getframerate()
+        return {"text": "heard %.2fs" % secs, "language": req.get("language") or "en",
+                "segments": [{"start": 0, "end": secs, "text": "heard"}]}
 `
 
 // TestWorkerRoundTrip runs the real worker.py against a fake adapter
@@ -82,6 +87,14 @@ func TestWorkerRoundTrip(t *testing.T) {
 	clip, err := wav.Read(out)
 	if err != nil || len(clip.Samples) != 800 {
 		t.Fatalf("clip: %v, %v", clip, err)
+	}
+
+	tr, err := e.Transcribe(ctx, engines.TranscribeRequest{Audio: out, Language: "de", Options: engines.Values{"model": "m1"}}, log)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tr.Text != "heard 0.05s" || tr.Language != "de" || len(tr.Segments) != 1 || tr.Segments[0].End != 0.05 {
+		t.Fatalf("transcript: %+v", tr)
 	}
 
 	if !e.Loaded() {

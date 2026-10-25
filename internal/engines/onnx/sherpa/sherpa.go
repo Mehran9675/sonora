@@ -26,7 +26,6 @@ import "C"
 
 import (
 	"errors"
-	"runtime"
 	"runtime/cgo"
 	"sync"
 	"unsafe"
@@ -58,12 +57,8 @@ func New(cfg Config) (*TTS, error) {
 			C.free(unsafe.Pointer(c))
 		}
 	}()
-	threads := cfg.Threads
-	if threads <= 0 {
-		threads = max(1, min(4, runtime.NumCPU()))
-	}
 	var c C.SherpaOnnxOfflineTtsConfig
-	c.model.num_threads = C.int32_t(threads)
+	c.model.num_threads = threads(cfg.Threads)
 	c.model.provider = str("cpu")
 	c.max_num_sentences = 1
 	switch cfg.Family {

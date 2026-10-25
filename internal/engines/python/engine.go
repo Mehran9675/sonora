@@ -5,6 +5,7 @@ package python
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"path/filepath"
 	"reflect"
 	"sync"
@@ -106,6 +107,23 @@ func (e *Engine) Synthesize(ctx context.Context, req engines.Request, log engine
 	}
 	_, err = w.call(ctx, "synthesize", nil, req)
 	return err
+}
+
+// Transcribe runs one speech-to-text request through the adapter.
+func (e *Engine) Transcribe(ctx context.Context, req engines.TranscribeRequest, log engines.Logger) (*engines.Transcript, error) {
+	w, err := e.ensure(ctx, engines.Subset(e.m.Options, req.Options, engines.ScopeLoad), log)
+	if err != nil {
+		return nil, err
+	}
+	raw, err := w.call(ctx, "transcribe", nil, req)
+	if err != nil {
+		return nil, err
+	}
+	var t engines.Transcript
+	if err := json.Unmarshal(raw, &t); err != nil {
+		return nil, errors.New("the engine returned an unreadable transcript")
+	}
+	return &t, nil
 }
 
 // Loaded reports whether a worker with a loaded model is running.

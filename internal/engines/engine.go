@@ -5,7 +5,9 @@ import "context"
 // Logger receives progress and log lines.
 type Logger func(line string)
 
-// Engine is a text-to-speech backend.
+// Engine is a speech backend. Speech-to-text engines (Task
+// TaskTranscribe) also implement Transcriber; their Synthesize fails
+// and Voices returns nothing.
 type Engine interface {
 	Manifest() *Manifest
 	// Installed reports whether the engine is ready to load.

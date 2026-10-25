@@ -24,6 +24,12 @@ type Settings struct {
 	Speed  map[string]float64        `json:"speed"`  // engine id → speed
 	Custom []*engines.Manifest       `json:"custom"` // user-added API/command engines
 	Draft  string                    `json:"draft"`  // the editor's text
+
+	// Transcription: the engine, the spoken language ("" detects it)
+	// and whether to translate into English.
+	TranscribeEngine string `json:"transcribe_engine,omitempty"`
+	Language         string `json:"language,omitempty"`
+	Translate        bool   `json:"translate,omitempty"`
 }
 
 // Store loads and saves Settings. Methods are safe from any goroutine.

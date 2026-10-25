@@ -6,9 +6,11 @@ import (
 	"github.com/mehran9675/giode"
 
 	"github.com/mehran9675/sonora/internal/audio/playback"
+	"github.com/mehran9675/sonora/internal/engines"
 	"github.com/mehran9675/sonora/internal/library"
 	"github.com/mehran9675/sonora/internal/manager"
 	"github.com/mehran9675/sonora/internal/settings"
+	"github.com/mehran9675/sonora/internal/transcripts"
 )
 
 // Ctx is passed to every page and component that needs app services.
@@ -17,15 +19,25 @@ type Ctx struct {
 	Manager  *manager.Manager
 	Settings *settings.Store
 	Library  *library.Library
-	Player   *playback.Player
-	Toasts   *giode.ToasterElement
-	Now      *NowPlaying
+	// Transcripts holds every transcription.
+	Transcripts *transcripts.Store
+	Player      *playback.Player
+	Toasts      *giode.ToasterElement
+	Now         *NowPlaying
 
 	page Page
 	// UseEngine selects an engine in the Studio (set by the Studio).
 	UseEngine func(id string)
 	// Reuse loads a library entry's text and settings into the Studio.
 	Reuse func(e library.Entry)
+	// UseTranscriber selects a speech-to-text engine on the Transcribe
+	// page (set by that page).
+	UseTranscriber func(id string)
+	// Speak puts text into the Studio's script (set by the Studio).
+	Speak func(text string)
+	// ShowEngines opens the Engines page on the voice or transcription
+	// tab (set by that page).
+	ShowEngines func(task engines.Task)
 }
 
 // Page returns the visible page.

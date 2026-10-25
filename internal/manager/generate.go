@@ -35,6 +35,10 @@ func (m *Manager) Generate(rt *Runtime, in Input, done func(library.Entry, error
 		return
 	}
 	man := rt.Manifest()
+	if man.Transcribes() {
+		done(library.Entry{}, errors.New(man.Name+" turns speech into text; pick a voice engine"))
+		return
+	}
 	id, out := m.library.NewFile()
 	req := engines.Request{
 		Text:          strings.TrimSpace(in.Text),
