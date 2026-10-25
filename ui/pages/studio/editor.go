@@ -10,6 +10,7 @@ import (
 
 	"github.com/mehran9675/giode"
 	"github.com/mehran9675/giode/components/input"
+	"github.com/mehran9675/giode/elements"
 	"github.com/mehran9675/giode/styles/properties"
 
 	"github.com/mehran9675/sonora/internal/manager"
@@ -20,13 +21,21 @@ import (
 	"github.com/mehran9675/sonora/ui/theme"
 )
 
+// expandedMargin is the room, in dp, an expanded script card leaves for
+// the tab bar, the title bar and page padding.
+const expandedMargin = 150
+
 // editor is the script card.
 type editor struct {
 	in     *input.Input
 	open   *giode.ButtonElement
 	sample *giode.ButtonElement
 	clear  *giode.ButtonElement
+	expand *giode.ButtonElement
 	next   int
+	// expanded grows the script card to the screen's height in the
+	// phone layout, where it's otherwise a fixed size.
+	expanded bool
 
 	// draft mirrors the text for OnBackground, which Android calls on
 	// its own thread, where the editor must not be touched.
@@ -54,6 +63,8 @@ func newEditor(c *core.Ctx) *editor {
 	})
 	e.clear = giode.Button("Clear", ghost).Variant(giode.VariantGhost).
 		Icon(icons.Icon(icons.Trash, 15, "")).OnClick(func() { e.in.ChangeText("") })
+	e.expand = giode.Button("", ghost).Variant(giode.VariantGhost).
+		Icon(icons.Icon(icons.Expand, 15, "")).OnClick(func() { e.expanded = !e.expanded })
 	e.open = giode.Button("Open file", ghost).Variant(giode.VariantGhost).
 		Icon(icons.Icon(icons.FileText, 15, "")).OnClick(func() { e.openFile(c) })
 	return e
@@ -114,8 +125,19 @@ func (e *editor) element(rt *manager.Runtime, height int) giode.Element {
 	}
 	card := theme.Card()
 	card.FlexGrow, card.Width, card.Gap = 1, -1, 12
+	header := []giode.Element{giode.Box(giode.Styles{FlexGrow: 1}, giode.Text("Script", theme.Heading)), e.open, e.sample, e.clear}
 	if height > 0 {
+		if e.expanded {
+			// Fill the screen below the tab bar and page padding; Back
+			// shrinks it again.
+			giode.HandleBack(func() { e.expanded = false })
+			height = max(height, int(float32(elements.WindowSize().Y)/giode.DisplayScale())-expandedMargin)
+			e.expand.Icon(icons.Icon(icons.Collapse, 15, ""))
+		} else {
+			e.expand.Icon(icons.Icon(icons.Expand, 15, ""))
+		}
 		card.FlexGrow, card.Height = 0, properties.Height(height)
+		header = append(header, e.expand)
 	}
 	card.Padding = giode.Inset{Top: 16, Left: 24, Right: 16, Bottom: 16}
 	// A phone has room for the buttons' icons only.
@@ -130,10 +152,7 @@ func (e *editor) element(rt *manager.Runtime, height int) giode.Element {
 		e.clear.Label("Clear")
 	}
 	return giode.Stack(card,
-		giode.Row(giode.Styles{Width: -1, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap, Gap: 4},
-			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text("Script", theme.Heading)),
-			e.open, e.sample, e.clear,
-		),
+		giode.Row(giode.Styles{Width: -1, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap, Gap: 4}, header...),
 		giode.Box(giode.Styles{Width: -1, FlexGrow: 1, Padding: giode.Inset{Right: 8}, Overflow: giode.OverflowHidden}, e.in),
 		giode.Divider(giode.Styles{Color: "theme.border"}),
 		giode.Row(giode.Styles{Width: -1, Align: giode.AlignCenter, Gap: 8, Wrap: giode.WrapNoWrap}, footer...),
