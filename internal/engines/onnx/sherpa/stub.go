@@ -21,6 +21,6 @@ func (t *TTS) SampleRate() int  { return 0 }
 func (t *TTS) NumSpeakers() int { return 0 }
 func (t *TTS) Close()           {}
 
-func (t *TTS) Generate(string, int, float32, Progress) ([]float32, int, error) {
+func (t *TTS) Generate(string, Params, Progress) ([]float32, int, error) {
 	return nil, 0, errUnavailable
 }

@@ -12,11 +12,15 @@ Linux and Android. The layout adapts to the window: narrow windows and phones ge
 single scrolling column with a bottom tab bar.
 
 **On Android** models run on the phone itself, offline: install **Kitten TTS Lite**,
-**Kokoro** or **Piper** from the Engines page and Sonora downloads the model (30–130 MB)
-and runs it with [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx). API servers work
-too — run a server such as [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) on
-your computer, or use a cloud TTS API, and add it under *Engines → Add engine*. The Python
-engines and voice cloning are desktop features. Clips are saved through the system file
+**Kokoro**, **Piper** or **ZipVoice** from the Engines page and Sonora downloads the model
+(30 MB for the smallest, about 500 MB for the largest) and runs it with
+[sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx). ZipVoice clones a voice from a
+recording right on the phone; Kokoro has a full-precision model and Piper high-quality
+voices for phones with memory to spare. API servers work too — run a server such as
+[Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) on your computer, or use a
+cloud TTS API, and add it under *Engines → Add engine*. The Python engines (IndexTTS,
+Chatterbox, Kitten TTS 2…) are desktop only: they need PyTorch, which doesn't run on
+Android. Clips are saved through the system file
 picker or sent to other apps with the share sheet; Back closes dialogs and returns to the
 Studio; your script is kept when you switch away.
 
@@ -33,7 +37,7 @@ Studio; your script is kept when you switch away.
   shows progress and logs while it installs. Nothing to configure.
 - **Studio.** A large script editor, searchable voice picker, speed control and every
   engine setting rendered as proper controls.
-- **Voice cloning.** On engines that can clone (Kitten TTS 2, Audio8, Chatterbox, Coqui),
+- **Voice cloning.** On engines that can clone (Kitten TTS 2, Audio8, IndexTTS, Chatterbox, Coqui, ZipVoice),
   switch to *Clone a voice* and record yourself right in the app — live level meter,
   auto-stop at 30 s, silence trimmed — or pick an audio file.
 - **Memory control.** A model stays loaded between generations for speed; **Eject** stops
@@ -52,6 +56,7 @@ Studio; your script is kept when you switch away.
 | --- | --- | --- | --- |
 | **Kitten TTS 2** (KittenML) | 47 voices, 20 languages, emotion tags | ✓ | CPU · GPU · Apple silicon |
 | **Audio8 TTS** (Audio8) | 0.6B multilingual, 11 languages | ✓ | CPU · GPU |
+| **IndexTTS** (Bilibili) | Expressive zero-shot cloning, emotion control; 2.5 speaks 5 languages | ✓ | GPU recommended |
 | **Kitten TTS Lite** | 15–80M models, tiny and fast | – | CPU |
 | **Kokoro** | Natural voices in 8 languages, 82M | – | CPU · GPU |
 | **Chatterbox** (Resemble AI) | Strong cloning, emotion control | ✓ | GPU recommended |
@@ -60,6 +65,7 @@ Studio; your script is kept when you switch away.
 | **Hugging Face models** | Any Transformers TTS model by ID (MMS, Bark, VITS…) | – | CPU · GPU |
 | **System voices** | Your OS's built-in voices, offline, instant | – | – |
 | **Kitten TTS Lite · Kokoro · Piper** *(on device)* | The same models running inside the app, no Python | – | Android |
+| **ZipVoice** *(on device)* | Cloning from a recording and its transcript, English and Chinese | ✓ | Android |
 | **API server** *(add your own)* | OpenAI, Kokoro-FastAPI, LocalAI, Audio8's server… | – | remote |
 | **Command line** *(add your own)* | espeak-ng, piper CLI, `say`, anything that writes WAV | – | local |
 

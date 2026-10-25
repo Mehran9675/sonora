@@ -39,7 +39,7 @@ on the next launch. User plugins live in `<data>/plugins`.
 
 ## On-device engines
 
-`internal/engines/onnx` runs Kitten, Kokoro and Piper models inside the app through
+`internal/engines/onnx` runs Kitten, Kokoro, Piper and ZipVoice models inside the app through
 [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx)'s C API (`onnx/sherpa`, cgo). It is
 compiled in only with the `sherpa` build tag, which the Android build uses; without it the
 package reports `Available = false` and the engines are hidden. `tools/fetchsherpa`
@@ -47,8 +47,10 @@ downloads the prebuilt libraries into `third_party/sherpa-onnx/`.
 
 Models are sherpa-onnx's self-contained packages (model, tokens, espeak-ng data, voices),
 downloaded on first use to `<data>/models/ondevice/<package>/`. Each Piper voice is its own
-package; Kitten's model size is a load-scope option. The model stays in memory until
-Eject, and Stop cancels generation through sherpa-onnx's progress callback.
+package; Kitten, Kokoro and ZipVoice offer their packages through a load-scope "model"
+option. ZipVoice also needs the Vocos vocoder, downloaded once next to the packages, and
+gets the reference recording (WAV) and its transcript per request. The model stays in
+memory until Eject, and Stop cancels generation through sherpa-onnx's progress callback.
 
 ## UI
 

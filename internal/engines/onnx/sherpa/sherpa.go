@@ -16,13 +16,9 @@ package sherpa
 extern int32_t sonoraProgress(float *samples, int32_t n, float p, void *arg);
 
 static const SherpaOnnxGeneratedAudio *generate(const SherpaOnnxOfflineTts *tts,
-		const char *text, int32_t sid, float speed, uintptr_t handle) {
-	SherpaOnnxGenerationConfig cfg;
-	memset(&cfg, 0, sizeof(cfg));
-	cfg.sid = sid;
-	cfg.speed = speed;
-	cfg.silence_scale = 0.2f;
-	return SherpaOnnxOfflineTtsGenerateWithConfig(tts, text, &cfg,
+		const char *text, SherpaOnnxGenerationConfig *cfg, uintptr_t handle) {
+	cfg->silence_scale = 0.2f;
+	return SherpaOnnxOfflineTtsGenerateWithConfig(tts, text, cfg,
 		(SherpaOnnxGeneratedAudioProgressCallbackWithArg)sonoraProgress, (void *)handle);
 }
 */
@@ -92,6 +88,17 @@ func New(cfg Config) (*TTS, error) {
 		c.model.kokoro.lexicon = str(cfg.Lexicon)
 		c.model.kokoro.dict_dir = str(cfg.DictDir)
 		c.model.kokoro.length_scale = 1
+	case ZipVoice:
+		c.model.zipvoice.tokens = str(cfg.Tokens)
+		c.model.zipvoice.encoder = str(cfg.Encoder)
+		c.model.zipvoice.decoder = str(cfg.Decoder)
+		c.model.zipvoice.vocoder = str(cfg.Vocoder)
+		c.model.zipvoice.data_dir = str(cfg.DataDir)
+		c.model.zipvoice.lexicon = str(cfg.Lexicon)
+		c.model.zipvoice.feat_scale = 0.1
+		c.model.zipvoice.t_shift = 0.5
+		c.model.zipvoice.target_rms = 0.1
+		c.model.zipvoice.guidance_scale = 1
 	default:
 		return nil, errors.New("unknown model family " + string(cfg.Family))
 	}
@@ -111,8 +118,8 @@ func (t *TTS) NumSpeakers() int { return int(C.SherpaOnnxOfflineTtsNumSpeakers(t
 // ErrStopped is returned when progress asked to stop.
 var ErrStopped = errors.New("generation stopped")
 
-// Generate speaks text with speaker sid at speed, reporting progress.
-func (t *TTS) Generate(text string, sid int, speed float32, progress Progress) ([]float32, int, error) {
+// Generate speaks text with the settings in p, reporting progress.
+func (t *TTS) Generate(text string, p Params, progress Progress) ([]float32, int, error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if t.ptr == nil {
@@ -120,10 +127,29 @@ func (t *TTS) Generate(text string, sid int, speed float32, progress Progress) (
 	}
 	ct := C.CString(text)
 	defer C.free(unsafe.Pointer(ct))
+	var cfg C.SherpaOnnxGenerationConfig
+	cfg.sid = C.int32_t(p.Speaker)
+	cfg.speed = C.float(p.Speed)
+	cfg.num_steps = C.int32_t(p.Steps)
+	if len(p.Reference) > 0 {
+		// Copied to C memory: cgo forbids passing Go pointers inside a
+		// struct.
+		ref := (*C.float)(C.malloc(C.size_t(len(p.Reference)) * C.size_t(unsafe.Sizeof(C.float(0)))))
+		defer C.free(unsafe.Pointer(ref))
+		copy(unsafe.Slice((*float32)(unsafe.Pointer(ref)), len(p.Reference)), p.Reference)
+		cfg.reference_audio = ref
+		cfg.reference_audio_len = C.int32_t(len(p.Reference))
+		cfg.reference_sample_rate = C.int32_t(p.ReferenceRate)
+	}
+	if p.ReferenceText != "" {
+		rt := C.CString(p.ReferenceText)
+		defer C.free(unsafe.Pointer(rt))
+		cfg.reference_text = rt
+	}
 	state := &genState{progress: progress}
 	h := cgo.NewHandle(state)
 	defer h.Delete()
-	audio := C.generate(t.ptr, ct, C.int32_t(sid), C.float(speed), C.uintptr_t(h))
+	audio := C.generate(t.ptr, ct, &cfg, C.uintptr_t(h))
 	if state.stopped {
 		if audio != nil {
 			C.SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio)

@@ -12,8 +12,8 @@ import (
 
 // order puts the headline engines first on the Engines page.
 var order = map[string]int{
-	"kitten-tts-2": 1, "audio8": 2, "kitten-tts-lite": 3, "kokoro": 4,
-	"chatterbox": 5, "piper": 6, "coqui": 7, "transformers": 8,
+	"kitten-tts-2": 1, "audio8": 2, "indextts": 3, "kitten-tts-lite": 4, "kokoro": 5,
+	"chatterbox": 6, "piper": 7, "coqui": 8, "transformers": 9,
 }
 
 // LoadDir reads every <dir>/<id>/engine.json. Broken manifests are

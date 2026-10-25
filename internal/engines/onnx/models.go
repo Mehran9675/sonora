@@ -1,6 +1,6 @@
 // Package onnx runs text-to-speech models inside the app with
-// sherpa-onnx: downloaded Kitten, Kokoro and Piper models on the CPU,
-// with no Python. It's what Android uses; desktop builds include it
+// sherpa-onnx: downloaded Kitten, Kokoro, Piper and ZipVoice models on
+// the CPU, with no Python. It's what Android uses; desktop builds include it
 // when built with the "sherpa" tag.
 package onnx
 
@@ -8,6 +8,9 @@ import "github.com/mehran9675/sonora/internal/engines/onnx/sherpa"
 
 // release is where sherpa-onnx publishes its ready-to-run model packages.
 const release = "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/"
+
+// vocos is the vocoder ZipVoice models need, a separate download.
+const vocos = "https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx"
 
 // model is one downloadable package.
 type model struct {
@@ -19,6 +22,8 @@ type model struct {
 	Lexicon string
 	// Dict is the dictionary folder inside the package (Kokoro).
 	Dict string
+	// Steps is the number of flow-matching steps (ZipVoice).
+	Steps int
 }
 
 func (m model) url() string { return release + m.ID + ".tar.bz2" }
@@ -29,8 +34,23 @@ var (
 		{ID: "kitten-micro-en-v0_8", Label: "Micro · 40M", Size: "44 MB", Family: sherpa.Kitten},
 		{ID: "kitten-mini-en-v0_8", Label: "Mini · 80M", Size: "68 MB", Family: sherpa.Kitten},
 	}
-	kokoroModel = model{ID: "kokoro-int8-multi-lang-v1_0", Label: "Kokoro v1.0", Size: "132 MB",
-		Family: sherpa.Kokoro, Lexicon: "lexicon-us-en.txt", Dict: "dict"}
+	// kokoroModels share one voice list; the full-precision model
+	// sounds a little cleaner and needs about 1 GB of free memory.
+	kokoroModels = []model{
+		{ID: "kokoro-int8-multi-lang-v1_0", Label: "Compact · int8", Size: "132 MB",
+			Family: sherpa.Kokoro, Lexicon: "lexicon-us-en.txt", Dict: "dict"},
+		{ID: "kokoro-multi-lang-v1_0", Label: "Full quality · fp32", Size: "333 MB",
+			Family: sherpa.Kokoro, Lexicon: "lexicon-us-en.txt", Dict: "dict"},
+	}
+	// zipvoiceModels clone a voice from a recording and its transcript.
+	// Both are the distilled model, which needs only 4 steps; sizes
+	// include the shared 52 MB vocoder.
+	zipvoiceModels = []model{
+		{ID: "sherpa-onnx-zipvoice-distill-int8-zh-en-emilia", Label: "Compact · int8", Size: "156 MB",
+			Family: sherpa.ZipVoice, Lexicon: "lexicon.txt", Steps: 4},
+		{ID: "sherpa-onnx-zipvoice-distill-fp32-zh-en-emilia", Label: "Full quality · fp32", Size: "508 MB",
+			Family: sherpa.ZipVoice, Lexicon: "lexicon.txt", Steps: 4},
+	}
 )
 
 // piperVoices are the Piper voices sherpa-onnx packages, one download
@@ -39,11 +59,16 @@ var piperVoices = []struct {
 	ID, Name, Language, Quality string
 }{
 	{"en_US-lessac-medium", "Lessac", "English (US)", "Medium"},
+	{"en_US-lessac-high", "Lessac", "English (US)", "High"},
 	{"en_US-amy-low", "Amy", "English (US)", "Low"},
 	{"en_US-ryan-medium", "Ryan", "English (US)", "Medium"},
+	{"en_US-ryan-high", "Ryan", "English (US)", "High"},
+	{"en_US-ljspeech-high", "LJSpeech", "English (US)", "High"},
 	{"en_GB-alba-medium", "Alba", "English (UK)", "Medium"},
+	{"en_GB-cori-high", "Cori", "English (UK)", "High"},
 	{"en_GB-northern_english_male-medium", "Northern English Male", "English (UK)", "Medium"},
 	{"de_DE-thorsten-medium", "Thorsten", "German", "Medium"},
+	{"de_DE-thorsten-high", "Thorsten", "German", "High"},
 	{"fr_FR-siwis-medium", "Siwis", "French", "Medium"},
 	{"es_ES-davefx-medium", "Davefx", "Spanish", "Medium"},
 	{"it_IT-paola-medium", "Paola", "Italian", "Medium"},
@@ -58,8 +83,22 @@ var piperVoices = []struct {
 	{"zh_CN-huayan-medium", "Huayan", "Chinese", "Medium"},
 }
 
+// piperSize is the download size of a voice by quality.
+func piperSize(quality string) string {
+	if quality == "High" {
+		return "110 MB"
+	}
+	return "67 MB"
+}
+
 func piperModel(voice string) model {
-	return model{ID: "vits-piper-" + voice, Label: voice, Size: "67 MB", Family: sherpa.VITS}
+	quality := "Medium"
+	for _, v := range piperVoices {
+		if v.ID == voice {
+			quality = v.Quality
+		}
+	}
+	return model{ID: "vits-piper-" + voice, Label: voice, Size: piperSize(quality), Family: sherpa.VITS}
 }
 
 // kittenVoices are speaker ids 0-7 in sherpa-onnx's voices.bin

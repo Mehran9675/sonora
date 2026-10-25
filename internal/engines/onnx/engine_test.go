@@ -20,6 +20,9 @@ func TestEngines(t *testing.T) {
 	if root == "" {
 		t.Skip("set SONORA_ONDEVICE_TEST to a download folder")
 	}
+	// Cloning engines copy the voice of the clip made before them.
+	const text = "Hello from Sonora, running on this device."
+	var reference string
 	for _, e := range All(root) {
 		e := e.(*Engine)
 		t.Run(e.m.ID, func(t *testing.T) {
@@ -30,9 +33,15 @@ func TestEngines(t *testing.T) {
 			if !e.Installed() {
 				t.Fatal("not installed after Install")
 			}
-			out := filepath.Join(t.TempDir(), "out.wav")
-			req := engines.Request{Text: "Hello from Sonora, running on this device.", Voice: e.m.DefaultVoice,
+			out := filepath.Join(root, e.m.ID+".wav")
+			req := engines.Request{Text: text, Voice: e.m.DefaultVoice,
 				Speed: 1, Options: engines.Resolve(e.m.Options, nil), Output: out}
+			if e.m.Clone == engines.CloneRequired {
+				if reference == "" {
+					t.Skip("no clip to clone")
+				}
+				req.Reference, req.ReferenceText = reference, text
+			}
 			if err := e.Synthesize(context.Background(), req, func(string) {}); err != nil {
 				t.Fatal(err)
 			}
@@ -45,6 +54,9 @@ func TestEngines(t *testing.T) {
 			}
 			if !e.Loaded() {
 				t.Fatal("model not loaded after Synthesize")
+			}
+			if e.m.Clone == engines.CloneNone {
+				reference = out
 			}
 			ctx, cancel := context.WithCancel(context.Background())
 			cancel()
