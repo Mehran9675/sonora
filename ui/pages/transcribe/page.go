@@ -47,7 +47,7 @@ func New(c *core.Ctx) *Page {
 	p.result = newResult(p)
 	p.history = newHistory(p)
 	p.player = playerbar.New(c)
-	bar := giode.Styles{ScrollBar: giode.ScrollBar{ThumbColor: "theme.text/0.15", Width: 5}}
+	bar := theme.Scrolling(5)
 	p.left = giode.Scroll(p.leftColumn, bar)
 	p.column = giode.Scroll(p.compactColumn, bar)
 	p.addEngine = giode.Button("Open Engines", giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
@@ -117,11 +117,14 @@ func (p *Page) start() {
 	s := c.Settings.Get()
 	in := manager.TranscribeInput{Source: p.source, Title: p.sourceName,
 		Language: language(rt.Manifest(), s.Language), Translate: s.Translate}
+	awake := c.StayAwake("Transcribing")
 	c.Manager.Transcribe(rt, in, func(e transcripts.Entry, err error) {
+		awake()
 		if err != nil {
 			c.Error(err)
 			return
 		}
+		c.NotifyIfAway("Transcript ready", e.Title)
 		p.dropSource()
 		p.result.show(e)
 	})

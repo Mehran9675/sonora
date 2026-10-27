@@ -39,7 +39,7 @@ func New(c *core.Ctx) *Page {
 	p.engines = newEnginePicker(c, p.selectEngine)
 	p.player = playerbar.New(c)
 	p.panel = newVoicePanel(p)
-	p.column = giode.Scroll(p.compactColumn, giode.Styles{ScrollBar: giode.ScrollBar{ThumbColor: "theme.text/0.15", Width: 4}})
+	p.column = giode.Scroll(p.compactColumn, theme.Scrolling(4))
 	p.addEngine = giode.Button("Add an engine", giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
 		Padding: giode.SymmetricInset(16, 9), BorderRadius: theme.RadiusSm + 2}).
 		Icon(icons.Icon(icons.Plus, 15, "")).OnClick(func() { c.Go(core.PageEngines) })
@@ -124,6 +124,11 @@ func (p *Page) Element() giode.Element {
 	)
 }
 
+// compactEditorHeight is the script card's height in the phone layout,
+// before it's expanded: room for the header's 48dp touch targets, a few
+// lines of text and the stats.
+const compactEditorHeight = 300
+
 // compactColumn stacks the same parts in one scrolling column for
 // narrow screens: script, voice settings with Generate, player.
 func (p *Page) compactColumn() giode.Element {
@@ -133,7 +138,7 @@ func (p *Page) compactColumn() giode.Element {
 	}
 	g := core.Gutter()
 	return giode.Stack(giode.Styles{Width: -1, Gap: 14, Padding: giode.UniformInset(g)},
-		p.editor.element(rt, 240),
+		p.editor.element(rt, compactEditorHeight),
 		p.panel.compactElement(rt),
 		p.player.Element(),
 	)

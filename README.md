@@ -23,7 +23,8 @@ voices for phones with memory to spare; Whisper goes up to Large v3 Turbo. API s
 work too — run a server such as [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI)
 on your computer, or use a cloud speech or transcription API, and add it under
 *Engines → Add engine*. The Python engines (IndexTTS, Chatterbox, faster-whisper…) are
-desktop only: they need PyTorch or CTranslate2, which don't run on Android. Phones read
+desktop only: they need PyTorch or CTranslate2, which don't run on Android. Recording
+works on phones too (Sonora asks for the microphone the first time). Phones read
 WAV, MP3, FLAC and Ogg Vorbis audio; other formats (M4A, Opus, video) need ffmpeg, which
 desktops can use when it's installed. Clips are saved through the system file
 picker or sent to other apps with the share sheet; Back closes dialogs and returns to the
@@ -58,7 +59,7 @@ Studio; your script is kept when you switch away.
   or load a clip's settings back into the Studio.
 - **Any model.** Built-in engines, Python plugins, API servers and command-line tools all
   appear in the same list and work the same way.
-- **Modern design.** Dark and light themes, a frameless window with a custom title bar,
+- **Modern design.** Dark and light themes (or follow the system), a frameless window with a custom title bar,
   the Inter typeface, a violet-to-cyan accent.
 
 ## Engines
@@ -119,9 +120,20 @@ sudo apt install gcc pkg-config libwayland-dev libx11-dev libx11-xcb-dev \
   libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev \
   libxcursor-dev libvulkan-dev libasound2-dev
 
-go build -o sonora ./cmd/sonora                              # Linux / macOS
-go build -ldflags "-H windowsgui" -o sonora.exe ./cmd/sonora  # Windows
+Builds use the [giode CLI](https://github.com/Mehran9675/giode-cli), which reads
+[`giode.toml`](giode.toml):
+
+```sh
+go install github.com/mehran9675/giode-cli/cmd/giode@latest
+giode doctor          # what's installed and what each target still needs
+giode run             # run on this computer
+giode build linux     # dist/linux: the executable, a .desktop entry and the icon
 ```
+
+On Windows and macOS, plain `go build` works too
+(`go build -ldflags "-H windowsgui" -o sonora.exe ./cmd/sonora` on Windows). The CLI's
+`windows` target isn't used: Sonora embeds its own Windows manifest and icon
+(`cmd/sonora/winres`), with per-monitor DPI awareness, which would clash with the CLI's.
 
 ## Using it
 
@@ -165,6 +177,9 @@ python/
 assets/                fonts and the app icon
 tools/makeicon/        draws the app icon
 tools/fetchsherpa/     downloads the sherpa-onnx libraries for on-device engines
+tools/packapk/         adds those libraries to the APK the giode CLI builds
+tools/setversion.sh    writes a release's version into giode.toml
+giode.toml             app ID, version, icon and Android manifest entries for the giode CLI
 docs/                  architecture, plugin guide, screenshots
 ```
 
@@ -187,17 +202,23 @@ keytool -genkey -keystore sonora.keystore -alias sonora -keyalg RSA -keysize 204
 base64 -w0 sonora.keystore   # paste into the ANDROID_KEYSTORE secret
 ```
 
-To build the APK locally, install the Android SDK and NDK and run:
+To build the APK locally, install the Android SDK and NDK (`giode doctor` checks them)
+and run:
 
 ```sh
-go run ./tools/fetchsherpa android     # sherpa-onnx libraries into third_party/
-go run gioui.org/cmd/gogio@v0.10.3 -target android -tags sherpa -appid com.sonora.app \
-  -icon assets/icon/icon.png -o sonora.apk ./cmd/sonora
+go run ./tools/fetchsherpa android                # sherpa-onnx libraries into third_party/
+giode build android                               # dist/android/Sonora.apk
+go run ./tools/packapk dist/android/Sonora.apk    # add the libraries, align, sign
+adb install -r dist/android/Sonora.apk
 ```
 
-gogio packs only its own library, so then add `third_party/sherpa-onnx/android/<abi>/*.so`
-to the APK under `lib/<abi>/`, zipalign it and sign it again; the release workflow's
-*Add native libraries* step does exactly this.
+The CLI adds what `giode.toml` asks for to the manifest (the microphone, notifications and
+the foreground service that keeps long jobs running), but packs only Sonora's own
+`libgio.so`. That library links against sherpa-onnx, so the APK doesn't start until
+`tools/packapk` adds the sherpa-onnx libraries and signs it again (with the debug key, or
+`-ks` and `-pass-env` for a release key). For the same reason, `giode run android` can't
+be used as is. Android builds always include the on-device engines; on desktops they need
+the `sherpa` build tag.
 
 The on-device engines can also be built into the Linux desktop app for testing:
 
@@ -211,7 +232,7 @@ LD_LIBRARY_PATH=third_party/sherpa-onnx/linux-x64 ./sonora
 
 ```sh
 go test ./...          # unit + integration tests (the worker test uses python3 if present)
-GIODE_MCP=1 ./sonora   # exposes the UI over MCP (giode) for automated UI testing
+giode run -mcp         # exposes the UI over MCP (giode) for automated UI testing
                        # its window tool resizes to a phone, e.g. {"action":"resize","width":400,"height":840}
 SONORA_HOME=/tmp/s ./sonora   # use a throwaway data folder
 ```

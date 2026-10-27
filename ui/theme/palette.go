@@ -39,10 +39,17 @@ var Light = giode.Palette{
 	Info:       "#2563eb",
 }
 
-// Apply installs both palettes and selects mode ("dark" or "light").
+// Apply installs both palettes and selects mode: "dark", "light", or
+// "system" to follow the platform's appearance (dark where it can't be
+// read).
 func Apply(mode string) {
 	giode.SetPalette(giode.ModeDark, Dark)
 	giode.SetPalette(giode.ModeLight, Light)
+	if mode == "system" {
+		if dark, err := giode.SystemDarkMode(); err == nil && !dark {
+			mode = "light"
+		}
+	}
 	if mode == "light" {
 		giode.SetMode(giode.ModeLight)
 	} else {

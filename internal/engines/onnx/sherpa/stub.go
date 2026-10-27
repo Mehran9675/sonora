@@ -1,4 +1,4 @@
-//go:build !sherpa
+//go:build !sherpa && !android
 
 package sherpa
 

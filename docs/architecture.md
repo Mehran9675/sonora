@@ -43,7 +43,7 @@ on the next launch. User plugins live in `<data>/plugins`.
 
 `internal/engines/onnx` runs Kitten, Kokoro, Piper and ZipVoice models inside the app through
 [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx)'s C API (`onnx/sherpa`, cgo). It is
-compiled in only with the `sherpa` build tag, which the Android build uses; without it the
+compiled in on Android, and on desktops with the `sherpa` build tag; without it the
 package reports `Available = false` and the engines are hidden. `tools/fetchsherpa`
 downloads the prebuilt libraries into `third_party/sherpa-onnx/`.
 

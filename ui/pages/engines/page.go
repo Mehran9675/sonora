@@ -39,7 +39,7 @@ func New(c *core.Ctx) *Page {
 	p.add = giode.Button("Add engine", giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
 		Padding: giode.SymmetricInset(14, 9), BorderRadius: theme.RadiusSm + 2}).
 		Icon(icons.Icon(icons.Plus, 16, "")).OnClick(p.adder.show)
-	p.scroll = giode.Scroll(p.content, giode.Styles{ScrollBar: giode.ScrollBar{ThumbColor: "theme.text/0.15", Width: 6}})
+	p.scroll = giode.Scroll(p.content, theme.Scrolling(6))
 	p.tabs = segmented.New([]segmented.Option{
 		{Value: string(engines.TaskSpeak), Label: "Text to speech"},
 		{Value: string(engines.TaskTranscribe), Label: "Speech to text"},

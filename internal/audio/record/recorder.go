@@ -1,5 +1,5 @@
 // Package record captures audio from the default microphone, for
-// recording a voice to clone.
+// recording a voice to clone or speech to transcribe.
 package record
 
 import (

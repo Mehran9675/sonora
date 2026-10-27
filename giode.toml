@@ -1,0 +1,44 @@
+# Build settings for the giode CLI (https://github.com/mehran9675/giode-cli):
+#   giode run                 run on this computer
+#   giode run android         build, install and run on a connected phone
+#   giode build android       dist/android/Sonora.apk (see README for the
+#                             sherpa-onnx libraries the APK also needs)
+#   giode build linux windows windows-installer
+# The release workflow sets version and build from the release tag.
+
+[app]
+name = "Sonora"
+id = "com.sonora.app"
+version = "1.0.3"
+build = 1
+icon = "assets/icon/icon.png"
+package = "./cmd/sonora"
+publisher = "Sonora"
+description = "A speech studio: text to speech and speech to text."
+website = "https://github.com/Mehran9675/sonora"
+ldflags = "-X github.com/mehran9675/sonora/ui/pages/settings.Version=1.0.3"
+
+[android]
+min_sdk = 26
+arch = ["arm64", "arm", "amd64"]
+# Recording voices and speech; the foreground service keeps generation,
+# transcription and model downloads running behind other apps
+# (App.KeepAlive); notifications say when they finish.
+permissions = ["microphone"]
+keep_alive = true
+notifications = true
+
+[ios.usage]
+microphone = "Sonora records your voice to clone it or to transcribe what you say."
+
+[macos.usage]
+microphone = "Sonora records your voice to clone it or to transcribe what you say."
+
+[windows]
+arch = "amd64"
+
+[windows.installer]
+desktop_shortcut = true
+
+[linux]
+categories = ["AudioVideo", "Audio"]

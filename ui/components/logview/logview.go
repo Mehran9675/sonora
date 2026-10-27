@@ -27,7 +27,7 @@ func New(lines func() []string) *View {
 			rows = append(rows, giode.Text(l, theme.MonoText))
 		}
 		return giode.Stack(giode.Styles{Width: -1, Gap: 2, Padding: giode.UniformInset(12)}, rows...)
-	}, giode.Styles{ScrollBar: giode.ScrollBar{ThumbColor: "theme.text/0.2", Width: 6}})
+	}, theme.Scrolling(6))
 	return v
 }
 

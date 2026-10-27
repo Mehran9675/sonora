@@ -43,15 +43,26 @@ func (p *Page) toggleGenerate() {
 		Reference:     reference,
 		ReferenceText: f.transcript.Text(),
 	}
+	awake := c.StayAwake("Generating speech")
 	c.Manager.Generate(rt, in, func(e library.Entry, err error) {
+		awake()
 		if err != nil {
 			c.Error(err)
 			return
 		}
+		c.NotifyIfAway("Speech is ready", firstWords(e.Text))
 		c.Open(c.Library.Path(e), e.VoiceName, e.EngineName, true)
 		// Engines that report voices once loaded have them now.
 		if len(rt.Voices) == 0 {
 			rt.VoicesLoaded = false
 		}
 	})
+}
+
+// firstWords shortens text for a notification.
+func firstWords(text string) string {
+	if r := []rune(strings.TrimSpace(text)); len(r) > 80 {
+		return string(r[:80]) + "…"
+	}
+	return strings.TrimSpace(text)
 }

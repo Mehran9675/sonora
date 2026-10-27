@@ -4,3 +4,6 @@ __pycache__/
 /sonora.exe
 /dist/
 third_party/
+
+# Left behind by the giode CLI's windows target, which Sonora does not use
+/cmd/sonora/Sonora_windows_*.syso
