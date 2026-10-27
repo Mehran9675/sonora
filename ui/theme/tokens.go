@@ -65,3 +65,12 @@ func Field() giode.Styles {
 		FontSize:     14,
 	}
 }
+
+// Scrolling returns the style of a scroll area whose scrollbar is width
+// dp wide. Phones (the "compact" layout) show none, as their own apps
+// don't; the content still scrolls by touch.
+func Scrolling(width int) giode.Styles {
+	return giode.Styles{ScrollBar: giode.ScrollBar{
+		ThumbColor: "theme.text/0.15", Width: width, HiddenOn: "compact",
+	}}
+}

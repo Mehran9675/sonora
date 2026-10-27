@@ -76,7 +76,7 @@ func New(c *core.Ctx, applyTheme func(mode string)) *Page {
 			c.Success("Python toolchain ready")
 		})
 	})
-	p.scroll = giode.Scroll(p.content, giode.Styles{ScrollBar: giode.ScrollBar{ThumbColor: "theme.text/0.15", Width: 6}})
+	p.scroll = giode.Scroll(p.content, theme.Scrolling(6))
 	return p
 }
 

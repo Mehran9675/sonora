@@ -39,7 +39,7 @@ func New(c *core.Ctx) *Page {
 	p.engines = newEnginePicker(c, p.selectEngine)
 	p.player = playerbar.New(c)
 	p.panel = newVoicePanel(p)
-	p.column = giode.Scroll(p.compactColumn, giode.Styles{ScrollBar: giode.ScrollBar{ThumbColor: "theme.text/0.15", Width: 4}})
+	p.column = giode.Scroll(p.compactColumn, theme.Scrolling(4))
 	p.addEngine = giode.Button("Add an engine", giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
 		Padding: giode.SymmetricInset(16, 9), BorderRadius: theme.RadiusSm + 2}).
 		Icon(icons.Icon(icons.Plus, 15, "")).OnClick(func() { c.Go(core.PageEngines) })

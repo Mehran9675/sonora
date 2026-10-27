@@ -132,7 +132,7 @@ func newPanel(p *Page) *panel {
 		}
 		c.Info(v.rt.Manifest().Name + " unloaded — memory freed")
 	})
-	v.scroll = giode.Scroll(v.content, giode.Styles{ScrollBar: giode.ScrollBar{ThumbColor: "theme.text/0.15", Width: 5}})
+	v.scroll = giode.Scroll(v.content, theme.Scrolling(5))
 	return v
 }
 

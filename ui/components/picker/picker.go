@@ -37,7 +37,7 @@ func New(title string, items func() []Item, selected func() string, onPick func(
 	field.Padding = giode.SymmetricInset(12, 10)
 	p.search = giode.Input.Text("Search…", field)
 	p.rows = giode.NewKeyedCache[string, *giode.PressableElement]()
-	p.scroll = giode.Scroll(p.list, giode.Styles{ScrollBar: giode.ScrollBar{ThumbColor: "theme.text/0.2", Width: 6}})
+	p.scroll = giode.Scroll(p.list, theme.Scrolling(6))
 	p.close = giode.Button("", giode.Styles{Color: "theme.muted", Background: "theme.text", Padding: giode.UniformInset(6), BorderRadius: 8}).
 		Variant(giode.VariantGhost).Icon(icons.Icon(icons.Close, 16, "")).OnClick(func() { p.open = false })
 	p.dialog = giode.Dialog(&p.open, p.content, giode.Styles{

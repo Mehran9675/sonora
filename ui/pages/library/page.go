@@ -34,7 +34,7 @@ func New(c *core.Ctx) *Page {
 	field := theme.Field()
 	field.Width = 280
 	p.search = giode.Input.Text("Search your clips…", field)
-	p.scroll = giode.Scroll(p.list, giode.Styles{ScrollBar: giode.ScrollBar{ThumbColor: "theme.text/0.15", Width: 6}})
+	p.scroll = giode.Scroll(p.list, theme.Scrolling(6))
 	p.player = playerbar.New(c)
 	p.studio = giode.Button("Open Studio", giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
 		Padding: giode.SymmetricInset(16, 9), BorderRadius: theme.RadiusSm + 2}).
@@ -67,7 +67,12 @@ func (p *Page) list() giode.Element {
 		e := e
 		els = append(els, p.rows.Get(e.ID, func() *row { return newRow(p.c, e) }).element())
 	}
-	return giode.Stack(giode.Styles{Width: -1, Gap: 10, Padding: giode.Inset{Right: 12, Bottom: 12}}, els...)
+	// Room for the scrollbar, which phones don't show.
+	right := 12
+	if giode.Compact() {
+		right = 0
+	}
+	return giode.Stack(giode.Styles{Width: -1, Gap: 10, Padding: giode.Inset{Right: right, Bottom: 12}}, els...)
 }
 
 // Element lays out the page.

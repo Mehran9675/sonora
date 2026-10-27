@@ -47,6 +47,8 @@ github.com/mehran9675/giode v0.1.1-alpha.1 h1:VzT0eVNpFKiWTiVgIMVTQ4igKswU2vTU8r
 github.com/mehran9675/giode v0.1.1-alpha.1/go.mod h1:qmocbcX34yaYAVh/qh2/XZQpyv+ICislgg1DMi0P6Uo=
 github.com/mehran9675/giode v0.1.4-alpha.1 h1:UlsO1H/7EYw7MxTwVm5yzMAtajiu8ASQ669cCvjyg80=
 github.com/mehran9675/giode v0.1.4-alpha.1/go.mod h1:BSCQZdDJ7+DCEUPSK0W3rnuoLJCieq9o5tIgPBH3GLE=
+github.com/mehran9675/giode v0.1.5-alpha.1 h1:b65XCiEoKupY6u4OGHQ3vwCIGxH1tllWmmhlVMOqJvo=
+github.com/mehran9675/giode v0.1.5-alpha.1/go.mod h1:BSCQZdDJ7+DCEUPSK0W3rnuoLJCieq9o5tIgPBH3GLE=
 github.com/mewkiz/flac v1.0.14 h1:hyRGAM8NCKznoPmIi9zz2jyO+nfmxY2ErqBnHZ+gxh4=
 github.com/mewkiz/flac v1.0.14/go.mod h1:HfPYDA+oxjyuqMu2V+cyKcxF51KM6incpw5eZXmfA6k=
 github.com/mewkiz/pkg v0.0.0-20250417130911-3f050ff8c56d h1:IL2tii4jXLdhCeQN69HNzYYW1kl0meSG0wt5+sLwszU=

@@ -8,7 +8,7 @@ require (
 	github.com/gen2brain/malgo v0.11.26
 	github.com/hajimehoshi/go-mp3 v0.3.4
 	github.com/jfreymuth/oggvorbis v1.0.5
-	github.com/mehran9675/giode v0.1.4-alpha.1
+	github.com/mehran9675/giode v0.1.5-alpha.1
 	github.com/mewkiz/flac v1.0.14
 	golang.org/x/image v0.26.0
 	golang.org/x/sys v0.47.0
