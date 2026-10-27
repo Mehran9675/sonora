@@ -42,7 +42,7 @@ func New(c *core.Ctx, applyTheme func(mode string)) *Page {
 	if !core.Mobile {
 		p.uvInfo = pyenv.UVVersion()
 	}
-	p.theme = segmented.New([]segmented.Option{{Value: "dark", Label: "Dark"}, {Value: "light", Label: "Light"}},
+	p.theme = segmented.New([]segmented.Option{{Value: "system", Label: "System"}, {Value: "dark", Label: "Dark"}, {Value: "light", Label: "Light"}},
 		func() string { return c.Settings.Get().Theme }, applyTheme)
 	p.device = segmented.New([]segmented.Option{{Value: "auto", Label: "Automatic"}, {Value: "gpu", Label: "GPU"}, {Value: "cpu", Label: "CPU only"}},
 		func() string { return c.Settings.Get().Device },
@@ -88,16 +88,16 @@ func (p *Page) content() giode.Element {
 	}
 	ffmpeg := chip.Accent("Found", "theme.success")
 	if !convert.Available() {
-		ffmpeg = chip.Accent("Not found — only needed for MP3 from API servers", "theme.muted")
+		ffmpeg = chip.Accent("Not found — needed for M4A, Opus and video files", "theme.muted")
 	}
 	sections := []giode.Element{
 		pagehead.Head(giode.Compact(), "Settings", "Make Sonora yours."),
 		section("Appearance", "How Sonora looks.",
-			p.setting("Theme", "Dark is easy on the eyes; light suits bright rooms.", p.theme.Element()),
+			p.setting("Theme", "System follows your device's light or dark setting.", p.theme.Element()),
 		),
 	}
-	// Models run locally only on desktops; phones use API servers, so
-	// devices, folders and the Python toolchain don't apply there.
+	// Phones run only on-device models, so the compute device, folders
+	// and the Python toolchain don't apply there.
 	if !core.Mobile {
 		sections = append(sections,
 			section("Performance", "Where models run. GPUs are much faster for large models.",
@@ -110,7 +110,7 @@ func (p *Page) content() giode.Element {
 			),
 			section("Toolchain", "Sonora manages Python for you; nothing to install by hand.",
 				p.setting("Python manager (uv)", "Creates an isolated environment per engine.", toolchain),
-				p.setting("FFmpeg", "Converts compressed audio from some servers.", ffmpeg),
+				p.setting("FFmpeg", "Reads audio formats Sonora can't decode itself.", ffmpeg),
 			),
 		)
 	}

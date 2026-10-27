@@ -1,8 +1,6 @@
 package studio
 
 import (
-	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -76,16 +74,13 @@ func newEditor(c *core.Ctx) *editor {
 func (e *editor) openFile(c *core.Ctx) {
 	var text, name string
 	c.Background(func() error {
-		r, err := c.App.OpenFile(context.Background(), giode.FileFilter{Extensions: textfile.Extensions})
-		if err != nil && !errors.Is(err, giode.ErrCanceled) {
-			return fmt.Errorf("couldn't open a file picker on this system (%v)", err)
-		}
+		f, err := c.PickFile(textfile.Extensions, "")
 		if err != nil {
 			return err
 		}
-		defer r.Close()
-		name = core.PickedName(r)
-		text, err = textfile.Read(name, r)
+		defer f.Close()
+		name = f.Name
+		text, err = textfile.Read(name, f)
 		return err
 	}, func(err error) {
 		if err != nil {
@@ -120,7 +115,9 @@ func (e *editor) element(rt *manager.Runtime, height int) giode.Element {
 	secs := float64(words) / 2.6
 	stats := fmt.Sprintf("%d characters · %d words · ≈ %s", len([]rune(text)), words, core.Clock(time.Duration(secs*float64(time.Second))))
 	footer := []giode.Element{giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(stats, theme.Caption))}
-	if hint := rt.Manifest().Hint; hint != "" && rt.State != manager.StateUnavailable {
+	// On a phone the hint shows in the voice panel instead: beside the
+	// stats it squeezes them, and the text field, to nothing.
+	if hint := rt.Manifest().Hint; hint != "" && rt.State != manager.StateUnavailable && height == 0 {
 		footer = append(footer, chip.Chip(hint))
 	}
 	card := theme.Card()

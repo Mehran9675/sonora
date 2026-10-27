@@ -53,8 +53,18 @@ func Run() error {
 		// Android may end a backgrounded app without warning, so the
 		// draft is saved whenever the app leaves the screen.
 		OnBackground: func() {
+			core.SetAway(true)
 			if studioPage != nil {
 				studioPage.SaveDraft()
+			}
+		},
+		OnForeground: func() { core.SetAway(false) },
+		// With the System theme, follow the platform's appearance as it
+		// changes.
+		OnSystemThemeChange: func(bool) {
+			if store.Get().Theme == "system" {
+				theme.Apply("system")
+				giode.InvalidateCaches()
 			}
 		},
 		OnShutdown: func() {

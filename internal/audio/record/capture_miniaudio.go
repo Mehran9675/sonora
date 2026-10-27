@@ -1,4 +1,4 @@
-//go:build !windows && !android && !ios
+//go:build !windows && !ios
 
 package record
 
@@ -11,8 +11,9 @@ import (
 	"github.com/gen2brain/malgo"
 )
 
-// miniaudio captures through CoreAudio on macOS and PulseAudio, ALSA
-// or JACK on Linux.
+// miniaudio captures through CoreAudio on macOS, PulseAudio, ALSA or
+// JACK on Linux, and AAudio or OpenSL ES on Android (the app must hold
+// the RECORD_AUDIO permission first).
 type miniaudio struct {
 	ctx *malgo.AllocatedContext
 	dev *malgo.Device

@@ -72,6 +72,13 @@ func (p *Page) list() giode.Element {
 
 // Element lays out the page.
 func (p *Page) Element() giode.Element {
+	// The search field spans the screen on a phone.
+	field := theme.Field()
+	field.Width = 280
+	if giode.Compact() {
+		field.Width = -1
+	}
+	p.search.Styles(field)
 	return giode.Stack(giode.Styles{Width: -1, Height: -1, Gap: 20, Padding: giode.UniformInset(core.Gutter())},
 		pagehead.Head(giode.Compact(), "Library", "Your generated audio, newest first.", p.search),
 		giode.Box(giode.Styles{Width: -1, FlexGrow: 1}, p.scroll),

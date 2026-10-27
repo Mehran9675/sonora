@@ -1,9 +1,6 @@
 package transcribe
 
 import (
-	"context"
-	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -89,7 +86,7 @@ func newPanel(p *Page) *panel {
 		FontSize: 13, Padding: giode.SymmetricInset(12, 7), BorderRadius: theme.RadiusSm}
 	v.install = giode.Button("Install", primary).Icon(icons.Icon(icons.Download, 15, "")).OnClick(func() {
 		rt := v.rt
-		c.Manager.Install(rt, func(err error) {
+		c.Install(rt, func(err error) {
 			if err != nil {
 				c.Error(err)
 				return
@@ -146,24 +143,22 @@ func (v *panel) pickFile() {
 	var path, name string
 	var temp bool
 	c.Background(func() error {
-		r, err := c.App.OpenFile(context.Background(), giode.FileFilter{Extensions: decode.Extensions})
-		if err != nil && !errors.Is(err, giode.ErrCanceled) {
-			return fmt.Errorf("couldn't open a file picker on this system (%v); record instead", err)
-		}
+		f, err := c.PickFile(append([]string{"audio/*", "video/*"}, decode.Extensions...), "; record instead")
 		if err != nil {
 			return err
 		}
-		defer r.Close()
-		if f, ok := r.(*os.File); ok && filepath.IsAbs(f.Name()) {
-			path, name = f.Name(), filepath.Base(f.Name())
+		defer f.Close()
+		// Desktop pickers hand over the file itself: read it in place.
+		if file, ok := f.ReadCloser.(*os.File); ok && filepath.IsAbs(file.Name()) {
+			path, name = file.Name(), f.Name
 			return nil
 		}
-		name = core.PickedName(r)
-		path, err = core.SavePicked(r, core.RecordingsDir(), "audio")
-		temp = true
+		name = f.Name
 		if name == "" {
 			name = "Audio from " + time.Now().Format("Jan 2, 15:04")
 		}
+		path, err = core.SavePicked(f, core.RecordingsDir(), "audio")
+		temp = true
 		return err
 	}, func(err error) {
 		if err != nil {

@@ -2,22 +2,44 @@ package core
 
 import (
 	"bytes"
+	"context"
+	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/mehran9675/giode"
 )
 
-// SavePicked copies a file from the system picker into dir and returns
-// its path. The Android picker hands over a stream without a file
-// name, so the name is then prefix plus the time, with the extension
-// taken from the content.
-func SavePicked(r io.Reader, dir, prefix string) (string, error) {
-	name := PickedName(r)
+// PickFile shows the system file picker for one file of the given
+// types (extensions or MIME types) and returns it with its name. It
+// blocks: call it off the UI goroutine. A desktop without a picker
+// service gets a hint to use another way in.
+func (c *Ctx) PickFile(types []string, otherwise string) (giode.PickedFile, error) {
+	files, err := c.App.PickFiles(context.Background(), giode.PickOptions{Types: types})
+	switch {
+	case errors.Is(err, giode.ErrCanceled):
+		return giode.PickedFile{}, err
+	case err != nil:
+		// Linux systems without the XDG desktop portal have no picker.
+		return giode.PickedFile{}, fmt.Errorf("couldn't open a file picker on this system (%v)%s", err, otherwise)
+	case len(files) == 0:
+		return giode.PickedFile{}, giode.ErrCanceled
+	}
+	return files[0], nil
+}
+
+// SavePicked copies a picked file into dir and returns its path. A
+// file without a name (or an extension) is named prefix plus the time,
+// with the extension taken from the content.
+func SavePicked(f giode.PickedFile, dir, prefix string) (string, error) {
+	name := filepath.Base(f.Name)
 	head := make([]byte, 12)
-	n, _ := io.ReadFull(r, head)
+	n, _ := io.ReadFull(f, head)
 	head = head[:n]
-	if name == "" || filepath.Ext(name) == "" {
+	if f.Name == "" || filepath.Ext(name) == "" {
 		name = prefix + "-" + time.Now().Format("20060102-150405") + sniffExt(head)
 	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -32,17 +54,8 @@ func SavePicked(r io.Reader, dir, prefix string) (string, error) {
 	if _, err := out.Write(head); err != nil {
 		return "", err
 	}
-	_, err = io.Copy(out, r)
+	_, err = io.Copy(out, f)
 	return dst, err
-}
-
-// PickedName returns the base name of a picked file, or "" when the
-// platform doesn't tell.
-func PickedName(r io.Reader) string {
-	if n, ok := r.(interface{ Name() string }); ok {
-		return filepath.Base(n.Name())
-	}
-	return ""
 }
 
 // sniffExt guesses a file extension from the first bytes of a file.

@@ -2,6 +2,7 @@ package optionfield
 
 import (
 	"fmt"
+	"unicode/utf8"
 
 	"github.com/mehran9675/giode"
 
@@ -10,10 +11,19 @@ import (
 	"github.com/mehran9675/sonora/ui/components/segmented"
 )
 
-// newSelect uses segments for up to three choices and a picker beyond.
+// segmentChars is the most label text, in characters, that fits
+// segments across a phone's width.
+const segmentChars = 30
+
+// newSelect uses segments for up to three short choices and a picker
+// otherwise.
 func newSelect(opt engines.Option, st Store) control {
 	current := func() string { return fmt.Sprint(valueOr(st.Get(opt.ID), opt.Default)) }
-	if len(opt.Choices) <= 3 {
+	chars := 0
+	for _, c := range opt.Choices {
+		chars += utf8.RuneCountInString(c.Label)
+	}
+	if len(opt.Choices) <= 3 && chars <= segmentChars {
 		var segs []segmented.Option
 		for _, c := range opt.Choices {
 			segs = append(segs, segmented.Option{Value: c.Value, Label: c.Label})

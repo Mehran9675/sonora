@@ -1,11 +1,11 @@
-//go:build android || ios
+//go:build ios
 
 package record
 
 import "errors"
 
-// Voice cloning needs a local model, which phones don't run, so there
-// is nothing to record for there.
+// iOS needs an audio session and a usage description that the build
+// doesn't provide yet.
 func open(push func([]byte)) (capture, error) {
 	return nil, errors.New("recording isn't available on this device")
 }

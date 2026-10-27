@@ -43,7 +43,7 @@ func newCard(c *core.Ctx, rt *manager.Runtime, cfg *configDialog, logs *logdialo
 		Padding: giode.SymmetricInset(10, 8), BorderRadius: theme.RadiusSm}
 
 	cd.install = giode.Button("Install", primary).Icon(icons.Icon(icons.Download, 15, "")).OnClick(func() {
-		c.Manager.Install(rt, func(err error) {
+		c.Install(rt, func(err error) {
 			if err != nil {
 				c.Error(err)
 				logs.Show(rt)

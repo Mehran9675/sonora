@@ -26,6 +26,9 @@ type Ctx struct {
 	Now         *NowPlaying
 
 	page Page
+	// awake counts StayAwake holders; release ends the KeepAlive.
+	awake   int
+	release func()
 	// UseEngine selects an engine in the Studio (set by the Studio).
 	UseEngine func(id string)
 	// Reuse loads a library entry's text and settings into the Studio.

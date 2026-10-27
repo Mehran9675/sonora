@@ -1,9 +1,6 @@
 package studio
 
 import (
-	"context"
-	"errors"
-	"fmt"
 	"path/filepath"
 
 	"github.com/mehran9675/giode"
@@ -172,16 +169,12 @@ func (f *engineForm) speedValue() float64 {
 func (f *engineForm) pickReference() {
 	var picked string
 	f.c.Background(func() error {
-		r, err := f.c.App.OpenFile(context.Background(), giode.FileFilter{Extensions: []string{"wav", "mp3", "flac", "ogg", "m4a"}})
-		if err != nil && !errors.Is(err, giode.ErrCanceled) {
-			// Linux systems without the XDG desktop portal have no picker.
-			return fmt.Errorf("couldn't open a file picker on this system (%v); record your voice instead", err)
-		}
+		file, err := f.c.PickFile([]string{"wav", "mp3", "flac", "ogg", "m4a"}, "; record your voice instead")
 		if err != nil {
 			return err
 		}
-		defer r.Close()
-		picked, err = core.SavePicked(r, core.ReferencesDir(), "voice")
+		defer file.Close()
+		picked, err = core.SavePicked(file, core.ReferencesDir(), "voice")
 		return err
 	}, func(err error) {
 		if err != nil {

@@ -14,7 +14,7 @@ import (
 
 // Settings is everything Sonora remembers between runs.
 type Settings struct {
-	Theme   string `json:"theme"`  // "dark" or "light"
+	Theme   string `json:"theme"`  // "system", "dark" or "light"
 	Device  string `json:"device"` // "auto", "cpu" or "gpu"
 	HFToken string `json:"hf_token,omitempty"`
 
@@ -42,7 +42,7 @@ type Store struct {
 // Open reads settings.json, falling back to defaults.
 func Open() *Store {
 	st := &Store{path: filepath.Join(paths.Data(), "settings.json")}
-	st.s = Settings{Theme: "dark", Device: "auto", Engine: "system"}
+	st.s = Settings{Theme: "system", Device: "auto", Engine: "system"}
 	if data, err := os.ReadFile(st.path); err == nil {
 		json.Unmarshal(data, &st.s)
 	}

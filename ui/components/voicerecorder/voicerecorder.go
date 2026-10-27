@@ -3,6 +3,7 @@
 package voicerecorder
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"time"
@@ -40,12 +41,13 @@ type Recorder struct {
 	onDone func(path string)
 	opts   Options
 
-	rec    *record.Recorder
-	timer  *time.Timer
-	meter  *levelmeter.Meter
-	start  *giode.ButtonElement
-	stop   *giode.ButtonElement
-	cancel *giode.ButtonElement
+	rec     *record.Recorder
+	opening bool // asking for the microphone or opening it
+	timer   *time.Timer
+	meter   *levelmeter.Meter
+	start   *giode.ButtonElement
+	stop    *giode.ButtonElement
+	cancel  *giode.ButtonElement
 }
 
 // New returns a recorder for cloning that calls onDone with the saved
@@ -96,17 +98,32 @@ func NewWith(c *core.Ctx, opts Options, onDone func(path string)) *Recorder {
 func (r *Recorder) Recording() bool { return r.rec != nil }
 
 // Button is the Record button shown while idle.
-func (r *Recorder) Button() giode.Element { return r.start }
+func (r *Recorder) Button() giode.Element { return r.start.Loading(r.opening) }
 
 func (r *Recorder) begin() {
-	r.c.Player.Pause() // don't record the speakers
-	rec, err := record.Start()
-	if err != nil {
-		r.c.Error(err)
+	if r.opening {
 		return
 	}
-	r.rec = rec
-	r.timer = time.AfterFunc(r.opts.Max, func() { r.c.App.Post(func() { r.finish(true) }) })
+	r.opening = true
+	r.c.Player.Pause() // don't record the speakers
+	var rec *record.Recorder
+	r.c.Background(func() error {
+		// Android asks the user for the microphone the first time.
+		if err := r.c.RequestMicrophone(context.Background()); err != nil {
+			return err
+		}
+		var err error
+		rec, err = record.Start()
+		return err
+	}, func(err error) {
+		r.opening = false
+		if err != nil {
+			r.c.Error(err)
+			return
+		}
+		r.rec = rec
+		r.timer = time.AfterFunc(r.opts.Max, func() { r.c.App.Post(func() { r.finish(true) }) })
+	})
 }
 
 // finish closes the microphone and, when keep is set, saves the take.

@@ -117,11 +117,14 @@ func (p *Page) start() {
 	s := c.Settings.Get()
 	in := manager.TranscribeInput{Source: p.source, Title: p.sourceName,
 		Language: language(rt.Manifest(), s.Language), Translate: s.Translate}
+	awake := c.StayAwake("Transcribing")
 	c.Manager.Transcribe(rt, in, func(e transcripts.Entry, err error) {
+		awake()
 		if err != nil {
 			c.Error(err)
 			return
 		}
+		c.NotifyIfAway("Transcript ready", e.Title)
 		p.dropSource()
 		p.result.show(e)
 	})

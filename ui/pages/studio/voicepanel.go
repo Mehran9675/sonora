@@ -42,7 +42,7 @@ func newVoicePanel(p *Page) *voicePanel {
 		Padding: giode.SymmetricInset(14, 8), BorderRadius: theme.RadiusSm}).
 		Icon(icons.Icon(icons.Download, 15, "")).OnClick(func() {
 		rt := v.rt
-		c.Manager.Install(rt, func(err error) {
+		c.Install(rt, func(err error) {
 			if err == nil {
 				c.Success(rt.Manifest().Name + " is ready")
 				c.Manager.LoadVoices(rt, false)
@@ -98,6 +98,11 @@ func (v *voicePanel) content() giode.Element {
 	els := []giode.Element{section("Engine", v.engineSection())}
 	if callout := v.callout(); callout != nil {
 		els = append(els, callout)
+	}
+	// The script card shows the hint on wide screens; a phone shows it
+	// here.
+	if giode.Compact() && m.Hint != "" && rt.State != manager.StateUnavailable {
+		els = append(els, giode.Text(m.Hint, giode.Styles{Color: "theme.muted", FontSize: 12, LineHeight: 17}))
 	}
 	ready := rt.State == manager.StateReady || rt.State == manager.StateWorking
 	if ready {

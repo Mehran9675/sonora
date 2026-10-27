@@ -23,7 +23,8 @@ voices for phones with memory to spare; Whisper goes up to Large v3 Turbo. API s
 work too — run a server such as [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI)
 on your computer, or use a cloud speech or transcription API, and add it under
 *Engines → Add engine*. The Python engines (IndexTTS, Chatterbox, faster-whisper…) are
-desktop only: they need PyTorch or CTranslate2, which don't run on Android. Phones read
+desktop only: they need PyTorch or CTranslate2, which don't run on Android. Recording
+works on phones too (Sonora asks for the microphone the first time). Phones read
 WAV, MP3, FLAC and Ogg Vorbis audio; other formats (M4A, Opus, video) need ffmpeg, which
 desktops can use when it's installed. Clips are saved through the system file
 picker or sent to other apps with the share sheet; Back closes dialogs and returns to the
@@ -58,7 +59,7 @@ Studio; your script is kept when you switch away.
   or load a clip's settings back into the Studio.
 - **Any model.** Built-in engines, Python plugins, API servers and command-line tools all
   appear in the same list and work the same way.
-- **Modern design.** Dark and light themes, a frameless window with a custom title bar,
+- **Modern design.** Dark and light themes (or follow the system), a frameless window with a custom title bar,
   the Inter typeface, a violet-to-cyan accent.
 
 ## Engines
