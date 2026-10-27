@@ -86,13 +86,20 @@ func newPanel(p *Page) *panel {
 		FontSize: 13, Padding: giode.SymmetricInset(12, 7), BorderRadius: theme.RadiusSm}
 	v.install = giode.Button("Install", primary).Icon(icons.Icon(icons.Download, 15, "")).OnClick(func() {
 		rt := v.rt
-		c.Install(rt, func(err error) {
+		done := func(err error) {
 			if err != nil {
 				c.Error(err)
 				return
 			}
 			c.Success(rt.Manifest().Name + " is ready")
-		})
+		}
+		// Engines with a model choice download the model the panel's
+		// selector shows.
+		if o := rt.Manifest().ModelOption(); o != nil {
+			c.InstallModel(rt, c.Manager.Values(rt.Manifest()).String(o.ID), done)
+			return
+		}
+		c.Install(rt, done)
 	})
 	v.manage = giode.Button("Open Engines", outline).Variant(giode.VariantOutlined).
 		OnClick(func() { c.ShowEngines(engines.TaskTranscribe) })
@@ -211,10 +218,7 @@ func (v *panel) form(rt *manager.Runtime) *form {
 		f.translate = optionfield.New(engines.Option{ID: "translate", Label: "Translate into English", Type: engines.OptionBool,
 			Help: "Write the text in English, whatever language is spoken."}, global)
 	}
-	store := optionfield.Store{
-		Get: func(id string) any { return c.Settings.Values(m.ID)[id] },
-		Set: func(id string, val any) { c.Settings.SetValue(m.ID, id, val) },
-	}
+	store := c.OptionStore(m, nil)
 	for _, o := range m.Options {
 		if o.Scope != engines.ScopeSetup {
 			f.fields = append(f.fields, optionfield.New(o, store))
@@ -300,6 +304,13 @@ func (v *panel) callout() giode.Element {
 			giode.Styles{Color: "theme.text", FontSize: 13, LineHeight: 19}))
 		if m.Size != "" {
 			body = append(body, chip.Chip(m.Size))
+		}
+		if o := m.ModelOption(); o != nil {
+			for _, fl := range v.form(rt).fields {
+				if fl.ID() == o.ID {
+					body = append(body, fl.Element())
+				}
+			}
 		}
 		if rt.Err != "" {
 			body = append(body, giode.Text(firstLine(rt.Err), giode.Styles{Color: "theme.danger", FontSize: 12, MaxLines: 3}))

@@ -137,12 +137,15 @@ On Windows and macOS, plain `go build` works too
 
 ## Using it
 
-1. **Engines** → press **Install** on an engine (or use *System Voices* right away).
+1. **Engines** → press **Install** on an engine (or use *System Voices* right away). Engines
+   with several models ask which to download, right in the card; **Add model** fetches
+   more later.
 2. **Studio** → write or paste text, choose the engine and voice, press **Generate speech**.
 3. Click the waveform to seek; use the download button to save a WAV.
 4. **Library** keeps every clip; ↺ loads one back into the Studio.
 
-Settings lets you switch theme, force CPU or GPU, and add a Hugging Face token for gated
+The Studio's (and Transcribe page's) model selector starts on a model you've downloaded and
+marks the rest; choosing another downloads it the first time you use it. Settings lets you switch theme, force CPU or GPU, and add a Hugging Face token for gated
 models.
 
 ## Adding other models

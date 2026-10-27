@@ -56,6 +56,7 @@ folder**, drop your folder in, and press **Reload engines**. Your engine appears
 | `transcript` | Whether the reference recording's transcript is `"optional"` or `"required"`. |
 | `voices` | A fixed voice list. Leave it out to report voices from `load()` instead. |
 | `hint` | A tip shown under the editor. |
+| `model_option` | The `select` option that picks the model, when it isn't called `model`. The engine card then asks which model to download on install (it's loaded once, so its files download), and the Studio defaults to a model that has loaded before. |
 | `task` | `"transcribe"` for a speech-to-text engine (see below); leave it out for text to speech. |
 | `translate` | Speech-to-text engines: `true` offers *Translate into English*. |
 | `languages` | Speech-to-text engines: the language codes it understands, `""` meaning it can detect the language. Leave it out for "any". |

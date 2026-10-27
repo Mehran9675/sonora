@@ -42,14 +42,21 @@ func newVoicePanel(p *Page) *voicePanel {
 		Padding: giode.SymmetricInset(14, 8), BorderRadius: theme.RadiusSm}).
 		Icon(icons.Icon(icons.Download, 15, "")).OnClick(func() {
 		rt := v.rt
-		c.Install(rt, func(err error) {
+		done := func(err error) {
 			if err == nil {
 				c.Success(rt.Manifest().Name + " is ready")
 				c.Manager.LoadVoices(rt, false)
 			} else {
 				c.Error(err)
 			}
-		})
+		}
+		// Engines with a model choice download the model the panel's
+		// selector shows.
+		if o := rt.Manifest().ModelOption(); o != nil {
+			c.InstallModel(rt, c.Manager.Values(rt.Manifest()).String(o.ID), done)
+			return
+		}
+		c.Install(rt, done)
 	})
 	v.manage = giode.Button("Open Engines", giode.Styles{Color: "theme.text", Background: "theme.border", BorderColor: "theme.border",
 		FontSize: 13, Padding: giode.SymmetricInset(14, 8), BorderRadius: theme.RadiusSm}).
@@ -142,6 +149,9 @@ func (v *voicePanel) callout() giode.Element {
 		body = append(body, giode.Text(msg, giode.Styles{Color: "theme.text", FontSize: 13, LineHeight: 19}))
 		if m.Size != "" {
 			body = append(body, chip.Chip(m.Size))
+		}
+		if fl := v.p.form(rt).modelField(); fl != nil {
+			body = append(body, fl.Element())
 		}
 		if rt.Err != "" {
 			body = append(body, giode.Text(firstLine(rt.Err), giode.Styles{Color: "theme.danger", FontSize: 12, MaxLines: 3}))

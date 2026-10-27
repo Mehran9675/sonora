@@ -89,5 +89,8 @@ func (e *Engine) Install(ctx context.Context, log engines.Logger) error {
 // Uninstall deletes the engine's environment, sources and models.
 func (e *Engine) Uninstall() error {
 	e.Close()
+	e.modelsMu.Lock()
+	e.models = nil
+	e.modelsMu.Unlock()
 	return os.RemoveAll(e.dir)
 }

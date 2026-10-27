@@ -16,14 +16,15 @@ import (
 const segmentChars = 30
 
 // newSelect uses segments for up to three short choices and a picker
-// otherwise.
+// otherwise, or whenever the store describes choices (Store.Detail).
 func newSelect(opt engines.Option, st Store) control {
 	current := func() string { return fmt.Sprint(valueOr(st.Get(opt.ID), opt.Default)) }
-	chars := 0
+	chars, described := 0, false
 	for _, c := range opt.Choices {
 		chars += utf8.RuneCountInString(c.Label)
+		described = described || st.detail(opt.ID, c.Value) != ""
 	}
-	if len(opt.Choices) <= 3 && chars <= segmentChars {
+	if len(opt.Choices) <= 3 && chars <= segmentChars && !described {
 		var segs []segmented.Option
 		for _, c := range opt.Choices {
 			segs = append(segs, segmented.Option{Value: c.Value, Label: c.Label})
@@ -33,7 +34,7 @@ func newSelect(opt engines.Option, st Store) control {
 	items := func() []picker.Item {
 		var out []picker.Item
 		for _, c := range opt.Choices {
-			out = append(out, picker.Item{ID: c.Value, Label: c.Label})
+			out = append(out, picker.Item{ID: c.Value, Label: c.Label, Detail: st.detail(opt.ID, c.Value)})
 		}
 		return out
 	}
@@ -42,7 +43,7 @@ func newSelect(opt engines.Option, st Store) control {
 		cur := current()
 		for _, c := range opt.Choices {
 			if c.Value == cur {
-				return c.Label, ""
+				return c.Label, st.detail(opt.ID, cur)
 			}
 		}
 		return cur, ""

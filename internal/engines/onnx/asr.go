@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -44,10 +43,15 @@ func (e *Recognizer) defaultModel() model {
 	return e.pick(engines.Resolve(e.m.Options, nil))
 }
 
-// Installed reports whether the default model is downloaded.
-func (e *Recognizer) Installed() bool {
-	_, err := os.Stat(filepath.Join(e.dir, e.defaultModel().ID))
-	return err == nil
+// Installed reports whether any of the engine's models is downloaded.
+func (e *Recognizer) Installed() bool { return anyDownloaded(e.dir, e.models) }
+
+// DownloadedModels reports which packages are on this device.
+func (e *Recognizer) DownloadedModels() map[string]bool { return downloaded(e.dir, e.models) }
+
+// InstallModel downloads the package with the given id.
+func (e *Recognizer) InstallModel(ctx context.Context, id string, log engines.Logger) error {
+	return fetchModel(ctx, e.dir, e.models, id, log)
 }
 
 // Install downloads the default model.

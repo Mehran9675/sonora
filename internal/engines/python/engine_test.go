@@ -55,7 +55,8 @@ func TestWorkerRoundTrip(t *testing.T) {
 	os.MkdirAll(engDir, 0o755)
 	os.WriteFile(filepath.Join(engDir, "adapter.py"), []byte(adapter), 0o644)
 	m := &engines.Manifest{ID: "fake", Name: "Fake", Kind: engines.KindPython, Dir: engDir,
-		Options: []engines.Option{{ID: "model", Scope: engines.ScopeLoad, Default: "m1"}}}
+		Options: []engines.Option{{ID: "model", Type: engines.OptionSelect, Scope: engines.ScopeLoad, Default: "m1",
+			Choices: []engines.Choice{{Value: "m1", Label: "One"}, {Value: "m2", Label: "Two"}}}}}
 	e := New(m, data, script, func() engines.Environment { return engines.Environment{Device: "cpu"} })
 	defer e.Close()
 
@@ -99,6 +100,22 @@ func TestWorkerRoundTrip(t *testing.T) {
 
 	if !e.Loaded() {
 		t.Fatal("the model should be loaded after a request")
+	}
+
+	// A model counts as downloaded once it has loaded; InstallModel loads
+	// one and frees it again.
+	if got := e.DownloadedModels(); !got["m1"] || got["m2"] {
+		t.Fatalf("downloaded models: %v", got)
+	}
+	os.WriteFile(e.markerPath(), []byte("{}"), 0o644) // stand in for Install
+	if err := e.InstallModel(ctx, "m2", log); err != nil {
+		t.Fatal(err)
+	}
+	if e.Loaded() {
+		t.Fatal("InstallModel must unload the model")
+	}
+	if got := New(m, data, script, nil).DownloadedModels(); !got["m1"] || !got["m2"] {
+		t.Fatalf("downloaded models after a restart: %v", got)
 	}
 	e.Close()
 	if e.Loaded() {

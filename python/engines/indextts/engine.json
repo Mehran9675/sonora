@@ -9,6 +9,7 @@
   "size": "≈ 10 GB with PyTorch + models",
   "accent": ["#00aeec", "#fb7299"],
   "kind": "python",
+  "model_option": "version",
   "python": "3.11",
   "source": {
     "url": "https://github.com/index-tts/index-tts/archive/refs/heads/main.zip"

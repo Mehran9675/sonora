@@ -38,6 +38,45 @@ func (m *Manager) LoadVoices(rt *Runtime, force bool) {
 }
 
 // values returns an engine's option values with defaults filled in.
+// Until the user picks a model, the model option names one that's
+// downloaded, rather than the manifest's default.
 func (m *Manager) values(man *engines.Manifest) engines.Values {
-	return engines.Resolve(man.Options, m.settings.Values(man.ID))
+	stored := m.settings.Values(man.ID)
+	v := engines.Resolve(man.Options, stored)
+	if o := man.ModelOption(); o != nil {
+		if _, picked := stored[o.ID]; !picked {
+			if id := m.firstDownloaded(man); id != "" {
+				v[o.ID] = id
+			}
+		}
+	}
+	return v
+}
+
+// Values is values for the UI: what a setting shows when the user
+// hasn't changed it.
+func (m *Manager) Values(man *engines.Manifest) engines.Values { return m.values(man) }
+
+// firstDownloaded returns the first model choice on this device, or "".
+func (m *Manager) firstDownloaded(man *engines.Manifest) string {
+	have := m.Downloaded(man.ID)
+	for _, c := range man.ModelOption().Choices {
+		if have[c.Value] {
+			return c.Value
+		}
+	}
+	return ""
+}
+
+// Downloaded reports which models of the engine with id are on this
+// device (nil for engines without a model choice).
+func (m *Manager) Downloaded(id string) map[string]bool {
+	rt := m.byID[id]
+	if rt == nil || rt.Manifest().ModelOption() == nil {
+		return nil
+	}
+	if s, ok := rt.Engine.(engines.ModelStore); ok {
+		return s.DownloadedModels()
+	}
+	return nil
 }

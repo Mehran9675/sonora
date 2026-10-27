@@ -1,6 +1,8 @@
 package engines
 
 import (
+	"strings"
+
 	"github.com/mehran9675/giode"
 	"github.com/mehran9675/giode/styles/properties"
 
@@ -10,6 +12,7 @@ import (
 	"github.com/mehran9675/sonora/ui/components/badge"
 	"github.com/mehran9675/sonora/ui/components/chip"
 	"github.com/mehran9675/sonora/ui/components/logdialog"
+	"github.com/mehran9675/sonora/ui/components/picker"
 	"github.com/mehran9675/sonora/ui/components/progressbar"
 	"github.com/mehran9675/sonora/ui/components/statuspill"
 	"github.com/mehran9675/sonora/ui/core"
@@ -30,6 +33,16 @@ type card struct {
 	configure *giode.ButtonElement
 	site      *giode.ButtonElement
 	eject     *giode.ButtonElement
+
+	// Choosing a model to download, for engines with a model choice:
+	// choosing shows the chooser in place of the card's details.
+	choosing bool
+	choice   string
+	models   *picker.Picker
+	model    *picker.Trigger
+	download *giode.ButtonElement
+	back     *giode.ButtonElement
+	addModel *giode.ButtonElement
 }
 
 func newCard(c *core.Ctx, rt *manager.Runtime, cfg *configDialog, logs *logdialog.Dialog) *card {
@@ -43,6 +56,10 @@ func newCard(c *core.Ctx, rt *manager.Runtime, cfg *configDialog, logs *logdialo
 		Padding: giode.SymmetricInset(10, 8), BorderRadius: theme.RadiusSm}
 
 	cd.install = giode.Button("Install", primary).Icon(icons.Icon(icons.Download, 15, "")).OnClick(func() {
+		if m.ModelOption() != nil {
+			cd.choose()
+			return
+		}
 		c.Install(rt, func(err error) {
 			if err != nil {
 				c.Error(err)
@@ -52,6 +69,47 @@ func newCard(c *core.Ctx, rt *manager.Runtime, cfg *configDialog, logs *logdialo
 			c.Success(m.Name + " is installed")
 		})
 	})
+	if o := m.ModelOption(); o != nil {
+		cd.models = picker.New("Choose a model", func() []picker.Item {
+			have := c.Manager.Downloaded(m.ID)
+			var items []picker.Item
+			for _, ch := range o.Choices {
+				it := picker.Item{ID: ch.Value, Label: ch.Label}
+				if have[ch.Value] {
+					it.Detail = "Downloaded"
+				}
+				items = append(items, it)
+			}
+			return items
+		}, func() string { return cd.choice }, func(it picker.Item) { cd.choice = it.ID })
+		cd.model = picker.NewTrigger("Model", func() (string, string) {
+			detail := ""
+			if c.Manager.Downloaded(m.ID)[cd.choice] {
+				detail = "Already downloaded"
+			}
+			for _, ch := range o.Choices {
+				if ch.Value == cd.choice {
+					return ch.Label, detail
+				}
+			}
+			return cd.choice, detail
+		}, nil, cd.models.Open)
+		cd.download = giode.Button("Download", primary).Icon(icons.Icon(icons.Download, 15, "")).OnClick(func() {
+			cd.choosing = false
+			c.InstallModel(rt, cd.choice, func(err error) {
+				if err != nil {
+					c.Error(err)
+					logs.Show(rt)
+					return
+				}
+				c.Success(m.Name + " is ready with " + choiceLabel(o, cd.choice))
+			})
+		})
+		cd.back = giode.Button("Cancel", outline).Variant(giode.VariantOutlined).OnClick(func() { cd.choosing = false })
+		cd.addModel = giode.Button("Add model", giode.Styles{Color: "theme.primary", Background: "theme.primary", FontSize: 12,
+			Padding: giode.SymmetricInset(8, 5), BorderRadius: theme.RadiusSm}).Variant(giode.VariantGhost).
+			Icon(icons.Icon(icons.Plus, 13, "")).OnClick(cd.choose)
+	}
 	cd.cancel = giode.Button("Cancel", outline).Variant(giode.VariantOutlined).OnClick(func() { c.Manager.Cancel(rt) })
 	cd.use = giode.Button("Use in Studio", primary).Icon(icons.Icon(icons.Sparkles, 15, "")).OnClick(func() {
 		c.UseEngine(m.ID)
@@ -92,6 +150,82 @@ func newCard(c *core.Ctx, rt *manager.Runtime, cfg *configDialog, logs *logdialo
 	return cd
 }
 
+// choose opens the model chooser, starting from the model the engine is
+// set to use.
+func (cd *card) choose() {
+	m := cd.rt.Manifest()
+	o := m.ModelOption()
+	cd.choice = cd.c.Manager.Values(m).String(o.ID)
+	// Adding a model: start from the first one that isn't here yet.
+	if have := cd.c.Manager.Downloaded(m.ID); have[cd.choice] {
+		for _, ch := range o.Choices {
+			if !have[ch.Value] {
+				cd.choice = ch.Value
+				break
+			}
+		}
+	}
+	cd.choosing = true
+}
+
+// chooser asks which model to download.
+func (cd *card) chooser() giode.Element {
+	m := cd.rt.Manifest()
+	msg := "You can add others later, or switch models in the Studio."
+	if m.Transcribes() {
+		msg = "You can add others later, or switch models on the Transcribe page."
+	}
+	cd.download.Disabled(cd.c.Manager.Downloaded(m.ID)[cd.choice])
+	return giode.Stack(giode.Styles{Width: -1, Gap: 10},
+		giode.Text("Choose a model to download", giode.Styles{Color: "theme.text", FontSize: 14, FontWeight: giode.FontWeightBold}),
+		giode.Text(msg, giode.Styles{Color: "theme.secondary", FontSize: 12, LineHeight: 17, MaxLines: 3, TextOverflow: giode.TextOverflowEllipsis}),
+		cd.model.Element(),
+	)
+}
+
+// downloadedModels names the engine's downloaded models, or "" when it
+// has no model choice.
+func (cd *card) downloadedModels() string {
+	o := cd.rt.Manifest().ModelOption()
+	if o == nil {
+		return ""
+	}
+	have := cd.c.Manager.Downloaded(cd.rt.Manifest().ID)
+	var names []string
+	for _, ch := range o.Choices {
+		if have[ch.Value] {
+			names = append(names, shortLabel(ch.Label))
+		}
+	}
+	if len(names) == 0 {
+		return ""
+	}
+	return "Downloaded: " + strings.Join(names, ", ")
+}
+
+// allDownloaded reports whether every model of the engine is here.
+func (cd *card) allDownloaded() bool {
+	o := cd.rt.Manifest().ModelOption()
+	return o != nil && len(cd.c.Manager.Downloaded(cd.rt.Manifest().ID)) >= len(o.Choices)
+}
+
+// choiceLabel returns the label of a model choice.
+func choiceLabel(o *engines.Option, value string) string {
+	for _, ch := range o.Choices {
+		if ch.Value == value {
+			return shortLabel(ch.Label)
+		}
+	}
+	return value
+}
+
+// shortLabel drops the size from a model label: "Tiny · 39M · 110 MB"
+// reads "Tiny".
+func shortLabel(label string) string {
+	name, _, _ := strings.Cut(label, " · ")
+	return name
+}
+
 // Fixed heights for each part of a card, so every card is the same
 // size whatever its state.
 const (
@@ -123,6 +257,17 @@ func (cd *card) element() giode.Element {
 	for _, t := range m.Tags {
 		tags = append(tags, chip.Chip(t))
 	}
+	if cd.choosing && cd.rt.State != manager.StateInstalling {
+		// The chooser takes the place of the description, tags, details
+		// and status.
+		return giode.Stack(st,
+			header,
+			fixed(descHeight+22+metaHeight+statusHeight+3*12, cd.chooser()),
+			giode.Box(giode.Styles{FlexGrow: 1}),
+			giode.Row(giode.Styles{Width: -1, Align: giode.AlignCenter, Gap: 6, Wrap: giode.WrapNoWrap},
+				cd.download, cd.back),
+		)
+	}
 	return giode.Stack(st,
 		header,
 		fixed(descHeight, giode.Text(m.Description, giode.Styles{Color: "theme.secondary", FontSize: 13, LineHeight: 19, MaxLines: 3, TextOverflow: giode.TextOverflowEllipsis})),
@@ -153,6 +298,15 @@ func (cd *card) status() giode.Element {
 		return giode.Row(giode.Styles{Gap: 8, Align: giode.AlignCenter},
 			giode.Box(giode.Styles{Width: 8, Height: 8, BorderRadius: 99, Background: "theme.success"}),
 			giode.Text("Model loaded in memory", giode.Styles{Color: "theme.secondary", FontSize: 12}))
+	case cd.downloadedModels() != "":
+		text := giode.Text(cd.downloadedModels(), giode.Styles{Color: "theme.secondary", FontSize: 12, LineHeight: 16,
+			MaxLines: 2, TextOverflow: giode.TextOverflowEllipsis})
+		if rt.State != manager.StateReady || cd.allDownloaded() {
+			return text
+		}
+		// Download another model.
+		return giode.Row(giode.Styles{Width: -1, Gap: 8, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap},
+			giode.Box(giode.Styles{FlexGrow: 1}, text), cd.addModel)
 	}
 	return giode.Box(giode.Styles{})
 }
@@ -177,6 +331,7 @@ func (cd *card) actions() giode.Element {
 	if rt.Engine.Loaded() && !rt.Busy() {
 		right = append(right, cd.eject)
 	}
+
 	if m.NeedsInstall() || len(rt.Log) > 0 {
 		right = append(right, cd.logBtn)
 	}

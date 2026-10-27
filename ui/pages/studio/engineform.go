@@ -43,15 +43,11 @@ type engineForm struct {
 func newEngineForm(c *core.Ctx, rt *manager.Runtime) *engineForm {
 	f := &engineForm{c: c, rt: rt}
 	m := rt.Manifest()
-	store := optionfield.Store{
-		Get: func(id string) any { return c.Settings.Values(m.ID)[id] },
-		Set: func(id string, v any) {
-			c.Settings.SetValue(m.ID, id, v)
-			if o := m.Option(id); o != nil && o.Scope == engines.ScopeLoad && len(m.Voices) == 0 {
-				rt.VoicesLoaded = false
-			}
-		},
-	}
+	store := c.OptionStore(m, func(id string) {
+		if o := m.Option(id); o != nil && o.Scope == engines.ScopeLoad && len(m.Voices) == 0 {
+			rt.VoicesLoaded = false
+		}
+	})
 	for _, o := range m.Options {
 		if o.Scope != engines.ScopeSetup {
 			f.fields = append(f.fields, optionfield.New(o, store))
@@ -122,6 +118,20 @@ func newEngineForm(c *core.Ctx, rt *manager.Runtime) *engineForm {
 		},
 		func(v string) { f.cloneMode = v == "clone" })
 	return f
+}
+
+// modelField returns the field of the engine's model option, or nil.
+func (f *engineForm) modelField() *optionfield.Field {
+	o := f.rt.Manifest().ModelOption()
+	if o == nil {
+		return nil
+	}
+	for _, fl := range f.fields {
+		if fl.ID() == o.ID {
+			return fl
+		}
+	}
+	return nil
 }
 
 func (f *engineForm) voiceList() []engines.Voice {

@@ -54,6 +54,16 @@ option. ZipVoice also needs the Vocos vocoder, downloaded once next to the packa
 gets the reference recording (WAV) and its transcript per request. The model stays in
 memory until Eject, and Stop cancels generation through sherpa-onnx's progress callback.
 
+## Models
+
+An engine whose model is a choice (a `select` option named `model`, or the manifest's
+`model_option`) implements `engines.ModelStore`: which choices are downloaded, and
+`InstallModel` to fetch one - an on-device package, or for a Python engine a first load
+(recorded in `models.json`). The engine card asks which model to download on install and
+offers more later; `manager.Values` resolves an untouched model setting to a downloaded
+model, so the Studio and Transcribe pages start on one, while a model picked there
+downloads on first use.
+
 ## Speech to text
 
 An engine whose manifest has `task: "transcribe"` also implements
