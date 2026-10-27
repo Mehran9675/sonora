@@ -1,13 +1,20 @@
 name: release
 
 # Builds Sonora for every platform when a GitHub release is published
-# and attaches the archives to that release.
+# and attaches the archives to that release. Android and Linux are built
+# with the giode CLI from giode.toml; macOS and Windows with go build
+# (Windows keeps the resources in cmd/sonora/winres, whose manifest the
+# CLI's would clash with).
 on:
   release:
     types: [published]
 
 permissions:
   contents: write
+
+env:
+  # The giode CLI version the Android and Linux builds use.
+  GIODE_CLI: v0.0.0-20261027144655-2e63ad8baee1
 
 jobs:
   build:
@@ -55,7 +62,20 @@ jobs:
         if: matrix.native
         run: go test ./...
 
+      - name: Set version
+        shell: bash
+        run: ./tools/setversion.sh "${VERSION#v}" "${{ github.run_number }}"
+
+      - name: Install the giode CLI
+        if: matrix.goos == 'linux'
+        run: go install github.com/mehran9675/giode-cli/cmd/giode@${GIODE_CLI}
+
+      - name: Build (giode CLI)
+        if: matrix.goos == 'linux'
+        run: giode build -o dist/sonora linux
+
       - name: Build
+        if: matrix.goos != 'linux'
         shell: bash
         run: |
           ldflags="-s -w -X github.com/mehran9675/sonora/ui/pages/settings.Version=${VERSION#v}"
@@ -111,8 +131,8 @@ jobs:
               codesign --verify --deep --strict --verbose=2 Sonora.app
               ditto -c -k --keepParent Sonora.app "../$name.zip" ;;
             *)
-              cp ../assets/icon/icon.png sonora.png
-              tar -czf "../$name.tar.gz" sonora sonora.png ;;
+              # The executable, its .desktop entry and icon, from giode.
+              tar -czf "../$name.tar.gz" sonora com.sonora.app.desktop com.sonora.app.png ;;
           esac
 
       - name: Attach to release
@@ -169,36 +189,27 @@ jobs:
           echo "SIGN_KEY=$key" >> "$GITHUB_ENV"
           echo "GOGIO_SIGNPASS=$pass" >> "$GITHUB_ENV"
 
-      # sherpa-onnx runs the on-device engines (Kitten, Kokoro, Piper).
+      # sherpa-onnx runs the on-device engines.
       - name: Download sherpa-onnx
         run: go run ./tools/fetchsherpa android
 
+      - name: Install the giode CLI
+        run: go install github.com/mehran9675/giode-cli/cmd/giode@${GIODE_CLI}
+
+      # giode adds the manifest entries in giode.toml (microphone,
+      # notifications, the KeepAlive service) and signs with the debug key.
       - name: Build APK
         run: |
           export ANDROID_NDK_ROOT="$ANDROID_HOME/ndk/$NDK_VERSION"
-          version="${VERSION#v}"
-          go run gioui.org/cmd/gogio@v0.10.3 -target android -arch arm64,arm,amd64 -tags sherpa \
-            -appid com.sonora.app -name Sonora -icon assets/icon/icon.png \
-            -version "${version}.${{ github.run_number }}" -minsdk 26 \
-            -ldflags "-s -w -X github.com/mehran9675/sonora/ui/pages/settings.Version=${version}" \
-            -signkey "$SIGN_KEY" \
-            -o gogio.apk ./cmd/sonora
+          ./tools/setversion.sh "${VERSION#v}" "${{ github.run_number }}"
+          giode build android
 
-      # gogio only packs libgio.so; add the libraries it links against,
-      # then align and sign the APK again.
-      - name: Add native libraries
+      # giode packs only libgio.so; add the sherpa-onnx libraries it links
+      # against, then align and sign with the release key.
+      - name: Add native libraries and sign
         run: |
-          tools="$ANDROID_HOME/build-tools/35.0.0"
-          stage="$RUNNER_TEMP/apk"
-          mkdir -p "$stage/lib"
-          cp -r third_party/sherpa-onnx/android/. "$stage/lib/"
-          zip -q -d gogio.apk 'META-INF/*'
-          (cd "$stage" && zip -q -r -D "$GITHUB_WORKSPACE/gogio.apk" lib)
-          unzip -l gogio.apk | grep 'lib/.*\.so$'
-          apk="sonora-${VERSION}-android.apk"
-          "$tools/zipalign" -p -f 4 gogio.apk "$apk"
-          "$tools/apksigner" sign --ks "$SIGN_KEY" --ks-pass env:GOGIO_SIGNPASS "$apk"
-          "$tools/apksigner" verify "$apk"
+          go run ./tools/packapk -ks "$SIGN_KEY" -pass-env GOGIO_SIGNPASS \
+            -o "sonora-${VERSION}-android.apk" dist/android/Sonora.apk
 
       - name: Attach to release
         env:

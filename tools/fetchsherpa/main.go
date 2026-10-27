@@ -4,7 +4,8 @@
 //	go run ./tools/fetchsherpa android     # all Android ABIs, for the APK
 //	go run ./tools/fetchsherpa linux-x64   # for developing on Linux
 //
-// Build with -tags sherpa afterwards; see internal/engines/onnx/sherpa.
+// Android builds use them automatically (see tools/packapk); desktop
+// builds need -tags sherpa. See internal/engines/onnx/sherpa.
 package main
 
 import (

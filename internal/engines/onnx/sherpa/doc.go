@@ -5,11 +5,12 @@
 // on the CPU, with Silero voice activity detection to cut long
 // recordings into utterances.
 //
-// The binding is compiled only with the "sherpa" build tag, and links
-// against libsherpa-onnx-c-api.so from third_party/sherpa-onnx (see
-// tools/fetchsherpa). Without the tag, Available is false and New
-// fails, so normal desktop builds need no native library. c-api.h is
-// the header of the release named in tools/fetchsherpa.
+// The binding is compiled on Android, and on desktops with the
+// "sherpa" build tag; it links against libsherpa-onnx-c-api.so from
+// third_party/sherpa-onnx (see tools/fetchsherpa). Without it,
+// Available is false and New fails, so normal desktop builds need no
+// native library. c-api.h is the header of the release named in
+// tools/fetchsherpa.
 package sherpa
 
 // Family selects the model architecture.
