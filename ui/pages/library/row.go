@@ -1,6 +1,8 @@
 package library
 
 import (
+	"strings"
+
 	"github.com/mehran9675/giode"
 
 	lib "github.com/mehran9675/sonora/internal/library"
@@ -23,24 +25,12 @@ type row struct {
 func newRow(c *core.Ctx, e lib.Entry) *row {
 	r := &row{c: c, e: e}
 	path := c.Library.Path(e)
-	r.play = giode.Pressable(func(s giode.PressState) giode.Element {
-		playing := c.IsPlaying(path)
-		icon := icons.Solid(icons.Play, 14, "theme.primary")
-		bg := "theme.primary/0.14"
-		if playing {
-			icon = icons.Solid(icons.Pause, 14, "#ffffff")
-			bg = "theme.primary"
-		} else if s.Hovered {
-			bg = "theme.primary/0.24"
-		}
-		return giode.Box(giode.Styles{Width: 40, Height: 40, BorderRadius: 99, Background: bg,
-			Align: giode.AlignCenter, Justify: giode.JustifyCenter}, icon)
-	}).Label("Play").OnClick(func(giode.ClickEvent) { c.PlayPause(path, e.VoiceName, e.EngineName) })
+	r.play = playButton(c, path, e.VoiceName, e.EngineName)
 	ghost := giode.Styles{Color: "theme.muted", Background: "theme.text", Padding: giode.UniformInset(8), BorderRadius: 8}
 	r.reuse = giode.Button("", ghost).Variant(giode.VariantGhost).Icon(icons.Icon(icons.Reuse, 16, "")).
 		OnClick(func() { c.Reuse(e) })
-	r.share = giode.Button("", ghost).Variant(giode.VariantGhost).Icon(icons.Icon(core.ShareIcon(), 16, "")).
-		OnClick(func() { c.ShareClip(path) })
+	r.share = giode.Button("", ghost).Variant(giode.VariantGhost).Icon(icons.Icon(icons.Share, 16, "")).
+		OnClick(func() { c.ExportFile(path, e.VoiceName+" - "+firstWords(e.Text, 6)) })
 	r.remove = giode.Button("", ghost).Variant(giode.VariantGhost).Icon(icons.Icon(icons.Trash, 16, "")).OnClick(func() {
 		giode.AfterLayout(func() {
 			if c.Player.Loaded() == path {
@@ -53,7 +43,7 @@ func newRow(c *core.Ctx, e lib.Entry) *row {
 	return r
 }
 
-// actions are the row's buttons: reuse, share (or show in folder) and
+// actions are the row's buttons: reuse, export (save a copy, share) and
 // delete.
 func (r *row) actions() giode.Element {
 	return giode.Row(giode.Styles{Gap: 2, Wrap: giode.WrapNoWrap}, r.reuse, r.share, r.remove)
@@ -79,4 +69,30 @@ func (r *row) element() giode.Element {
 		),
 		r.actions(),
 	)
+}
+
+// playButton plays and pauses the audio at path.
+func playButton(c *core.Ctx, path, title, subtitle string) *giode.PressableElement {
+	return giode.Pressable(func(s giode.PressState) giode.Element {
+		playing := c.IsPlaying(path)
+		icon := icons.Solid(icons.Play, 14, "theme.primary")
+		bg := "theme.primary/0.14"
+		if playing {
+			icon = icons.Solid(icons.Pause, 14, "#ffffff")
+			bg = "theme.primary"
+		} else if s.Hovered {
+			bg = "theme.primary/0.24"
+		}
+		return giode.Box(giode.Styles{Width: 40, Height: 40, BorderRadius: 99, Background: bg,
+			Align: giode.AlignCenter, Justify: giode.JustifyCenter}, icon)
+	}).Label("Play").OnClick(func(giode.ClickEvent) { c.PlayPause(path, title, subtitle) })
+}
+
+// firstWords returns up to n words of text, for a file name.
+func firstWords(text string, n int) string {
+	w := strings.Fields(text)
+	if len(w) > n {
+		w = w[:n]
+	}
+	return strings.Join(w, " ")
 }

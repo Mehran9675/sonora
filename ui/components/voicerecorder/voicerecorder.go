@@ -5,13 +5,13 @@ package voicerecorder
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/mehran9675/giode"
 
 	"github.com/mehran9675/sonora/internal/audio/record"
-	"github.com/mehran9675/sonora/internal/audio/wav"
 	"github.com/mehran9675/sonora/ui/components/levelmeter"
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
@@ -28,9 +28,10 @@ const (
 // Options set what a recorder is for. The zero value records a voice
 // for cloning.
 type Options struct {
-	Min, Max time.Duration // defaults: MinLength, MaxLength
-	Dir      string        // where takes are saved; default ReferencesDir
-	Name     string        // file name prefix; default "recording"
+	// Min is the shortest take kept (default MinLength); Max stops the
+	// recording (0: the limit set in Settings).
+	Min, Max time.Duration
+	Name     string // file name prefix; default "voice"
 	// Hint shows while recording, Ready once the take is long enough.
 	Hint, Ready string
 }
@@ -51,9 +52,10 @@ type Recorder struct {
 }
 
 // New returns a recorder for cloning that calls onDone with the saved
-// WAV file.
+// file. Cloning models use a few seconds of speech, so it stops at
+// MaxLength.
 func New(c *core.Ctx, onDone func(path string)) *Recorder {
-	return NewWith(c, Options{}, onDone)
+	return NewWith(c, Options{Max: MaxLength}, onDone)
 }
 
 // NewWith returns a recorder configured by opts.
@@ -61,14 +63,8 @@ func NewWith(c *core.Ctx, opts Options, onDone func(path string)) *Recorder {
 	if opts.Min == 0 {
 		opts.Min = MinLength
 	}
-	if opts.Max == 0 {
-		opts.Max = MaxLength
-	}
-	if opts.Dir == "" {
-		opts.Dir = core.ReferencesDir()
-	}
 	if opts.Name == "" {
-		opts.Name = "recording"
+		opts.Name = "voice"
 	}
 	if opts.Hint == "" {
 		opts.Hint = "Read naturally, a few sentences, in a quiet room."
@@ -106,6 +102,9 @@ func (r *Recorder) begin() {
 	}
 	r.opening = true
 	r.c.Player.Pause() // don't record the speakers
+	// Recordings go to the folder chosen in Settings, at its quality.
+	path := filepath.Join(r.c.RecordingsDir(), r.opts.Name+"-"+time.Now().Format("2006-01-02 15.04.05")+".opus")
+	limit := r.limit()
 	var rec *record.Recorder
 	r.c.Background(func() error {
 		// Android asks the user for the microphone the first time.
@@ -113,7 +112,7 @@ func (r *Recorder) begin() {
 			return err
 		}
 		var err error
-		rec, err = record.Start()
+		rec, err = record.Start(record.Options{Path: path, Bitrate: r.c.RecordBitrate()})
 		return err
 	}, func(err error) {
 		r.opening = false
@@ -122,11 +121,20 @@ func (r *Recorder) begin() {
 			return
 		}
 		r.rec = rec
-		r.timer = time.AfterFunc(r.opts.Max, func() { r.c.App.Post(func() { r.finish(true) }) })
+		r.timer = time.AfterFunc(limit, func() { r.c.App.Post(func() { r.finish(true) }) })
 	})
 }
 
-// finish closes the microphone and, when keep is set, saves the take.
+// limit returns how long this recorder records at most.
+func (r *Recorder) limit() time.Duration {
+	if r.opts.Max > 0 {
+		return r.opts.Max
+	}
+	return r.c.RecordMax()
+}
+
+// finish closes the microphone and the file and, when keep is set,
+// hands the take over; otherwise it's deleted.
 func (r *Recorder) finish(keep bool) {
 	rec := r.rec
 	if rec == nil {
@@ -134,18 +142,22 @@ func (r *Recorder) finish(keep bool) {
 	}
 	r.rec = nil
 	r.timer.Stop()
-	elapsed := rec.Elapsed()
 	var path string
 	r.c.Background(func() error {
-		clip := rec.Stop()
 		if !keep {
+			rec.Cancel()
 			return nil
 		}
-		if elapsed < r.opts.Min || clip.Duration() < r.opts.Min*6/10 {
+		p, length, err := rec.Stop()
+		if err != nil {
+			return err
+		}
+		if length < r.opts.Min {
+			os.Remove(p)
 			return fmt.Errorf("That recording is too short; speak for at least %d seconds", int(r.opts.Min.Seconds()))
 		}
-		path = filepath.Join(r.opts.Dir, r.opts.Name+"-"+time.Now().Format("20060102-150405")+".wav")
-		return wav.Write(path, clip)
+		path = p
+		return nil
 	}, func(err error) {
 		if err != nil {
 			r.c.Error(err)
@@ -164,7 +176,7 @@ func (r *Recorder) Element() giode.Element {
 	}
 	giode.HandleBack(func() { r.finish(false) }) // Back discards the take
 	elapsed := r.rec.Elapsed()
-	clock := fmt.Sprintf("%s / %s", core.Clock(elapsed), core.Clock(r.opts.Max))
+	clock := fmt.Sprintf("%s / %s", core.Clock(elapsed), core.Clock(r.limit()))
 	hint := r.opts.Hint
 	if elapsed >= r.opts.Min {
 		hint = r.opts.Ready

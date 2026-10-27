@@ -2,7 +2,10 @@ package settings
 
 import (
 	"context"
+	"os"
 	"runtime"
+	"strconv"
+	"strings"
 
 	"github.com/mehran9675/giode"
 	"github.com/mehran9675/giode/components/input"
@@ -14,6 +17,7 @@ import (
 	st "github.com/mehran9675/sonora/internal/settings"
 	"github.com/mehran9675/sonora/ui/components/chip"
 	"github.com/mehran9675/sonora/ui/components/pagehead"
+	"github.com/mehran9675/sonora/ui/components/picker"
 	"github.com/mehran9675/sonora/ui/components/segmented"
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
@@ -34,6 +38,11 @@ type Page struct {
 	library *giode.ButtonElement
 	uv      *giode.ButtonElement
 	uvInfo  string
+
+	quality, limit       *picker.Picker
+	qualityT, limitT     *picker.Trigger
+	folder               *input.Input
+	openFolder, defaults *giode.ButtonElement
 }
 
 // New builds the page; applyTheme switches the palette.
@@ -76,8 +85,101 @@ func New(c *core.Ctx, applyTheme func(mode string)) *Page {
 			c.Success("Python toolchain ready")
 		})
 	})
+	p.recordingControls()
 	p.scroll = giode.Scroll(p.content, theme.Scrolling(6))
 	return p
+}
+
+// recordingControls builds the Recording section's controls.
+func (p *Page) recordingControls() {
+	c := p.c
+	quality := func() string {
+		q := c.Settings.Get().RecordQuality
+		if q == "" {
+			return core.RecordQualities[1].Value
+		}
+		return q
+	}
+	p.quality = picker.New("Recording quality", func() []picker.Item {
+		var items []picker.Item
+		for _, q := range core.RecordQualities {
+			label, detail, _ := strings.Cut(q.Label, " · ")
+			items = append(items, picker.Item{ID: q.Value, Label: label, Detail: detail})
+		}
+		return items
+	}, quality, func(it picker.Item) { c.Settings.Update(func(s *st.Settings) { s.RecordQuality = it.ID }) })
+	p.qualityT = picker.NewTrigger("Recording quality", func() (string, string) {
+		for _, q := range core.RecordQualities {
+			if q.Value == quality() {
+				label, detail, _ := strings.Cut(q.Label, " · ")
+				return label, detail
+			}
+		}
+		return quality(), ""
+	}, nil, p.quality.Open)
+	minutes := func() string { return strconv.Itoa(int(c.RecordMax().Minutes())) }
+	p.limit = picker.New("Longest recording", func() []picker.Item {
+		var items []picker.Item
+		for _, m := range core.RecordLimits {
+			items = append(items, picker.Item{ID: strconv.Itoa(m), Label: limitLabel(m)})
+		}
+		return items
+	}, minutes, func(it picker.Item) {
+		m, _ := strconv.Atoi(it.ID)
+		c.Settings.Update(func(s *st.Settings) { s.RecordMinutes = m })
+	})
+	p.limitT = picker.NewTrigger("Longest recording", func() (string, string) {
+		m, _ := strconv.Atoi(minutes())
+		return limitLabel(m), "Then the recording stops by itself"
+	}, nil, p.limit.Open)
+	p.folder = giode.Input.Text(core.DefaultRecordingsDir(), theme.Field()).Label("Recordings folder").
+		OnChange(func(v string) { c.Settings.Update(func(s *st.Settings) { s.RecordDir = strings.TrimSpace(v) }) })
+	p.folder.SetText(c.Settings.Get().RecordDir)
+	outline := giode.Styles{Color: "theme.text", Background: "theme.border", BorderColor: "theme.border", FontSize: 13,
+		Padding: giode.SymmetricInset(12, 7), BorderRadius: theme.RadiusSm}
+	p.openFolder = giode.Button("Open", outline).Variant(giode.VariantOutlined).Icon(icons.Icon(icons.Folder, 14, "")).
+		OnClick(func() {
+			dir := c.RecordingsDir()
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				c.Error(err)
+				return
+			}
+			c.Error(paths.Open(dir))
+		})
+	p.defaults = giode.Button("Default", outline).Variant(giode.VariantOutlined).OnClick(func() {
+		p.folder.SetText("")
+		c.Settings.Update(func(s *st.Settings) { s.RecordDir = "" })
+	})
+}
+
+// limitLabel names a recording length in minutes.
+func limitLabel(m int) string {
+	switch {
+	case m == 60:
+		return "1 hour"
+	case m%60 == 0:
+		return strconv.Itoa(m/60) + " hours"
+	}
+	return strconv.Itoa(m) + " minutes"
+}
+
+// recordingSection is the Recording settings card.
+func (p *Page) recordingSection() giode.Element {
+	rows := []giode.Element{
+		p.setting("Quality", "Recordings are Opus files, a fraction of a WAV's size. Higher quality suits voices you'll clone.",
+			p.qualityT.Element()),
+		p.setting("Longest recording", "A safety stop, so a forgotten recording doesn't fill the storage.", p.limitT.Element()),
+	}
+	// Phones keep recordings in Sonora's own storage; export them from
+	// the Library.
+	if !core.Mobile {
+		rows = append(rows, p.setting("Folder", "Where recordings are saved. Leave empty for Sonora's data folder.",
+			giode.Stack(giode.Styles{Width: -1, Gap: 8},
+				giode.Box(giode.Styles{Width: -1}, p.folder),
+				giode.Row(giode.Styles{Gap: 8}, p.openFolder, p.defaults),
+			)))
+	}
+	return section("Recording", "Voices you record to clone or to transcribe.", rows...)
 }
 
 func (p *Page) content() giode.Element {
@@ -95,6 +197,7 @@ func (p *Page) content() giode.Element {
 		section("Appearance", "How Sonora looks.",
 			p.setting("Theme", "System follows your device's light or dark setting.", p.theme.Element()),
 		),
+		p.recordingSection(),
 	}
 	// Phones run only on-device models, so the compute device, folders
 	// and the Python toolchain don't apply there.

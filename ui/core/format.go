@@ -5,9 +5,12 @@ import (
 	"time"
 )
 
-// Clock formats a duration as m:ss.
+// Clock formats a duration as m:ss, or h:mm:ss from an hour.
 func Clock(d time.Duration) string {
 	s := int(d.Round(time.Second).Seconds())
+	if s >= 3600 {
+		return fmt.Sprintf("%d:%02d:%02d", s/3600, s/60%60, s%60)
+	}
 	return fmt.Sprintf("%d:%02d", s/60, s%60)
 }
 

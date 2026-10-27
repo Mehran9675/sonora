@@ -3,13 +3,17 @@ package manager
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/mehran9675/sonora/internal/audio/decode"
 	"github.com/mehran9675/sonora/internal/audio/wav"
 	"github.com/mehran9675/sonora/internal/engines"
 	"github.com/mehran9675/sonora/internal/library"
+	"github.com/mehran9675/sonora/internal/paths"
 )
 
 // Job is a generation in progress.
@@ -58,7 +62,13 @@ func (m *Manager) Generate(rt *Runtime, in Input, done func(library.Entry, error
 	m.Job = &Job{Runtime: rt, Started: time.Now()}
 	sink := m.sink(rt)
 	go func() {
-		err := explain(rt.Engine.Synthesize(ctx, req, sink.Log))
+		// Engines read WAV; recordings are Opus.
+		ref, cleanup, err := wavReference(req.Reference)
+		defer cleanup()
+		req.Reference = ref
+		if err == nil {
+			err = explain(rt.Engine.Synthesize(ctx, req, sink.Log))
+		}
 		var entry library.Entry
 		if err == nil {
 			entry, err = m.record(id, out, man, in, req)
@@ -102,4 +112,23 @@ func (m *Manager) record(id, out string, man *engines.Manifest, in Input, req en
 	}
 	m.library.Add(e)
 	return e, nil
+}
+
+// wavReference returns a WAV copy of a non-WAV reference recording
+// (Opus, MP3…), for engines that read only WAV, and a function that
+// deletes it.
+func wavReference(path string) (string, func(), error) {
+	noop := func() {}
+	if path == "" || strings.EqualFold(filepath.Ext(path), ".wav") {
+		return path, noop, nil
+	}
+	clip, err := decode.File(path, 0)
+	if err != nil {
+		return "", noop, err
+	}
+	out := filepath.Join(paths.Sub("cache"), fmt.Sprintf("reference-%d.wav", time.Now().UnixNano()))
+	if err := wav.Write(out, clip); err != nil {
+		return "", noop, err
+	}
+	return out, func() { os.Remove(out) }, nil
 }

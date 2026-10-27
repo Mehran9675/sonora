@@ -8,9 +8,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mehran9675/sonora/internal/audio"
 	"github.com/mehran9675/sonora/internal/audio/decode"
+	"github.com/mehran9675/sonora/internal/audio/opusfile"
 	"github.com/mehran9675/sonora/internal/audio/wav"
 	"github.com/mehran9675/sonora/internal/engines"
+	"github.com/mehran9675/sonora/internal/paths"
 	"github.com/mehran9675/sonora/internal/transcripts"
 )
 
@@ -71,13 +74,20 @@ func (m *Manager) transcribe(ctx context.Context, tr engines.Transcriber, man *e
 	if err != nil {
 		return transcripts.Entry{}, err
 	}
-	if err := wav.Write(audioPath, clip); err != nil {
+	// Engines take a 16 kHz WAV; the transcript keeps the audio as Opus,
+	// a few percent of the size.
+	input := filepath.Join(paths.Sub("cache"), id+".wav")
+	if err := wav.Write(input, clip); err != nil {
+		return transcripts.Entry{}, err
+	}
+	defer os.Remove(input)
+	if err := saveOpus(audioPath, clip); err != nil {
 		return transcripts.Entry{}, err
 	}
 	if ctx.Err() != nil {
 		return transcripts.Entry{}, ctx.Err()
 	}
-	req := engines.TranscribeRequest{Audio: audioPath, Language: in.Language, Translate: in.Translate && man.Translate,
+	req := engines.TranscribeRequest{Audio: input, Language: in.Language, Translate: in.Translate && man.Translate,
 		Options: m.values(man)}
 	res, err := tr.Transcribe(ctx, req, log)
 	if err != nil {
@@ -102,4 +112,20 @@ func (m *Manager) transcribe(ctx context.Context, tr engines.Transcriber, man *e
 	}
 	m.transcripts.Add(e)
 	return e, nil
+}
+
+// transcriptBitrate keeps transcribed speech clear at 16 kHz.
+const transcriptBitrate = 24000
+
+// saveOpus writes a 16 kHz clip as Opus.
+func saveOpus(path string, clip *audio.Clip) error {
+	w, err := opusfile.Create(path, clip.SampleRate, transcriptBitrate)
+	if err != nil {
+		return err
+	}
+	if err := w.Write(clip.Samples); err != nil {
+		w.Close()
+		return err
+	}
+	return w.Close()
 }

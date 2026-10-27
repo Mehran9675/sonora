@@ -43,10 +43,6 @@ github.com/jfreymuth/vorbis v1.0.2 h1:m1xH6+ZI4thH927pgKD8JOH4eaGRm18rEE9/0WKjvN
 github.com/jfreymuth/vorbis v1.0.2/go.mod h1:DoftRo4AznKnShRl1GxiTFCseHr4zR9BN3TWXyuzrqQ=
 github.com/ledongthuc/pdf v0.0.0-20250511090121-5959a4027728 h1:QwWKgMY28TAXaDl+ExRDqGQltzXqN/xypdKP86niVn8=
 github.com/ledongthuc/pdf v0.0.0-20250511090121-5959a4027728/go.mod h1:1fEHWurg7pvf5SG6XNE5Q8UZmOwex51Mkx3SLhrW5B4=
-github.com/mehran9675/giode v0.1.1-alpha.1 h1:VzT0eVNpFKiWTiVgIMVTQ4igKswU2vTU8rpB/LAkrk8=
-github.com/mehran9675/giode v0.1.1-alpha.1/go.mod h1:qmocbcX34yaYAVh/qh2/XZQpyv+ICislgg1DMi0P6Uo=
-github.com/mehran9675/giode v0.1.4-alpha.1 h1:UlsO1H/7EYw7MxTwVm5yzMAtajiu8ASQ669cCvjyg80=
-github.com/mehran9675/giode v0.1.4-alpha.1/go.mod h1:BSCQZdDJ7+DCEUPSK0W3rnuoLJCieq9o5tIgPBH3GLE=
 github.com/mehran9675/giode v0.1.5-alpha.1 h1:b65XCiEoKupY6u4OGHQ3vwCIGxH1tllWmmhlVMOqJvo=
 github.com/mehran9675/giode v0.1.5-alpha.1/go.mod h1:BSCQZdDJ7+DCEUPSK0W3rnuoLJCieq9o5tIgPBH3GLE=
 github.com/mewkiz/flac v1.0.14 h1:hyRGAM8NCKznoPmIi9zz2jyO+nfmxY2ErqBnHZ+gxh4=
@@ -57,6 +53,8 @@ github.com/mewpkg/term v0.0.0-20241026122259-37a80af23985 h1:h8O1byDZ1uk6RUXMhj1
 github.com/mewpkg/term v0.0.0-20241026122259-37a80af23985/go.mod h1:uiPmbdUbdt1NkGApKl7htQjZ8S7XaGUAVulJUJ9v6q4=
 github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef h1:Ch6Q+AZUxDBCVqdkI8FSpFyZDtCVBc2VmejdNrm5rRQ=
 github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef/go.mod h1:nXTWP6+gD5+LUJ8krVhhoeHjvHTutPxMYl5SvkcnJNE=
+github.com/thesyncim/gopus v0.1.2 h1:owP6CIQ+RvoFDVwKkedHIGb77gnnCbH50d9oBOTxs7M=
+github.com/thesyncim/gopus v0.1.2/go.mod h1:orRqwrGs5gqYRRnhqwI0Y3liqQTeDkreUpra+Kv9bQc=
 github.com/yuin/goldmark v1.4.13 h1:fVcFKWvrslecOb/tg+Cc05dkeYx540o0FuFt3nUVDoE=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0 h1:R84qjqJb5nVJMxqWYb3np9L5ZsaDtB+a39EqjV0JSUM=

@@ -24,11 +24,6 @@ import (
 	"github.com/mehran9675/sonora/ui/theme"
 )
 
-// maxRecording stops a transcription recording automatically. Takes
-// are held in memory (about 10 MB a minute), so longer audio is better
-// recorded with another app and picked as a file.
-const maxRecording = 15 * time.Minute
-
 // panel is the right-hand column: engine, audio, language, settings
 // and the Transcribe button.
 type panel struct {
@@ -108,9 +103,9 @@ func newPanel(p *Page) *panel {
 	v.clear = giode.Button("", giode.Styles{Color: "theme.muted", Background: "theme.text", Padding: giode.UniformInset(5), BorderRadius: 8}).
 		Variant(giode.VariantGhost).Icon(icons.Icon(icons.Close, 14, "")).OnClick(p.dropSource)
 	v.recorder = voicerecorder.NewWith(c, voicerecorder.Options{
-		Min: time.Second, Max: maxRecording, Dir: core.RecordingsDir(), Name: "speech",
-		Hint: "Speak normally; the recording stops by itself after 15 minutes.", Ready: "Press Stop when you're done.",
-	}, func(path string) { p.setSource(path, "Recording "+time.Now().Format("Jan 2, 15:04"), true) })
+		Min: time.Second, Name: "speech",
+		Hint: "Speak normally; press Stop when you're done.", Ready: "Press Stop when you're done.",
+	}, func(path string) { p.setSource(path, "Recording "+time.Now().Format("Jan 2, 15:04"), false) })
 	v.play = giode.Pressable(func(s giode.PressState) giode.Element {
 		icon := icons.Solid(icons.Play, 12, "theme.primary")
 		if c.IsPlaying(p.source) {
@@ -164,7 +159,7 @@ func (v *panel) pickFile() {
 		if name == "" {
 			name = "Audio from " + time.Now().Format("Jan 2, 15:04")
 		}
-		path, err = core.SavePicked(f, core.RecordingsDir(), "audio")
+		path, err = core.SavePicked(f, core.PickedDir(), "audio")
 		temp = true
 		return err
 	}, func(err error) {

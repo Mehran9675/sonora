@@ -11,6 +11,7 @@ import (
 	"github.com/mehran9675/sonora/internal/manager"
 	"github.com/mehran9675/sonora/internal/settings"
 	"github.com/mehran9675/sonora/internal/transcripts"
+	"github.com/mehran9675/sonora/ui/components/actionsheet"
 )
 
 // Ctx is passed to every page and component that needs app services.
@@ -23,7 +24,9 @@ type Ctx struct {
 	Transcripts *transcripts.Store
 	Player      *playback.Player
 	Toasts      *giode.ToasterElement
-	Now         *NowPlaying
+	// Sheet lists actions for an item (export, share).
+	Sheet *actionsheet.Sheet
+	Now   *NowPlaying
 
 	page Page
 	// awake counts StayAwake holders; release ends the KeepAlive.
@@ -38,6 +41,9 @@ type Ctx struct {
 	UseTranscriber func(id string)
 	// Speak puts text into the Studio's script (set by the Studio).
 	Speak func(text string)
+	// Transcribe opens an audio file on the Transcribe page (set by that
+	// page).
+	Transcribe func(path, title string)
 	// ShowEngines opens the Engines page on the voice or transcription
 	// tab (set by that page).
 	ShowEngines func(task engines.Task)

@@ -1,4 +1,4 @@
-// Package transcripts keeps every transcription with its audio.
+// Package transcripts keeps every transcription with its audio, as Opus.
 package transcripts
 
 import (
@@ -25,7 +25,7 @@ type Entry struct {
 	EngineName string            `json:"engine_name"`
 	Created    time.Time         `json:"created"`
 	Duration   time.Duration     `json:"duration"`
-	Audio      string            `json:"audio"` // 16 kHz WAV inside the folder
+	Audio      string            `json:"audio"` // the audio inside the folder: Opus (older entries: WAV)
 }
 
 // Store is the folder of transcripts plus index.json. Methods are safe
@@ -48,11 +48,11 @@ func Open(dir string) *Store {
 
 func (s *Store) index() string { return filepath.Join(s.dir, "index.json") }
 
-// NewFile returns a fresh id and the path its audio should be written
-// to.
+// NewFile returns a fresh id and the path its Opus audio should be
+// written to.
 func (s *Store) NewFile() (id, path string) {
 	id = fmt.Sprintf("%d", time.Now().UnixNano())
-	return id, filepath.Join(s.dir, id+".wav")
+	return id, filepath.Join(s.dir, id+".opus")
 }
 
 // AudioPath returns the absolute path of an entry's audio.

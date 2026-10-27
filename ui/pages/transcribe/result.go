@@ -24,7 +24,7 @@ type result struct {
 	text  *input.Input
 	save  *time.Timer // debounces saving edits
 
-	play, copy, txt, srt, share, speak *giode.ButtonElement
+	play, copy, export, speak *giode.ButtonElement
 }
 
 func newResult(p *Page) *result {
@@ -49,9 +49,7 @@ func newResult(p *Page) *result {
 		c.App.SetClipboard(r.text.Text())
 		c.Success("Copied")
 	})
-	r.txt = button("Text", icons.Download, func() { c.SaveText(core.FileName(r.entry.Title, ".txt"), r.text.Text()) })
-	r.srt = button("Subtitles", icons.Captions, func() { c.SaveText(core.FileName(r.entry.Title, ".srt"), transcripts.SRT(*r.entry)) })
-	r.share = button("Share", icons.Share, func() { c.ShareText(r.text.Text(), r.entry.Title) })
+	r.export = button("Export", icons.Share, func() { c.ExportTranscript(*r.entry, r.text.Text()) })
 	r.speak = button("Speak", icons.Speaker, func() { c.Speak(r.text.Text()) })
 	return r
 }
@@ -108,7 +106,7 @@ func (r *result) element(height int) giode.Element {
 		return giode.Stack(card,
 			giode.Text("Transcript", theme.Heading),
 			giode.Text("Choose an audio file or record, then press Transcribe. The text appears here, "+
-				"ready to edit, copy, save as text or subtitles, or turn back into speech in the Studio.",
+				"ready to edit, copy, export or share as text or subtitles, or turn back into speech in the Studio.",
 				giode.Styles{Color: "theme.muted", FontSize: 13, LineHeight: 19}),
 		)
 	}
@@ -128,7 +126,7 @@ func (r *result) element(height int) giode.Element {
 	for _, b := range []struct {
 		btn   *giode.ButtonElement
 		label string
-	}{{r.play, "Play"}, {r.copy, "Copy"}, {r.txt, "Text"}, {r.srt, "Subtitles"}, {r.share, "Share"}, {r.speak, "Speak"}} {
+	}{{r.play, "Play"}, {r.copy, "Copy"}, {r.export, "Export"}, {r.speak, "Speak"}} {
 		if giode.Compact() {
 			b.label = ""
 		}
@@ -142,7 +140,7 @@ func (r *result) element(height int) giode.Element {
 		giode.Box(giode.Styles{Width: -1, Height: properties.Height(textHeight), Padding: giode.Inset{Right: 8},
 			Overflow: giode.OverflowHidden}, r.text),
 		giode.Divider(giode.Styles{Color: "theme.border"}),
-		giode.Row(giode.Styles{Width: -1, Gap: 4, Align: giode.AlignCenter}, r.play, r.copy, r.txt, r.srt, r.share, r.speak),
+		giode.Row(giode.Styles{Width: -1, Gap: 4, Align: giode.AlignCenter}, r.play, r.copy, r.export, r.speak),
 	)
 }
 

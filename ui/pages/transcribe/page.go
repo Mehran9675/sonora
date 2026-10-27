@@ -34,8 +34,8 @@ type Page struct {
 	addEngine    *giode.ButtonElement
 
 	// source is the audio waiting to be transcribed; temp marks a copy
-	// Sonora made (a recording, or a file from the Android picker) to
-	// delete once it's transcribed.
+	// Sonora made of a picked file (the Android picker hands over a
+	// stream) to delete once it's transcribed. Recordings are kept.
 	source, sourceName string
 	temp               bool
 }
@@ -53,6 +53,10 @@ func New(c *core.Ctx) *Page {
 	p.addEngine = giode.Button("Open Engines", giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
 		Padding: giode.SymmetricInset(16, 9), BorderRadius: theme.RadiusSm + 2}).
 		Icon(icons.Icon(icons.Chip, 15, "")).OnClick(func() { c.ShowEngines(engines.TaskTranscribe) })
+	c.Transcribe = func(path, title string) {
+		p.setSource(path, title, false)
+		c.Go(core.PageTranscribe)
+	}
 	c.UseTranscriber = func(id string) {
 		p.selectEngine(id)
 		c.Go(core.PageTranscribe)
@@ -60,9 +64,9 @@ func New(c *core.Ctx) *Page {
 	if es := c.Transcripts.Entries(); len(es) > 0 {
 		p.result.show(es[0])
 	}
-	// Recordings and picked files are only kept until they're
-	// transcribed; clear what an earlier session left behind.
-	olds, _ := filepath.Glob(filepath.Join(core.RecordingsDir(), "*"))
+	// Copies of picked files are only kept until they're transcribed;
+	// clear what an earlier session left behind.
+	olds, _ := filepath.Glob(filepath.Join(core.PickedDir(), "*"))
 	for _, f := range olds {
 		os.Remove(f)
 	}

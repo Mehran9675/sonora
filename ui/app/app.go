@@ -14,6 +14,7 @@ import (
 	"github.com/mehran9675/sonora/internal/paths"
 	"github.com/mehran9675/sonora/internal/settings"
 	"github.com/mehran9675/sonora/internal/transcripts"
+	"github.com/mehran9675/sonora/ui/components/actionsheet"
 	"github.com/mehran9675/sonora/ui/core"
 	enginespage "github.com/mehran9675/sonora/ui/pages/engines"
 	librarypage "github.com/mehran9675/sonora/ui/pages/library"
@@ -36,6 +37,7 @@ func Run() error {
 		Transcripts: transcripts.Open(paths.Sub("transcripts")),
 		Player:      playback.New(),
 		Toasts:      giode.Toaster().Placement(giode.ToastBottomRight),
+		Sheet:       actionsheet.New(),
 	}
 	var studioPage *studio.Page
 	cfg := giode.Config{
