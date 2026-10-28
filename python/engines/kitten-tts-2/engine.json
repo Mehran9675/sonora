@@ -9,6 +9,7 @@
   "size": "≈ 3 GB with PyTorch + 0.5–1 GB model",
   "accent": ["#f97316", "#ec4899"],
   "kind": "python",
+  "model_option": "weights",
   "python": "3.11",
   "install": [["kittenml"]],
   "clone": "optional",

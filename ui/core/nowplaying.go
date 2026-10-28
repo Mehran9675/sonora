@@ -3,7 +3,7 @@ package core
 import (
 	"time"
 
-	"github.com/mehran9675/sonora/internal/audio/wav"
+	"github.com/mehran9675/sonora/internal/audio/decode"
 )
 
 // peakCount is the waveform resolution kept for display.
@@ -22,7 +22,7 @@ type NowPlaying struct {
 // starting playback when autoplay is set.
 func (c *Ctx) Open(path, title, subtitle string, autoplay bool) {
 	go func() {
-		clip, err := wav.Read(path)
+		clip, err := decode.File(path, 0) // WAV clips, Opus recordings…
 		if err == nil {
 			err = c.Player.Load(clip, path)
 		}

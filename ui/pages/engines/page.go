@@ -64,7 +64,9 @@ func (p *Page) content() giode.Element {
 	var ready, rest []giode.Element
 	for _, rt := range p.c.Manager.EnginesFor(p.task) {
 		el := p.card(rt).element()
-		if rt.State == manager.StateReady || rt.State == manager.StateWorking {
+		// An installed engine downloading another model stays put.
+		installed := rt.State == manager.StateInstalling && rt.Engine.Installed()
+		if rt.State == manager.StateReady || rt.State == manager.StateWorking || installed {
 			ready = append(ready, el)
 		} else {
 			rest = append(rest, el)

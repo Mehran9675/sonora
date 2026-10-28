@@ -25,9 +25,9 @@ on your computer, or use a cloud speech or transcription API, and add it under
 *Engines → Add engine*. The Python engines (IndexTTS, Chatterbox, faster-whisper…) are
 desktop only: they need PyTorch or CTranslate2, which don't run on Android. Recording
 works on phones too (Sonora asks for the microphone the first time). Phones read
-WAV, MP3, FLAC and Ogg Vorbis audio; other formats (M4A, Opus, video) need ffmpeg, which
-desktops can use when it's installed. Clips are saved through the system file
-picker or sent to other apps with the share sheet; Back closes dialogs and returns to the
+WAV, MP3, FLAC, Ogg Vorbis and Opus audio; other formats (M4A, video) need ffmpeg, which
+desktops can use when it's installed. Clips, recordings and transcripts are saved through
+the system file picker or sent to other apps with the share sheet; Back closes dialogs and returns to the
 Studio; your script is kept when you switch away.
 
 ![Studio](docs/screenshots/studio.png)
@@ -45,18 +45,24 @@ Studio; your script is kept when you switch away.
   engine setting rendered as proper controls. **Open file** loads the script from a
   document: text, Markdown, subtitles (SRT, WebVTT), HTML, Word, OpenDocument, EPUB, PDF
   or RTF.
-- **Transcribe.** Pick an audio or video file, or record up to 15 minutes, choose the
-  language (or let it be detected) and get an editable transcript with timestamps.
-  Translate into English, copy, share, save as text or SRT subtitles, or send it to the
-  Studio to be spoken. Every transcript is kept with its audio.
+- **Transcribe.** Pick an audio or video file, or record (up to an hour by default),
+  choose the language (or let it be detected) and get an editable transcript with
+  timestamps. Translate into English, copy, export or share it as text or SRT subtitles,
+  or send it to the Studio to be spoken. Every transcript is kept with its audio.
+- **Recording.** Recordings stream straight to an Opus file as you speak, so their length
+  is limited only by the cap you choose. *Settings → Recording* picks the microphone (an
+  unplugged one falls back to the system default), the quality (16 to 128 kbps; standard
+  is about 14 MB an hour), the longest recording (15 minutes to 8 hours, 1 hour by
+  default) and, on desktops, the folder they're kept in.
 - **Voice cloning.** On engines that can clone (Kitten TTS 2, Audio8, IndexTTS, Chatterbox, Coqui, ZipVoice),
   switch to *Clone a voice* and record yourself right in the app — live level meter,
-  auto-stop at 30 s, silence trimmed — or pick an audio file.
+  auto-stop at 30 s — or pick an audio file.
 - **Memory control.** A model stays loaded between generations for speed; **Eject** stops
   its Python process and frees the RAM (or VRAM) whenever you want it back.
 - **Player.** A waveform you can click to seek, play/pause, save as WAV, show in folder.
-- **Library.** Every clip is kept with its text, engine and voice. Search, replay, export,
-  or load a clip's settings back into the Studio.
+- **Library.** Every clip is kept with its text, engine and voice. Search, replay, export
+  or share the audio file as it is, or load a clip's settings back into the Studio. The
+  *Recordings* tab lists your recordings to play, transcribe, export or delete.
 - **Any model.** Built-in engines, Python plugins, API servers and command-line tools all
   appear in the same list and work the same way.
 - **Modern design.** Dark and light themes (or follow the system), a frameless window with a custom title bar,
@@ -137,12 +143,15 @@ On Windows and macOS, plain `go build` works too
 
 ## Using it
 
-1. **Engines** → press **Install** on an engine (or use *System Voices* right away).
+1. **Engines** → press **Install** on an engine (or use *System Voices* right away). Engines
+   with several models ask which to download, right in the card; **Add model** fetches
+   more later.
 2. **Studio** → write or paste text, choose the engine and voice, press **Generate speech**.
 3. Click the waveform to seek; use the download button to save a WAV.
 4. **Library** keeps every clip; ↺ loads one back into the Studio.
 
-Settings lets you switch theme, force CPU or GPU, and add a Hugging Face token for gated
+The Studio's (and Transcribe page's) model selector starts on a model you've downloaded and
+marks the rest; choosing another downloads it the first time you use it. Settings lets you switch theme, force CPU or GPU, and add a Hugging Face token for gated
 models.
 
 ## Adding other models

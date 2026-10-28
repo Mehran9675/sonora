@@ -14,7 +14,7 @@ app stays small, starts instantly, and one misbehaving model can't take the UI d
 │                              ├─ system   → SAPI / say / eSpeak NG     │
 │                              └─ onnx     → sherpa-onnx, in process    │
 │ pyenv/     uv: downloads Python, one virtualenv per engine            │
-│ audio/     WAV codec, decoding (MP3/FLAC/Ogg/ffmpeg), playback (oto)  │
+│ audio/     WAV + Opus codecs, decoding (MP3/FLAC/Ogg/ffmpeg), playback│
 │ textfile/  documents → script text;  transcripts/ the transcript store│
 └───────────────────────────────────────────────────────────────────────┘
 ```
@@ -54,14 +54,29 @@ option. ZipVoice also needs the Vocos vocoder, downloaded once next to the packa
 gets the reference recording (WAV) and its transcript per request. The model stays in
 memory until Eject, and Stop cancels generation through sherpa-onnx's progress callback.
 
+## Models
+
+An engine whose model is a choice (a `select` option named `model`, or the manifest's
+`model_option`) implements `engines.ModelStore`: which choices are downloaded, and
+`InstallModel` to fetch one - an on-device package, or for a Python engine a first load
+(recorded in `models.json`). The engine card asks which model to download on install and
+offers more later; `manager.Values` resolves an untouched model setting to a downloaded
+model, so the Studio and Transcribe pages start on one, while a model picked there
+downloads on first use.
+
 ## Speech to text
 
 An engine whose manifest has `task: "transcribe"` also implements
 `engines.Transcriber`. The manager (`manager/transcribe.go`) first decodes the picked or
-recorded file with `audio/decode` - WAV, MP3, FLAC and Ogg Vorbis in Go, anything else
-through ffmpeg - resampling to 16 kHz mono block by block, so an hour of audio costs
-about 115 MB, and stores that WAV with the transcript in `<data>/transcripts`. Every
-engine then gets the same 16 kHz WAV.
+recorded file with `audio/decode` - WAV, MP3, FLAC, Ogg Vorbis and Opus in Go, anything
+else through ffmpeg - resampling to 16 kHz mono block by block into a temporary WAV, so
+every engine gets the same 16 kHz WAV. The transcript keeps an Opus copy of the audio
+(24 kbps) in `<data>/transcripts`.
+
+The microphone (`audio/record`) captures 48 kHz mono and a goroutine encodes it to an
+Ogg Opus file as it arrives (`audio/opusfile`, pure Go via gopus), so a recording's length
+costs disk, not memory. Cloning references recorded this way are converted to a
+temporary WAV before an engine sees them.
 
 On device, `onnx/asr.go` cuts the audio into utterances with Silero VAD (each widened a
 little so first syllables survive, at most 20 s for Whisper) and recognizes them one by

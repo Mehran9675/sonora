@@ -1,34 +1,70 @@
 package record
 
-import "testing"
+import (
+	"math"
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
 
-func TestTrimSilence(t *testing.T) {
-	rate := 1000
-	s := make([]float32, 3000)
-	for i := 1000; i < 2000; i++ {
-		s[i] = 0.5
+	"github.com/mehran9675/sonora/internal/audio/opusfile"
+)
+
+// pcm returns n samples of a 440 Hz tone at half scale as the device
+// delivers them.
+func pcm(start, n int) []byte {
+	b := make([]byte, 2*n)
+	for i := 0; i < n; i++ {
+		v := int16(16384 * math.Sin(2*math.Pi*440*float64(start+i)/SampleRate))
+		b[2*i], b[2*i+1] = byte(v), byte(uint16(v)>>8)
 	}
-	got := trimSilence(s, rate)
-	// 1000 loud samples plus 100 samples of padding on each side.
-	if len(got) != 1199 {
-		t.Fatalf("got %d samples", len(got))
+	return b
+}
+
+// TestRecordToFile feeds two seconds through the recorder, as a
+// microphone would, and reads the Opus file back.
+func TestRecordToFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "sub", "take.opus")
+	r, err := newRecorder(Options{Path: path, Bitrate: 32000})
+	if err != nil {
+		t.Fatal(err)
 	}
-	if quiet := make([]float32, 50); len(trimSilence(quiet, rate)) != 50 {
-		t.Fatal("an all-quiet recording is kept as is")
+	for i := 0; i < 2*SampleRate; i += 480 { // 10 ms blocks
+		r.push(pcm(i, 480))
+	}
+	if lv := r.Levels(); len(lv) == 0 || lv[len(lv)-1] < 0.8 {
+		t.Fatalf("levels %v", lv)
+	}
+	if got := r.Elapsed(); got != 2*time.Second {
+		t.Fatalf("elapsed %v", got)
+	}
+	out, length, err := r.Stop()
+	if err != nil || out != path || length != 2*time.Second {
+		t.Fatalf("stop: %q %v %v", out, length, err)
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	n := 0
+	if err := opusfile.Decode(f, func(_ int, m []float32) error { n += len(m); return nil }); err != nil {
+		t.Fatal(err)
+	}
+	if secs := float64(n) / 48000; math.Abs(secs-2) > 0.01 {
+		t.Fatalf("decoded %.3fs", secs)
 	}
 }
 
-func TestPushLevels(t *testing.T) {
-	r := &Recorder{}
-	loud := make([]byte, 400)
-	for i := 0; i < len(loud); i += 2 {
-		loud[i], loud[i+1] = 0x00, 0x40 // 0.5 full scale
+func TestCancelDeletes(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "take.opus")
+	r, err := newRecorder(Options{Path: path, Bitrate: 16000})
+	if err != nil {
+		t.Fatal(err)
 	}
-	r.push(loud)
-	if lv := r.Levels(); len(lv) != 1 || lv[0] < 0.8 {
-		t.Fatalf("levels %v", lv)
-	}
-	if len(r.samples) != 200 {
-		t.Fatalf("samples %d", len(r.samples))
+	r.push(pcm(0, 4800))
+	r.Cancel()
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Fatal("cancelled recording kept")
 	}
 }

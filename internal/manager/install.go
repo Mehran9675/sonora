@@ -3,6 +3,8 @@ package manager
 import (
 	"context"
 	"errors"
+
+	"github.com/mehran9675/sonora/internal/engines"
 )
 
 // Install runs the engine's installer in the background.
@@ -30,6 +32,49 @@ func (m *Manager) Install(rt *Runtime, done func(error)) {
 			} else {
 				rt.State, rt.Status = StateReady, "Installed"
 				rt.VoicesLoaded = false
+			}
+			if done != nil {
+				done(err)
+			}
+		})
+	}()
+}
+
+// InstallModel installs the engine if needed and downloads one of its
+// models, then makes that model the engine's setting, so the Studio
+// and Transcribe pages use it.
+func (m *Manager) InstallModel(rt *Runtime, model string, done func(error)) {
+	store, ok := rt.Engine.(engines.ModelStore)
+	o := rt.Manifest().ModelOption()
+	if !ok || o == nil {
+		m.Install(rt, done)
+		return
+	}
+	if rt.Busy() {
+		return
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	rt.cancel = cancel
+	rt.State, rt.Err, rt.Log, rt.Progress = StateInstalling, "", nil, -1
+	rt.Status = "Preparing…"
+	sink := m.sink(rt)
+	go func() {
+		err := explain(store.InstallModel(ctx, model, sink.Log))
+		m.post(func() {
+			rt.cancel = nil
+			rt.Progress = -1
+			switch {
+			case err == nil:
+				m.settings.SetValue(rt.Manifest().ID, o.ID, model)
+				rt.State, rt.Status = StateReady, "Model downloaded"
+				rt.VoicesLoaded = false
+			case errors.Is(err, context.Canceled):
+				rt.Status = "Download cancelled"
+			default:
+				rt.Err, rt.Status = err.Error(), "Download failed"
+			}
+			if err != nil {
+				rt.State = initialState(rt.Engine) // ready if other models are there
 			}
 			if done != nil {
 				done(err)

@@ -37,6 +37,7 @@ type row struct {
 	p      *Page
 	id     string
 	open   *giode.PressableElement
+	export *giode.ButtonElement
 	remove *giode.ButtonElement
 }
 
@@ -69,7 +70,13 @@ func newRow(p *Page, e transcripts.Entry) *row {
 			p.result.show(cur)
 		}
 	})
-	r.remove = giode.Button("", giode.Styles{Color: "theme.muted", Background: "theme.text", Padding: giode.UniformInset(8), BorderRadius: 8}).
+	ghost := giode.Styles{Color: "theme.muted", Background: "theme.text", Padding: giode.UniformInset(8), BorderRadius: 8}
+	r.export = giode.Button("", ghost).Variant(giode.VariantGhost).Icon(icons.Icon(icons.Share, 15, "")).OnClick(func() {
+		if cur, ok := c.Transcripts.Get(r.id); ok {
+			c.ExportTranscript(cur, cur.Text)
+		}
+	})
+	r.remove = giode.Button("", ghost).
 		Variant(giode.VariantGhost).Icon(icons.Icon(icons.Trash, 15, "")).OnClick(func() {
 		giode.AfterLayout(func() {
 			cur, _ := c.Transcripts.Get(r.id)
@@ -88,5 +95,5 @@ func newRow(p *Page, e transcripts.Entry) *row {
 
 func (r *row) element() giode.Element {
 	return giode.Row(giode.Styles{Width: -1, Gap: 4, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap},
-		giode.Box(giode.Styles{FlexGrow: 1}, r.open), r.remove)
+		giode.Box(giode.Styles{FlexGrow: 1}, r.open), r.export, r.remove)
 }

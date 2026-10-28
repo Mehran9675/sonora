@@ -24,11 +24,6 @@ import (
 	"github.com/mehran9675/sonora/ui/theme"
 )
 
-// maxRecording stops a transcription recording automatically. Takes
-// are held in memory (about 10 MB a minute), so longer audio is better
-// recorded with another app and picked as a file.
-const maxRecording = 15 * time.Minute
-
 // panel is the right-hand column: engine, audio, language, settings
 // and the Transcribe button.
 type panel struct {
@@ -86,13 +81,20 @@ func newPanel(p *Page) *panel {
 		FontSize: 13, Padding: giode.SymmetricInset(12, 7), BorderRadius: theme.RadiusSm}
 	v.install = giode.Button("Install", primary).Icon(icons.Icon(icons.Download, 15, "")).OnClick(func() {
 		rt := v.rt
-		c.Install(rt, func(err error) {
+		done := func(err error) {
 			if err != nil {
 				c.Error(err)
 				return
 			}
 			c.Success(rt.Manifest().Name + " is ready")
-		})
+		}
+		// Engines with a model choice download the model the panel's
+		// selector shows.
+		if o := rt.Manifest().ModelOption(); o != nil {
+			c.InstallModel(rt, c.Manager.Values(rt.Manifest()).String(o.ID), done)
+			return
+		}
+		c.Install(rt, done)
 	})
 	v.manage = giode.Button("Open Engines", outline).Variant(giode.VariantOutlined).
 		OnClick(func() { c.ShowEngines(engines.TaskTranscribe) })
@@ -101,9 +103,9 @@ func newPanel(p *Page) *panel {
 	v.clear = giode.Button("", giode.Styles{Color: "theme.muted", Background: "theme.text", Padding: giode.UniformInset(5), BorderRadius: 8}).
 		Variant(giode.VariantGhost).Icon(icons.Icon(icons.Close, 14, "")).OnClick(p.dropSource)
 	v.recorder = voicerecorder.NewWith(c, voicerecorder.Options{
-		Min: time.Second, Max: maxRecording, Dir: core.RecordingsDir(), Name: "speech",
-		Hint: "Speak normally; the recording stops by itself after 15 minutes.", Ready: "Press Stop when you're done.",
-	}, func(path string) { p.setSource(path, "Recording "+time.Now().Format("Jan 2, 15:04"), true) })
+		Min: time.Second, Name: "speech",
+		Hint: "Speak normally; press Stop when you're done.", Ready: "Press Stop when you're done.",
+	}, func(path string) { p.setSource(path, "Recording "+time.Now().Format("Jan 2, 15:04"), false) })
 	v.play = giode.Pressable(func(s giode.PressState) giode.Element {
 		icon := icons.Solid(icons.Play, 12, "theme.primary")
 		if c.IsPlaying(p.source) {
@@ -157,7 +159,7 @@ func (v *panel) pickFile() {
 		if name == "" {
 			name = "Audio from " + time.Now().Format("Jan 2, 15:04")
 		}
-		path, err = core.SavePicked(f, core.RecordingsDir(), "audio")
+		path, err = core.SavePicked(f, core.PickedDir(), "audio")
 		temp = true
 		return err
 	}, func(err error) {
@@ -211,10 +213,7 @@ func (v *panel) form(rt *manager.Runtime) *form {
 		f.translate = optionfield.New(engines.Option{ID: "translate", Label: "Translate into English", Type: engines.OptionBool,
 			Help: "Write the text in English, whatever language is spoken."}, global)
 	}
-	store := optionfield.Store{
-		Get: func(id string) any { return c.Settings.Values(m.ID)[id] },
-		Set: func(id string, val any) { c.Settings.SetValue(m.ID, id, val) },
-	}
+	store := c.OptionStore(m, nil)
 	for _, o := range m.Options {
 		if o.Scope != engines.ScopeSetup {
 			f.fields = append(f.fields, optionfield.New(o, store))
@@ -300,6 +299,13 @@ func (v *panel) callout() giode.Element {
 			giode.Styles{Color: "theme.text", FontSize: 13, LineHeight: 19}))
 		if m.Size != "" {
 			body = append(body, chip.Chip(m.Size))
+		}
+		if o := m.ModelOption(); o != nil {
+			for _, fl := range v.form(rt).fields {
+				if fl.ID() == o.ID {
+					body = append(body, fl.Element())
+				}
+			}
 		}
 		if rt.Err != "" {
 			body = append(body, giode.Text(firstLine(rt.Err), giode.Styles{Color: "theme.danger", FontSize: 12, MaxLines: 3}))

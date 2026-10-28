@@ -13,7 +13,7 @@ import (
 // length, level and pitch at 16 kHz. The tone is ffmpeg's sine at -6 dB,
 // RMS 0.044; the stereo files carry it 3 dB lower in each channel.
 func TestFormats(t *testing.T) {
-	for _, name := range []string{"tone8k.wav", "tone.mp3", "tone.flac", "tone.ogg", "tone.m4a"} {
+	for _, name := range []string{"tone8k.wav", "tone.mp3", "tone.flac", "tone.ogg", "tone.opus", "tone.m4a"} {
 		t.Run(name, func(t *testing.T) {
 			clip, err := File(filepath.Join("testdata", name), SpeechRate)
 			if errors.Is(err, ErrFormat) && !convert.Available() {

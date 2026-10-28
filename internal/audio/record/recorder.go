@@ -1,18 +1,21 @@
-// Package record captures audio from the default microphone, for
-// recording a voice to clone or speech to transcribe.
+// Package record captures audio from a microphone - a voice
+// to clone, or speech to transcribe - straight into an Ogg Opus file,
+// so a recording's length is bounded by the disk, not memory.
 package record
 
 import (
 	"errors"
 	"math"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
-	"github.com/mehran9675/sonora/internal/audio"
+	"github.com/mehran9675/sonora/internal/audio/opusfile"
 )
 
-// SampleRate is the capture rate; 44.1 kHz suits every cloning model.
-const SampleRate = 44100
+// SampleRate is the capture rate, Opus's own.
+const SampleRate = 48000
 
 // levelWindow is how many recent loudness values Levels keeps.
 const levelWindow = 48
@@ -25,25 +28,101 @@ type capture interface {
 	stop()
 }
 
-// Recorder records mono 16-bit audio. Methods are safe from any
-// goroutine.
-type Recorder struct {
-	mu      sync.Mutex
-	samples []float32
-	levels  []float32
-	started time.Time
-	dev     capture
+// Options say where and how to record.
+type Options struct {
+	Path    string // the .opus file to write; its folder is created
+	Bitrate int    // Opus bitrate in bits per second
+	// Device is the microphone's Device.ID; empty, or a microphone
+	// that isn't connected, records from the system default.
+	Device string
 }
 
-// Start opens the default microphone and begins recording.
-func Start() (*Recorder, error) {
-	r := &Recorder{started: time.Now()}
-	dev, err := open(r.push)
+// AndroidPrefix starts the ID of an Android input device: the prefix
+// and AudioDeviceInfo.getId(). miniaudio lists only the default input
+// on Android, so the app finds the others through AudioManager.
+const AndroidPrefix = "android:"
+
+// Device is a microphone.
+type Device struct {
+	// ID is what Options.Device takes. Desktops know a microphone by
+	// its name, which outlives restarts and backends where their IDs
+	// don't.
+	ID   string
+	Name string
+}
+
+// Recorder records mono audio into an Opus file. Methods are safe from
+// any goroutine.
+type Recorder struct {
+	path string
+	w    *opusfile.Writer
+	dev  capture
+	done chan error // the writer goroutine's result
+
+	mu       sync.Mutex
+	wake     *sync.Cond
+	queue    [][]float32 // captured blocks waiting to be encoded
+	closed   bool
+	captured int64 // samples captured
+	levels   []float32
+}
+
+// Start opens the microphone o.Device and records into o.Path.
+func Start(o Options) (*Recorder, error) {
+	r, err := newRecorder(o)
 	if err != nil {
+		return nil, err
+	}
+	dev, err := open(o.Device, r.push)
+	if err != nil {
+		r.abort()
 		return nil, err
 	}
 	r.dev = dev
 	return r, nil
+}
+
+// newRecorder creates the file and starts encoding what push delivers.
+func newRecorder(o Options) (*Recorder, error) {
+	if err := os.MkdirAll(filepath.Dir(o.Path), 0o755); err != nil {
+		return nil, err
+	}
+	w, err := opusfile.Create(o.Path, SampleRate, o.Bitrate)
+	if err != nil {
+		return nil, err
+	}
+	r := &Recorder{path: o.Path, w: w, done: make(chan error, 1)}
+	r.wake = sync.NewCond(&r.mu)
+	go r.encode()
+	return r, nil
+}
+
+// encode writes queued blocks to the file until the queue is closed.
+// The microphone callback only queues, so a slow disk can't make it
+// drop audio.
+func (r *Recorder) encode() {
+	var failed error
+	for {
+		r.mu.Lock()
+		for len(r.queue) == 0 && !r.closed {
+			r.wake.Wait()
+		}
+		blocks, closed := r.queue, r.closed
+		r.queue = nil
+		r.mu.Unlock()
+		for _, b := range blocks {
+			if failed == nil {
+				failed = r.w.Write(b)
+			}
+		}
+		if closed {
+			if err := r.w.Close(); failed == nil {
+				failed = err
+			}
+			r.done <- failed
+			return
+		}
+	}
 }
 
 // push receives captured 16-bit little-endian mono PCM from the
@@ -53,11 +132,11 @@ func (r *Recorder) push(pcm []byte) {
 	if n == 0 {
 		return
 	}
-	chunk := make([]float32, n)
+	block := make([]float32, n)
 	var sum float64
-	for i := range chunk {
+	for i := range block {
 		v := float32(int16(uint16(pcm[2*i])|uint16(pcm[2*i+1])<<8)) / 32768
-		chunk[i] = v
+		block[i] = v
 		sum += float64(v) * float64(v)
 	}
 	// Map RMS to a 0..1 meter on a decibel scale (-54 dB .. 0 dB).
@@ -66,7 +145,11 @@ func (r *Recorder) push(pcm []byte) {
 		level = float32(max(0, min(1, (20*math.Log10(rms)+54)/54)))
 	}
 	r.mu.Lock()
-	r.samples = append(r.samples, chunk...)
+	if !r.closed {
+		r.queue = append(r.queue, block)
+		r.captured += int64(n)
+		r.wake.Signal()
+	}
 	r.levels = append(r.levels, level)
 	if len(r.levels) > levelWindow {
 		r.levels = r.levels[len(r.levels)-levelWindow:]
@@ -74,8 +157,12 @@ func (r *Recorder) push(pcm []byte) {
 	r.mu.Unlock()
 }
 
-// Elapsed returns how long the recorder has been running.
-func (r *Recorder) Elapsed() time.Duration { return time.Since(r.started) }
+// Elapsed returns how much audio has been recorded.
+func (r *Recorder) Elapsed() time.Duration {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return time.Duration(r.captured) * time.Second / SampleRate
+}
 
 // Levels returns recent input loudness values in [0, 1], oldest first.
 func (r *Recorder) Levels() []float32 {
@@ -84,31 +171,33 @@ func (r *Recorder) Levels() []float32 {
 	return append([]float32(nil), r.levels...)
 }
 
-// Stop ends the recording and returns it with leading and trailing
-// silence trimmed.
-func (r *Recorder) Stop() *audio.Clip {
-	r.dev.stop()
+// Stop ends the recording, finishes the file and returns its path and
+// length.
+func (r *Recorder) Stop() (string, time.Duration, error) {
+	if r.dev != nil {
+		r.dev.stop()
+	}
+	length := r.Elapsed()
 	r.mu.Lock()
-	defer r.mu.Unlock()
-	return &audio.Clip{Samples: trimSilence(r.samples, SampleRate), SampleRate: SampleRate}
+	r.closed = true
+	r.wake.Signal()
+	r.mu.Unlock()
+	if err := <-r.done; err != nil {
+		os.Remove(r.path)
+		return "", 0, err
+	}
+	return r.path, length, nil
 }
 
-// trimSilence drops quiet stretches at both ends, keeping a short pad
-// so words aren't clipped.
-func trimSilence(s []float32, rate int) []float32 {
-	const threshold = 0.02
-	pad := rate / 10
-	first, last := -1, -1
-	for i, v := range s {
-		if v > threshold || v < -threshold {
-			if first < 0 {
-				first = i
-			}
-			last = i
-		}
+// Cancel ends the recording and deletes the file.
+func (r *Recorder) Cancel() {
+	if path, _, err := r.Stop(); err == nil {
+		os.Remove(path)
 	}
-	if first < 0 {
-		return s
-	}
-	return s[max(0, first-pad):min(len(s), last+pad)]
+}
+
+// abort stops encoding and deletes the file, before a device opened.
+func (r *Recorder) abort() {
+	r.dev = nil
+	r.Cancel()
 }

@@ -74,6 +74,9 @@ type Manifest struct {
 	DefaultVoice string   `json:"default_voice,omitempty"`
 	Hint         string   `json:"hint,omitempty"`
 	Options      []Option `json:"options,omitempty"`
+	// ModelOptionID names the select option that picks the model, when
+	// it isn't called "model"; see ModelOption.
+	ModelOptionID string `json:"model_option,omitempty"`
 
 	// Dir is the folder holding engine.json and adapter.py; Custom
 	// marks engines the user created (they can be deleted).

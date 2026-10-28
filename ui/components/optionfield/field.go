@@ -13,6 +13,16 @@ import (
 type Store struct {
 	Get func(id string) any
 	Set func(id string, v any)
+	// Detail, when set, describes a choice of a select option (such as
+	// whether a model is downloaded); "" adds nothing.
+	Detail func(id, value string) string
+}
+
+func (st Store) detail(id, value string) string {
+	if st.Detail == nil {
+		return ""
+	}
+	return st.Detail(id, value)
 }
 
 // control is one rendered option.
@@ -42,6 +52,9 @@ func New(opt engines.Option, st Store) *Field {
 	}
 	return f
 }
+
+// ID returns the option's id.
+func (f *Field) ID() string { return f.opt.ID }
 
 // Element returns the labelled control.
 func (f *Field) Element() giode.Element {

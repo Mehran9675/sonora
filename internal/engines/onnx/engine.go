@@ -75,11 +75,8 @@ func (e *Engine) defaultModel() model {
 	return e.pick(e.m.DefaultVoice, engines.Resolve(e.m.Options, nil))
 }
 
-// Installed reports whether the default model is downloaded.
-func (e *Engine) Installed() bool {
-	_, err := os.Stat(filepath.Join(e.dir, e.defaultModel().ID))
-	return err == nil
-}
+// Installed reports whether any of the engine's models is downloaded.
+func (e *Engine) Installed() bool { return anyDownloaded(e.dir, e.models) }
 
 // Install downloads the default model.
 func (e *Engine) Install(ctx context.Context, log engines.Logger) error {
@@ -87,10 +84,42 @@ func (e *Engine) Install(ctx context.Context, log engines.Logger) error {
 	return err
 }
 
+// DownloadedModels reports which packages are on this device.
+func (e *Engine) DownloadedModels() map[string]bool { return downloaded(e.dir, e.models) }
+
+// InstallModel downloads the package with the given id.
+func (e *Engine) InstallModel(ctx context.Context, id string, log engines.Logger) error {
+	return fetchModel(ctx, e.dir, e.models, id, log)
+}
+
 // Uninstall unloads and deletes every package this engine downloaded.
 func (e *Engine) Uninstall() error {
 	e.Close()
 	return removeModels(e.dir, e.models)
+}
+
+// downloaded reports which of models are unpacked in dir.
+func downloaded(dir string, models []model) map[string]bool {
+	out := map[string]bool{}
+	for _, m := range models {
+		if _, err := os.Stat(filepath.Join(dir, m.ID)); err == nil {
+			out[m.ID] = true
+		}
+	}
+	return out
+}
+
+func anyDownloaded(dir string, models []model) bool { return len(downloaded(dir, models)) > 0 }
+
+// fetchModel downloads the package of models with the given id.
+func fetchModel(ctx context.Context, dir string, models []model, id string, log engines.Logger) error {
+	for _, m := range models {
+		if m.ID == id {
+			_, err := fetch(ctx, dir, m, log)
+			return err
+		}
+	}
+	return fmt.Errorf("unknown model %q", id)
 }
 
 // removeModels deletes downloaded packages and their extra files.

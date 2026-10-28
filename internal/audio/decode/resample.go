@@ -27,6 +27,9 @@ func (r *resampler) empty() bool { return r.n == 0 }
 // lets it serve as wav.Stream's callback.
 func (r *resampler) write(in int, block []float32) error {
 	if r.in == 0 {
+		if r.rate == 0 { // keep the file's rate
+			r.rate = in
+		}
 		r.in, r.ratio = in, float64(in)/float64(r.rate)
 		if r.ratio > 1 {
 			r.next = r.ratio
