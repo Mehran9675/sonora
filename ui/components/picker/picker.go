@@ -95,7 +95,7 @@ func (p *Picker) list() giode.Element {
 }
 
 func (p *Picker) row(it Item) giode.Element {
-	return p.rows.Get(it.ID+"\x00"+it.Label, func() *giode.PressableElement {
+	return p.rows.Get(it.ID+"\x00"+it.Label+"\x00"+it.Detail, func() *giode.PressableElement {
 		return giode.Pressable(func(s giode.PressState) giode.Element {
 			sel := p.selected() == it.ID
 			bg := ""

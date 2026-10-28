@@ -50,9 +50,10 @@ Studio; your script is kept when you switch away.
   timestamps. Translate into English, copy, export or share it as text or SRT subtitles,
   or send it to the Studio to be spoken. Every transcript is kept with its audio.
 - **Recording.** Recordings stream straight to an Opus file as you speak, so their length
-  is limited only by the cap you choose. *Settings → Recording* sets the quality (16 to
-  128 kbps; standard is about 14 MB an hour), the longest recording (15 minutes to 8
-  hours, 1 hour by default) and, on desktops, the folder they're kept in.
+  is limited only by the cap you choose. *Settings → Recording* picks the microphone (an
+  unplugged one falls back to the system default), the quality (16 to 128 kbps; standard
+  is about 14 MB an hour), the longest recording (15 minutes to 8 hours, 1 hour by
+  default) and, on desktops, the folder they're kept in.
 - **Voice cloning.** On engines that can clone (Kitten TTS 2, Audio8, IndexTTS, Chatterbox, Coqui, ZipVoice),
   switch to *Clone a voice* and record yourself right in the app — live level meter,
   auto-stop at 30 s — or pick an audio file.

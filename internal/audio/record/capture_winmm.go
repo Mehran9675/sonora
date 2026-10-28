@@ -13,15 +13,17 @@ import (
 // winmm captures with the classic waveIn API, which every Windows
 // version has and which needs no cgo, so ARM64 builds stay simple.
 var (
-	winmm               = windows.NewLazySystemDLL("winmm.dll")
-	procWaveInOpen      = winmm.NewProc("waveInOpen")
-	procWaveInPrepare   = winmm.NewProc("waveInPrepareHeader")
-	procWaveInUnprepare = winmm.NewProc("waveInUnprepareHeader")
-	procWaveInAddBuffer = winmm.NewProc("waveInAddBuffer")
-	procWaveInStart     = winmm.NewProc("waveInStart")
-	procWaveInStop      = winmm.NewProc("waveInStop")
-	procWaveInReset     = winmm.NewProc("waveInReset")
-	procWaveInClose     = winmm.NewProc("waveInClose")
+	winmm                = windows.NewLazySystemDLL("winmm.dll")
+	procWaveInGetNumDevs = winmm.NewProc("waveInGetNumDevs")
+	procWaveInGetDevCaps = winmm.NewProc("waveInGetDevCapsW")
+	procWaveInOpen       = winmm.NewProc("waveInOpen")
+	procWaveInPrepare    = winmm.NewProc("waveInPrepareHeader")
+	procWaveInUnprepare  = winmm.NewProc("waveInUnprepareHeader")
+	procWaveInAddBuffer  = winmm.NewProc("waveInAddBuffer")
+	procWaveInStart      = winmm.NewProc("waveInStart")
+	procWaveInStop       = winmm.NewProc("waveInStop")
+	procWaveInReset      = winmm.NewProc("waveInReset")
+	procWaveInClose      = winmm.NewProc("waveInClose")
 )
 
 const (
@@ -40,6 +42,16 @@ type waveFormatEx struct {
 	BlockAlign     uint16
 	BitsPerSample  uint16
 	Size           uint16
+}
+
+// waveInCaps is WAVEINCAPSW.
+type waveInCaps struct {
+	Mid, Pid      uint16
+	DriverVersion uint32
+	Pname         [32]uint16
+	Formats       uint32
+	Channels      uint16
+	Reserved      uint16
 }
 
 type waveHdr struct {
@@ -71,7 +83,42 @@ func call(p *windows.LazyProc, args ...uintptr) error {
 	return nil
 }
 
-func open(push func([]byte)) (capture, error) {
+// Devices lists the microphones by their (at most 31-character) names.
+func Devices() ([]Device, error) {
+	n, _, _ := procWaveInGetNumDevs.Call()
+	var out []Device
+	for i := uintptr(0); i < n; i++ {
+		if name := deviceName(i); name != "" {
+			out = append(out, Device{ID: name, Name: name})
+		}
+	}
+	return out, nil
+}
+
+// deviceName is the name of input i, or "".
+func deviceName(i uintptr) string {
+	var caps waveInCaps
+	if call(procWaveInGetDevCaps, i, uintptr(unsafe.Pointer(&caps)), unsafe.Sizeof(caps)) != nil {
+		return ""
+	}
+	return windows.UTF16ToString(caps.Pname[:])
+}
+
+// deviceIndex returns the input called name, or the wave mapper (the
+// default microphone) when there's none.
+func deviceIndex(name string) uintptr {
+	if name != "" {
+		n, _, _ := procWaveInGetNumDevs.Call()
+		for i := uintptr(0); i < n; i++ {
+			if deviceName(i) == name {
+				return i
+			}
+		}
+	}
+	return waveMapper
+}
+
+func open(device string, push func([]byte)) (capture, error) {
 	ev, err := windows.CreateEvent(nil, 0, 0, nil)
 	if err != nil {
 		return nil, err
@@ -79,7 +126,7 @@ func open(push func([]byte)) (capture, error) {
 	w := &waveIn{event: ev, push: push, quit: make(chan struct{})}
 	format := waveFormatEx{FormatTag: 1, Channels: 1, SamplesPerSec: SampleRate,
 		AvgBytesPerSec: SampleRate * 2, BlockAlign: 2, BitsPerSample: 16}
-	if err := call(procWaveInOpen, uintptr(unsafe.Pointer(&w.handle)), waveMapper,
+	if err := call(procWaveInOpen, uintptr(unsafe.Pointer(&w.handle)), deviceIndex(device),
 		uintptr(unsafe.Pointer(&format)), uintptr(ev), 0, callbackEvent); err != nil {
 		windows.CloseHandle(ev)
 		return nil, fmt.Errorf("%w (%v)", ErrNoInput, err)

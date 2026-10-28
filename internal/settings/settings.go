@@ -37,6 +37,11 @@ type Settings struct {
 	RecordQuality string `json:"record_quality,omitempty"`
 	RecordDir     string `json:"record_dir,omitempty"`
 	RecordMinutes int    `json:"record_minutes,omitempty"`
+	// Microphone is the record.Device ID to record from ("" is the
+	// system default); MicrophoneName is its name, shown while it's
+	// unplugged.
+	Microphone     string `json:"microphone,omitempty"`
+	MicrophoneName string `json:"microphone_name,omitempty"`
 }
 
 // Store loads and saves Settings. Methods are safe from any goroutine.

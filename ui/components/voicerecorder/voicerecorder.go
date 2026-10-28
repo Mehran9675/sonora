@@ -112,7 +112,7 @@ func (r *Recorder) begin() {
 			return err
 		}
 		var err error
-		rec, err = record.Start(record.Options{Path: path, Bitrate: r.c.RecordBitrate()})
+		rec, err = record.Start(record.Options{Path: path, Bitrate: r.c.RecordBitrate(), Device: r.c.Settings.Get().Microphone})
 		return err
 	}, func(err error) {
 		r.opening = false

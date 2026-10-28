@@ -43,6 +43,7 @@ type Page struct {
 	qualityT, limitT     *picker.Trigger
 	folder               *input.Input
 	openFolder, defaults *giode.ButtonElement
+	mic                  microphone
 }
 
 // New builds the page; applyTheme switches the palette.
@@ -86,6 +87,7 @@ func New(c *core.Ctx, applyTheme func(mode string)) *Page {
 		})
 	})
 	p.recordingControls()
+	p.mic.init(c)
 	p.scroll = giode.Scroll(p.content, theme.Scrolling(6))
 	return p
 }
@@ -166,6 +168,8 @@ func limitLabel(m int) string {
 // recordingSection is the Recording settings card.
 func (p *Page) recordingSection() giode.Element {
 	rows := []giode.Element{
+		p.setting("Microphone", "Where recordings come from. An unplugged microphone falls back to the default.",
+			p.mic.trigger.Element()),
 		p.setting("Quality", "Recordings are Opus files, a fraction of a WAV's size. Higher quality suits voices you'll clone.",
 			p.qualityT.Element()),
 		p.setting("Longest recording", "A safety stop, so a forgotten recording doesn't fill the storage.", p.limitT.Element()),

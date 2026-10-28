@@ -1,4 +1,4 @@
-// Package record captures audio from the default microphone - a voice
+// Package record captures audio from a microphone - a voice
 // to clone, or speech to transcribe - straight into an Ogg Opus file,
 // so a recording's length is bounded by the disk, not memory.
 package record
@@ -32,6 +32,23 @@ type capture interface {
 type Options struct {
 	Path    string // the .opus file to write; its folder is created
 	Bitrate int    // Opus bitrate in bits per second
+	// Device is the microphone's Device.ID; empty, or a microphone
+	// that isn't connected, records from the system default.
+	Device string
+}
+
+// AndroidPrefix starts the ID of an Android input device: the prefix
+// and AudioDeviceInfo.getId(). miniaudio lists only the default input
+// on Android, so the app finds the others through AudioManager.
+const AndroidPrefix = "android:"
+
+// Device is a microphone.
+type Device struct {
+	// ID is what Options.Device takes. Desktops know a microphone by
+	// its name, which outlives restarts and backends where their IDs
+	// don't.
+	ID   string
+	Name string
 }
 
 // Recorder records mono audio into an Opus file. Methods are safe from
@@ -50,13 +67,13 @@ type Recorder struct {
 	levels   []float32
 }
 
-// Start opens the default microphone and records into o.Path.
+// Start opens the microphone o.Device and records into o.Path.
 func Start(o Options) (*Recorder, error) {
 	r, err := newRecorder(o)
 	if err != nil {
 		return nil, err
 	}
-	dev, err := open(r.push)
+	dev, err := open(o.Device, r.push)
 	if err != nil {
 		r.abort()
 		return nil, err
