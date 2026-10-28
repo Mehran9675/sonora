@@ -63,8 +63,10 @@ func Devices() ([]Device, error) {
 		seen := map[string]bool{}
 		for i := range infos {
 			name := infos[i].Name()
-			// PulseAudio lists every output's loopback as an input too.
-			if name == "" || seen[name] || strings.HasPrefix(name, "Monitor of ") {
+			// PulseAudio lists every output's loopback as an input too,
+			// and ALSA its plugins (rate converters, JACK, PulseAudio…).
+			if name == "" || seen[name] || strings.HasPrefix(name, "Monitor of ") ||
+				isALSA(b) && !isCard(infos[i].ID) {
 				continue
 			}
 			seen[name] = true
@@ -75,6 +77,15 @@ func Devices() ([]Device, error) {
 		}
 	}
 	return nil, lastErr
+}
+
+func isALSA(b []malgo.Backend) bool { return len(b) == 1 && b[0] == malgo.BackendAlsa }
+
+// isCard reports whether an ALSA device ID names a sound card
+// ("hw:0,0", "sysdefault:CARD=PCH") rather than a plugin ("jack").
+func isCard(id malgo.DeviceID) bool {
+	name, _, _ := strings.Cut(string(id[:]), "\x00")
+	return strings.Contains(name, ":")
 }
 
 func open(device string, push func([]byte)) (capture, error) {

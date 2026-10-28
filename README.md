@@ -221,6 +221,10 @@ go run ./tools/packapk dist/android/Sonora.apk    # add the libraries, align, si
 adb install -r dist/android/Sonora.apk
 ```
 
+Use a CLI from 28 October 2026 or later (releases pin it as `GIODE_CLI` in
+`.github/workflows/release.yml`): it builds Android against a patched Gio that keeps held keys repeating (holding backspace
+clears a field) and renders at the display's full refresh rate.
+
 The CLI adds what `giode.toml` asks for to the manifest (the microphone, notifications and
 the foreground service that keeps long jobs running), but packs only Sonora's own
 `libgio.so`. That library links against sherpa-onnx, so the APK doesn't start until
