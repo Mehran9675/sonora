@@ -1,6 +1,7 @@
 package picker
 
 import (
+	"runtime"
 	"strings"
 
 	"github.com/mehran9675/giode"
@@ -23,11 +24,20 @@ type Picker struct {
 	onPick   func(Item)
 
 	search *input.Input
-	scroll *scroll.Scroll
-	rows   *giode.KeyedCache[string, *giode.PressableElement]
-	close  *giode.ButtonElement
-	dialog *dialog.Dialog
+	// searchable shows the search field, for lists of searchFrom or more.
+	searchable bool
+	scroll     *scroll.Scroll
+	rows       *giode.KeyedCache[string, *giode.PressableElement]
+	close      *giode.ButtonElement
+	dialog     *dialog.Dialog
 }
+
+// searchFrom is the shortest list that gets a search field.
+const searchFrom = 9
+
+// touch is true on phones, where focusing the search field would open
+// the keyboard over the list.
+const touch = runtime.GOOS == "android" || runtime.GOOS == "ios"
 
 // New returns a picker titled title listing items(); selected returns
 // the current choice's ID; onPick runs when the user chooses.
@@ -49,25 +59,31 @@ func New(title string, items func() []Item, selected func() string, onPick func(
 	return p
 }
 
-// Open shows the picker with an empty search.
+// Open shows the picker with an empty search, focused on desktops.
 func (p *Picker) Open() {
 	p.search.SetText("")
-	p.search.Focus()
+	p.searchable = len(p.items()) >= searchFrom
+	if p.searchable && !touch {
+		p.search.Focus()
+	}
 	p.scroll.ScrollTo(0)
 	p.open = true
 }
 
 func (p *Picker) content() giode.Element {
-	return giode.Stack(giode.Styles{Width: -1, MaxWidth: 460, Gap: 14},
+	parts := []giode.Element{
 		giode.Row(giode.Styles{Width: -1, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap},
 			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(p.title, theme.Heading)),
 			p.close,
 		),
-		giode.Row(giode.Styles{Width: -1, Align: giode.AlignCenter, Gap: 8, Wrap: giode.WrapNoWrap},
+	}
+	if p.searchable {
+		parts = append(parts, giode.Row(giode.Styles{Width: -1, Align: giode.AlignCenter, Gap: 8, Wrap: giode.WrapNoWrap},
 			giode.Box(giode.Styles{FlexGrow: 1}, p.search),
-		),
-		giode.Box(giode.Styles{Width: -1, Height: 380}, p.scroll),
-	)
+		))
+	}
+	parts = append(parts, giode.Box(giode.Styles{Width: -1, Height: 380}, p.scroll))
+	return giode.Stack(giode.Styles{Width: -1, MaxWidth: 460, Gap: 14}, parts...)
 }
 
 func (p *Picker) list() giode.Element {

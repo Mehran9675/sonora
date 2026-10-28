@@ -8,14 +8,15 @@ import (
 )
 
 // microphone is the Recording section's microphone picker. The list is
-// read in the background when the page is built and again each time
-// the picker opens, so newly plugged-in microphones show up.
+// read in the background when the section is first shown and again
+// each time the picker opens, so newly plugged-in microphones show up.
 type microphone struct {
 	c       *core.Ctx
 	picker  *picker.Picker
 	trigger *picker.Trigger
 	devices []record.Device
 	loaded  bool
+	loading bool // a listing is running; refresh doesn't start another
 }
 
 func (m *microphone) init(c *core.Ctx) {
@@ -34,11 +35,14 @@ func (m *microphone) init(c *core.Ctx) {
 		m.refresh()
 		m.picker.Open()
 	})
-	m.refresh()
 }
 
 // refresh reads the microphones off the UI goroutine.
 func (m *microphone) refresh() {
+	if m.loading {
+		return
+	}
+	m.loading = true
 	var found []record.Device
 	m.c.Background(func() error {
 		var err error
@@ -46,7 +50,7 @@ func (m *microphone) refresh() {
 		return err
 	}, func(error) {
 		// A failed listing still leaves the default to choose.
-		m.devices, m.loaded = found, true
+		m.devices, m.loaded, m.loading = found, true, false
 	})
 }
 
@@ -73,6 +77,9 @@ func (m *microphone) items() []picker.Item {
 }
 
 func (m *microphone) label() (string, string) {
+	if !m.loaded {
+		m.refresh()
+	}
 	s := m.c.Settings.Get()
 	switch {
 	case s.Microphone == "":

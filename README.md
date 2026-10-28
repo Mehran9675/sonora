@@ -130,7 +130,7 @@ Builds use the [giode CLI](https://github.com/Mehran9675/giode-cli), which reads
 [`giode.toml`](giode.toml):
 
 ```sh
-go install github.com/mehran9675/giode-cli/cmd/giode@latest
+go install github.com/mehran9675/giode-cli/cmd/giode@3dee975
 giode doctor          # what's installed and what each target still needs
 giode run             # run on this computer
 giode build linux     # dist/linux: the executable, a .desktop entry and the icon
@@ -220,6 +220,10 @@ giode build android                               # dist/android/Sonora.apk
 go run ./tools/packapk dist/android/Sonora.apk    # add the libraries, align, sign
 adb install -r dist/android/Sonora.apk
 ```
+
+Use the CLI version pinned in `.github/workflows/release.yml` (`GIODE_CLI`), as above:
+it builds Android against a patched Gio that keeps held keys repeating (holding backspace
+clears a field) and renders at the display's full refresh rate.
 
 The CLI adds what `giode.toml` asks for to the manifest (the microphone, notifications and
 the foreground service that keeps long jobs running), but packs only Sonora's own

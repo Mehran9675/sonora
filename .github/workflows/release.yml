@@ -13,8 +13,9 @@ permissions:
   contents: write
 
 env:
-  # The giode CLI version the Android and Linux builds use.
-  GIODE_CLI: v0.0.0-20261027144655-2e63ad8baee1
+  # The giode CLI version the Android and Linux builds use: the commit
+  # whose patched Gio keeps held keys (backspace) repeating on Android.
+  GIODE_CLI: v0.0.0-20261027221102-3dee97562985
 
 jobs:
   build:
