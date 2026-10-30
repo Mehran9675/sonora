@@ -168,7 +168,7 @@ func managerKeys(dir, root string, add func(text, where string, plural bool)) er
 }
 
 // manifestKeys collects what an engine shows besides names: its
-// description, hint and tags, its options' labels, help and placeholders,
+// description, hint and tags, its voices' groups and descriptions, its options' labels, help and placeholders,
 // and the labels of choices other than voices and models.
 func manifestKeys(m *engines.Manifest, add func(text, where string, plural bool)) {
 	where := "engine " + m.ID
@@ -176,6 +176,16 @@ func manifestKeys(m *engines.Manifest, add func(text, where string, plural bool)
 	add(m.Hint, where, false)
 	for _, t := range m.Tags {
 		add(t, where, false)
+	}
+	for _, v := range m.Voices {
+		// Shown through core.Parts: each " · " part translates alone.
+		for _, s := range []string{v.Group, v.Description} {
+			for _, part := range strings.Split(s, " · ") {
+				if part != "" && (part[0] < '0' || part[0] > '9') {
+					add(part, where, false)
+				}
+			}
+		}
 	}
 	for _, o := range m.Options {
 		add(o.Label, where, false)

@@ -474,5 +474,22 @@
   },
   "{size} GB": "{size} GB",
   "{size} KB": "{size} KB",
-  "{size} MB": "{size} MB"
+  "{size} MB": "{size} MB",
+  "American English": "Amerikanisches Englisch",
+  "Brazilian Portuguese": "Brasilianisches Portugiesisch",
+  "British English": "Britisches Englisch",
+  "Built-in": "Integriert",
+  "Cloned": "Geklont",
+  "Dutch (Belgium)": "Niederländisch (Belgien)",
+  "English (UK)": "Englisch (UK)",
+  "English (US)": "Englisch (USA)",
+  "Female": "Weiblich",
+  "High quality": "Hohe Qualität",
+  "Low quality": "Niedrige Qualität",
+  "Male": "Männlich",
+  "Medium quality": "Mittlere Qualität",
+  "Portuguese (Brazil)": "Portugiesisch (Brasilien)",
+  "Spanish (Mexico)": "Spanisch (Mexiko)",
+  "Spanish (Spain)": "Spanisch (Spanien)",
+  "on device": "auf dem Gerät"
 }

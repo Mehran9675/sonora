@@ -38,7 +38,7 @@ func newVoicePanel(p *Page) *voicePanel {
 	c := p.c
 	v.engine = picker.NewTrigger(tr.Msg("Engine"), func() (string, string) {
 		label, _ := statuspill.Describe(v.rt)
-		return v.rt.Manifest().Name, joinNonEmpty(v.rt.Manifest().Vendor, tr.T(label))
+		return v.rt.Manifest().Name, joinNonEmpty(core.Parts(v.rt.Manifest().Vendor), tr.T(label))
 	}, func() giode.Element { return badge.Engine(v.rt.Manifest(), 32) }, p.engines.Open)
 	v.install = giode.Button("", giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
 		Padding: giode.SymmetricInset(14, 8), BorderRadius: theme.RadiusSm}).

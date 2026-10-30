@@ -485,5 +485,22 @@
   },
   "{size} GB": "{size} GB",
   "{size} KB": "{size} KB",
-  "{size} MB": "{size} MB"
+  "{size} MB": "{size} MB",
+  "American English": "Amerikos anglų",
+  "Brazilian Portuguese": "Brazilijos portugalų",
+  "British English": "Britų anglų",
+  "Built-in": "Integruoti",
+  "Cloned": "Klonuoti",
+  "Dutch (Belgium)": "Nyderlandų (Belgija)",
+  "English (UK)": "Anglų (Jungtinė Karalystė)",
+  "English (US)": "Anglų (JAV)",
+  "Female": "Moteris",
+  "High quality": "Aukšta kokybė",
+  "Low quality": "Žema kokybė",
+  "Male": "Vyras",
+  "Medium quality": "Vidutinė kokybė",
+  "Portuguese (Brazil)": "Portugalų (Brazilija)",
+  "Spanish (Mexico)": "Ispanų (Meksika)",
+  "Spanish (Spain)": "Ispanų (Ispanija)",
+  "on device": "įrenginyje"
 }

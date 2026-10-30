@@ -21,7 +21,7 @@ func newEnginePicker(c *core.Ctx, onPick func(id string)) *enginePicker {
 		for _, rt := range c.Manager.EnginesFor(engines.TaskSpeak) {
 			m := rt.Manifest()
 			label, _ := statuspill.Describe(rt)
-			it := picker.Item{ID: m.ID, Label: m.Name, Detail: joinNonEmpty(m.Vendor, tr.T(label))}
+			it := picker.Item{ID: m.ID, Label: m.Name, Detail: joinNonEmpty(core.Parts(m.Vendor), tr.T(label))}
 			if rt.State == manager.StateReady || rt.State == manager.StateWorking {
 				it.Group = tr.T("Ready to use")
 				ready = append(ready, it)

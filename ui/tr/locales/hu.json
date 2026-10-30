@@ -474,5 +474,22 @@
   },
   "{size} GB": "{size} GB",
   "{size} KB": "{size} KB",
-  "{size} MB": "{size} MB"
+  "{size} MB": "{size} MB",
+  "American English": "Amerikai angol",
+  "Brazilian Portuguese": "Brazíliai portugál",
+  "British English": "Brit angol",
+  "Built-in": "Beépített",
+  "Cloned": "Klónozott",
+  "Dutch (Belgium)": "Holland (Belgium)",
+  "English (UK)": "Angol (Egyesült Királyság)",
+  "English (US)": "Angol (USA)",
+  "Female": "Női",
+  "High quality": "Magas minőség",
+  "Low quality": "Alacsony minőség",
+  "Male": "Férfi",
+  "Medium quality": "Közepes minőség",
+  "Portuguese (Brazil)": "Portugál (Brazília)",
+  "Spanish (Mexico)": "Spanyol (Mexikó)",
+  "Spanish (Spain)": "Spanyol (Spanyolország)",
+  "on device": "az eszközön"
 }

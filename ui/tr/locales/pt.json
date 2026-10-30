@@ -486,5 +486,22 @@
   "giode.copied": "Copiado",
   "giode.dismiss": "Fechar",
   "giode.license": "Licença",
-  "giode.no_license": "Não foi encontrado nenhum ficheiro de licença neste módulo."
+  "giode.no_license": "Não foi encontrado nenhum ficheiro de licença neste módulo.",
+  "American English": "Inglês americano",
+  "Brazilian Portuguese": "Português do Brasil",
+  "British English": "Inglês britânico",
+  "Built-in": "Integrada",
+  "Cloned": "Clonada",
+  "Dutch (Belgium)": "Neerlandês (Bélgica)",
+  "English (UK)": "Inglês (Reino Unido)",
+  "English (US)": "Inglês (EUA)",
+  "Female": "Feminina",
+  "High quality": "Alta qualidade",
+  "Low quality": "Baixa qualidade",
+  "Male": "Masculina",
+  "Medium quality": "Qualidade média",
+  "Portuguese (Brazil)": "Português (Brasil)",
+  "Spanish (Mexico)": "Espanhol (México)",
+  "Spanish (Spain)": "Espanhol (Espanha)",
+  "on device": "no dispositivo"
 }

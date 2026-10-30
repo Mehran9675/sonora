@@ -474,5 +474,22 @@
   },
   "{size} GB": "{size} GB",
   "{size} KB": "{size} KB",
-  "{size} MB": "{size} MB"
+  "{size} MB": "{size} MB",
+  "American English": "Amerikan İngilizcesi",
+  "Brazilian Portuguese": "Brezilya Portekizcesi",
+  "British English": "İngiliz İngilizcesi",
+  "Built-in": "Yerleşik",
+  "Cloned": "Klonlanmış",
+  "Dutch (Belgium)": "Felemenkçe (Belçika)",
+  "English (UK)": "İngilizce (Birleşik Krallık)",
+  "English (US)": "İngilizce (ABD)",
+  "Female": "Kadın",
+  "High quality": "Yüksek kalite",
+  "Low quality": "Düşük kalite",
+  "Male": "Erkek",
+  "Medium quality": "Orta kalite",
+  "Portuguese (Brazil)": "Portekizce (Brezilya)",
+  "Spanish (Mexico)": "İspanyolca (Meksika)",
+  "Spanish (Spain)": "İspanyolca (İspanya)",
+  "on device": "cihazda"
 }

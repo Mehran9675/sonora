@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/mehran9675/sonora/ui/tr"
@@ -34,4 +35,18 @@ func Ago(t time.Time) string {
 		return tr.N("{n} d ago", int(d.Hours()/24))
 	}
 	return tr.T("{month} {day}, {year}", "month", tr.T(months[t.Month()-1]), "day", t.Day(), "year", t.Year())
+}
+
+// onDevice notes an engine that runs in the app ("hexgrad · on device").
+var onDevice = tr.Msg("on device")
+
+// Parts translates each part of a " · "-separated line from an engine
+// ("hexgrad · on device", "High quality · 110 MB"); names and sizes
+// have no translation and stay as they are.
+func Parts(s string) string {
+	parts := strings.Split(s, " · ")
+	for i, p := range parts {
+		parts[i] = tr.T(p)
+	}
+	return strings.Join(parts, " · ")
 }

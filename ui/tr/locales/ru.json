@@ -485,5 +485,22 @@
   },
   "{size} GB": "{size} ГБ",
   "{size} KB": "{size} КБ",
-  "{size} MB": "{size} МБ"
+  "{size} MB": "{size} МБ",
+  "American English": "Американский английский",
+  "Brazilian Portuguese": "Бразильский португальский",
+  "British English": "Британский английский",
+  "Built-in": "Встроенные",
+  "Cloned": "Клонированные",
+  "Dutch (Belgium)": "Нидерландский (Бельгия)",
+  "English (UK)": "Английский (Великобритания)",
+  "English (US)": "Английский (США)",
+  "Female": "Женский",
+  "High quality": "Высокое качество",
+  "Low quality": "Низкое качество",
+  "Male": "Мужской",
+  "Medium quality": "Среднее качество",
+  "Portuguese (Brazil)": "Португальский (Бразилия)",
+  "Spanish (Mexico)": "Испанский (Мексика)",
+  "Spanish (Spain)": "Испанский (Испания)",
+  "on device": "на устройстве"
 }

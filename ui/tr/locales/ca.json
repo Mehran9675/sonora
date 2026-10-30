@@ -486,5 +486,22 @@
   "giode.copied": "Copiat",
   "giode.dismiss": "Descartar",
   "giode.license": "Llicència",
-  "giode.no_license": "No s’ha trobat cap fitxer de llicència en aquest mòdul."
+  "giode.no_license": "No s’ha trobat cap fitxer de llicència en aquest mòdul.",
+  "American English": "Anglès americà",
+  "Brazilian Portuguese": "Portuguès del Brasil",
+  "British English": "Anglès britànic",
+  "Built-in": "Integrada",
+  "Cloned": "Clonada",
+  "Dutch (Belgium)": "Neerlandès (Bèlgica)",
+  "English (UK)": "Anglès (Regne Unit)",
+  "English (US)": "Anglès (EUA)",
+  "Female": "Femenina",
+  "High quality": "Alta qualitat",
+  "Low quality": "Baixa qualitat",
+  "Male": "Masculina",
+  "Medium quality": "Qualitat mitjana",
+  "Portuguese (Brazil)": "Portuguès (Brasil)",
+  "Spanish (Mexico)": "Espanyol (Mèxic)",
+  "Spanish (Spain)": "Espanyol (Espanya)",
+  "on device": "al dispositiu"
 }

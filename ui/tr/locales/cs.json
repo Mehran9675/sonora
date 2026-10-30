@@ -485,5 +485,22 @@
   },
   "{size} GB": "{size} GB",
   "{size} KB": "{size} KB",
-  "{size} MB": "{size} MB"
+  "{size} MB": "{size} MB",
+  "American English": "Americká angličtina",
+  "Brazilian Portuguese": "Brazilská portugalština",
+  "British English": "Britská angličtina",
+  "Built-in": "Vestavěné",
+  "Cloned": "Naklonované",
+  "Dutch (Belgium)": "Nizozemština (Belgie)",
+  "English (UK)": "Angličtina (Spojené království)",
+  "English (US)": "Angličtina (USA)",
+  "Female": "Žena",
+  "High quality": "Vysoká kvalita",
+  "Low quality": "Nízká kvalita",
+  "Male": "Muž",
+  "Medium quality": "Střední kvalita",
+  "Portuguese (Brazil)": "Portugalština (Brazílie)",
+  "Spanish (Mexico)": "Španělština (Mexiko)",
+  "Spanish (Spain)": "Španělština (Španělsko)",
+  "on device": "v zařízení"
 }

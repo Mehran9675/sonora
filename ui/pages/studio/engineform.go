@@ -64,9 +64,9 @@ func newEngineForm(c *core.Ctx, rt *manager.Runtime) *engineForm {
 			return tr.T("Loading voices…"), tr.T("Starting {name}", "name", m.Name)
 		}
 		v := f.voice()
-		detail := tr.T(v.Group)
+		detail := core.Parts(v.Group)
 		if v.Description != "" {
-			detail = joinNonEmpty(tr.T(v.Group), tr.T(v.Description))
+			detail = joinNonEmpty(core.Parts(v.Group), core.Parts(v.Description))
 		}
 		return v.Label(), detail
 	}, func() giode.Element {
@@ -150,7 +150,7 @@ func (f *engineForm) voiceList() []engines.Voice {
 func (f *engineForm) voiceItems() []picker.Item {
 	var out []picker.Item
 	for _, v := range f.voiceList() {
-		out = append(out, picker.Item{ID: v.ID, Label: v.Label(), Group: tr.T(v.Group), Detail: tr.T(v.Description)})
+		out = append(out, picker.Item{ID: v.ID, Label: v.Label(), Group: core.Parts(v.Group), Detail: core.Parts(v.Description)})
 	}
 	return out
 }

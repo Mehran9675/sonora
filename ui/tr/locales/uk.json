@@ -485,5 +485,22 @@
   },
   "{size} GB": "{size} ГБ",
   "{size} KB": "{size} КБ",
-  "{size} MB": "{size} МБ"
+  "{size} MB": "{size} МБ",
+  "American English": "Американська англійська",
+  "Brazilian Portuguese": "Бразильська португальська",
+  "British English": "Британська англійська",
+  "Built-in": "Вбудовані",
+  "Cloned": "Клоновані",
+  "Dutch (Belgium)": "Нідерландська (Бельгія)",
+  "English (UK)": "Англійська (Велика Британія)",
+  "English (US)": "Англійська (США)",
+  "Female": "Жіночий",
+  "High quality": "Висока якість",
+  "Low quality": "Низька якість",
+  "Male": "Чоловічий",
+  "Medium quality": "Середня якість",
+  "Portuguese (Brazil)": "Португальська (Бразилія)",
+  "Spanish (Mexico)": "Іспанська (Мексика)",
+  "Spanish (Spain)": "Іспанська (Іспанія)",
+  "on device": "на пристрої"
 }

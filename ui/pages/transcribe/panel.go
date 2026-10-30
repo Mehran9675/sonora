@@ -61,7 +61,7 @@ func newPanel(p *Page) *panel {
 		for _, rt := range c.Manager.EnginesFor(engines.TaskTranscribe) {
 			m := rt.Manifest()
 			label, _ := statuspill.Describe(rt)
-			it := picker.Item{ID: m.ID, Label: m.Name, Detail: joinNonEmpty(m.Vendor, label)}
+			it := picker.Item{ID: m.ID, Label: m.Name, Detail: joinNonEmpty(core.Parts(m.Vendor), label)}
 			if rt.State == manager.StateReady || rt.State == manager.StateWorking {
 				it.Group = tr.T("Ready to use")
 				ready = append(ready, it)
@@ -74,7 +74,7 @@ func newPanel(p *Page) *panel {
 	}, func() string { return c.Settings.Get().TranscribeEngine }, func(it picker.Item) { p.selectEngine(it.ID) })
 	v.engine = picker.NewTrigger(tr.Msg("Engine"), func() (string, string) {
 		label, _ := statuspill.Describe(v.rt)
-		return v.rt.Manifest().Name, joinNonEmpty(v.rt.Manifest().Vendor, label)
+		return v.rt.Manifest().Name, joinNonEmpty(core.Parts(v.rt.Manifest().Vendor), label)
 	}, func() giode.Element { return badge.Engine(v.rt.Manifest(), 32) }, v.engines.Open)
 
 	primary := giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,

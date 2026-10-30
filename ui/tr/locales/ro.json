@@ -485,5 +485,22 @@
   },
   "{size} GB": "{size} GB",
   "{size} KB": "{size} KB",
-  "{size} MB": "{size} MB"
+  "{size} MB": "{size} MB",
+  "American English": "Engleză americană",
+  "Brazilian Portuguese": "Portugheză braziliană",
+  "British English": "Engleză britanică",
+  "Built-in": "Integrate",
+  "Cloned": "Clonate",
+  "Dutch (Belgium)": "Neerlandeză (Belgia)",
+  "English (UK)": "Engleză (Regatul Unit)",
+  "English (US)": "Engleză (SUA)",
+  "Female": "Feminin",
+  "High quality": "Calitate înaltă",
+  "Low quality": "Calitate scăzută",
+  "Male": "Masculin",
+  "Medium quality": "Calitate medie",
+  "Portuguese (Brazil)": "Portugheză (Brazilia)",
+  "Spanish (Mexico)": "Spaniolă (Mexic)",
+  "Spanish (Spain)": "Spaniolă (Spania)",
+  "on device": "pe dispozitiv"
 }

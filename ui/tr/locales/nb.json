@@ -474,5 +474,22 @@
   },
   "{size} GB": "{size} GB",
   "{size} KB": "{size} kB",
-  "{size} MB": "{size} MB"
+  "{size} MB": "{size} MB",
+  "American English": "Amerikansk engelsk",
+  "Brazilian Portuguese": "Brasiliansk portugisisk",
+  "British English": "Britisk engelsk",
+  "Built-in": "Innebygd",
+  "Cloned": "Klonet",
+  "Dutch (Belgium)": "Nederlandsk (Belgia)",
+  "English (UK)": "Engelsk (Storbritannia)",
+  "English (US)": "Engelsk (USA)",
+  "Female": "Kvinne",
+  "High quality": "Høy kvalitet",
+  "Low quality": "Lav kvalitet",
+  "Male": "Mann",
+  "Medium quality": "Middels kvalitet",
+  "Portuguese (Brazil)": "Portugisisk (Brasil)",
+  "Spanish (Mexico)": "Spansk (Mexico)",
+  "Spanish (Spain)": "Spansk (Spania)",
+  "on device": "på enheten"
 }

@@ -485,5 +485,22 @@
   },
   "{size} GB": "{size} GB",
   "{size} KB": "{size} KB",
-  "{size} MB": "{size} MB"
+  "{size} MB": "{size} MB",
+  "American English": "Američki engleski",
+  "Brazilian Portuguese": "Brazilski portugalski",
+  "British English": "Britanski engleski",
+  "Built-in": "Ugrađeni",
+  "Cloned": "Klonirani",
+  "Dutch (Belgium)": "Nizozemski (Belgija)",
+  "English (UK)": "Engleski (UK)",
+  "English (US)": "Engleski (SAD)",
+  "Female": "Ženski",
+  "High quality": "Visoka kvaliteta",
+  "Low quality": "Niska kvaliteta",
+  "Male": "Muški",
+  "Medium quality": "Srednja kvaliteta",
+  "Portuguese (Brazil)": "Portugalski (Brazil)",
+  "Spanish (Mexico)": "Španjolski (Meksiko)",
+  "Spanish (Spain)": "Španjolski (Španjolska)",
+  "on device": "na uređaju"
 }

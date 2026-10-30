@@ -474,5 +474,22 @@
   },
   "{size} GB": "{size} GB",
   "{size} KB": "{size} KB",
-  "{size} MB": "{size} MB"
+  "{size} MB": "{size} MB",
+  "American English": "Αμερικανικά Αγγλικά",
+  "Brazilian Portuguese": "Πορτογαλικά Βραζιλίας",
+  "British English": "Βρετανικά Αγγλικά",
+  "Built-in": "Ενσωματωμένες",
+  "Cloned": "Κλωνοποιημένες",
+  "Dutch (Belgium)": "Ολλανδικά (Βέλγιο)",
+  "English (UK)": "Αγγλικά (ΗΒ)",
+  "English (US)": "Αγγλικά (ΗΠΑ)",
+  "Female": "Γυναικεία",
+  "High quality": "Υψηλή ποιότητα",
+  "Low quality": "Χαμηλή ποιότητα",
+  "Male": "Ανδρική",
+  "Medium quality": "Μέτρια ποιότητα",
+  "Portuguese (Brazil)": "Πορτογαλικά (Βραζιλία)",
+  "Spanish (Mexico)": "Ισπανικά (Μεξικό)",
+  "Spanish (Spain)": "Ισπανικά (Ισπανία)",
+  "on device": "στη συσκευή"
 }
