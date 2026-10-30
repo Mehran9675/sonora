@@ -12,6 +12,7 @@ import (
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // Sidebar is the left navigation column.
@@ -28,27 +29,27 @@ func NewSidebar(c *core.Ctx, onTheme func()) *Sidebar {
 		s.items = append(s.items, navitem.New(icon, label,
 			func() bool { return c.Page() == p }, badge, func() { c.Go(p) }))
 	}
-	nav(icons.Waves, "Studio", core.PageStudio, nil)
-	nav(icons.Captions, "Transcribe", core.PageTranscribe, func() string {
+	nav(icons.Waves, tr.Msg("Studio"), core.PageStudio, nil)
+	nav(icons.Captions, tr.Msg("Transcribe"), core.PageTranscribe, func() string {
 		if n := len(c.Transcripts.Entries()); n > 0 {
 			return fmt.Sprint(n)
 		}
 		return ""
 	})
-	nav(icons.Library, "Library", core.PageLibrary, func() string {
+	nav(icons.Library, tr.Msg("Library"), core.PageLibrary, func() string {
 		if n := len(c.Library.Entries()); n > 0 {
 			return fmt.Sprint(n)
 		}
 		return ""
 	})
-	nav(icons.Chip, "Engines", core.PageEngines, func() string {
+	nav(icons.Chip, tr.Msg("Engines"), core.PageEngines, func() string {
 		return fmt.Sprintf("%d/%d", len(c.Manager.Ready()), len(c.Manager.Engines()))
 	})
-	nav(icons.Sliders, "Settings", core.PageSettings, nil)
+	nav(icons.Sliders, tr.Msg("Settings"), core.PageSettings, nil)
 	s.theme = giode.Pressable(func(ps giode.PressState) giode.Element {
-		icon, label := icons.Sun, "Light mode"
+		icon, label := icons.Sun, tr.T("Light mode")
 		if !theme.IsDark() {
-			icon, label = icons.Moon, "Dark mode"
+			icon, label = icons.Moon, tr.T("Dark mode")
 		}
 		fg := "theme.muted"
 		bg := ""
@@ -58,7 +59,8 @@ func NewSidebar(c *core.Ctx, onTheme func()) *Sidebar {
 		return giode.Row(giode.Styles{Width: -1, Gap: 12, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap,
 			Padding: giode.SymmetricInset(12, 10), BorderRadius: theme.RadiusSm + 2, Background: bg},
 			icons.Icon(icon, 18, fg), giode.Text(label, giode.Styles{Color: fg, FontSize: 13, FontWeight: giode.FontWeightMedium}))
-	}).Label("Toggle theme").OnClick(func(giode.ClickEvent) { onTheme() })
+	}).OnClick(func(giode.ClickEvent) { onTheme() })
+	tr.Bind(func(l string) { s.theme.Label(l) }, "Toggle theme")
 	return s
 }
 
@@ -98,25 +100,25 @@ func logo() giode.Element {
 		}, icons.Icon(icons.Waves, 20, "#ffffff")),
 		giode.Stack(giode.Styles{Gap: 1},
 			giode.Text("Sonora", giode.Styles{Color: "theme.text", FontSize: 18, FontWeight: giode.FontWeightExtraBold}),
-			giode.Text("Speech studio", theme.Caption),
+			giode.Text(tr.T("Speech studio"), theme.Caption),
 		),
 	)
 }
 
 func (s *Sidebar) engineSummary() giode.Element {
 	ready := len(s.c.Manager.Ready())
-	msg := fmt.Sprintf("%d engine%s ready", ready, plural(ready))
+	msg := tr.N("{n} engines ready", ready)
 	m := s.c.Manager
 	for _, rt := range m.Engines() {
 		if rt.Busy() && rt.State == manager.StateInstalling {
-			msg = "Installing " + rt.Manifest().Name
+			msg = tr.T("Installing {name}", "name", rt.Manifest().Name)
 		}
 	}
 	if j := m.TranscribeJob; j != nil {
-		msg = "Transcribing with " + j.Runtime.Manifest().Name
+		msg = tr.T("Transcribing with {name}", "name", j.Runtime.Manifest().Name)
 	}
 	if j := m.Job; j != nil {
-		msg = "Generating with " + j.Runtime.Manifest().Name
+		msg = tr.T("Generating with {name}", "name", j.Runtime.Manifest().Name)
 	}
 	return giode.Row(giode.Styles{Width: -1, Gap: 10, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap,
 		Padding: giode.UniformInset(12), Margin: giode.Inset{Bottom: 6},
@@ -124,11 +126,4 @@ func (s *Sidebar) engineSummary() giode.Element {
 		giode.Box(giode.Styles{Width: 8, Height: 8, BorderRadius: 99, Background: "theme.success"}),
 		giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(msg, giode.Styles{Color: "theme.secondary", FontSize: 12, MaxLines: 2})),
 	)
-}
-
-func plural(n int) string {
-	if n == 1 {
-		return ""
-	}
-	return "s"
 }

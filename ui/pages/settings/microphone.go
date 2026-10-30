@@ -5,6 +5,7 @@ import (
 	st "github.com/mehran9675/sonora/internal/settings"
 	"github.com/mehran9675/sonora/ui/components/picker"
 	"github.com/mehran9675/sonora/ui/core"
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // microphone is the Recording section's microphone picker. The list is
@@ -22,7 +23,7 @@ type microphone struct {
 func (m *microphone) init(c *core.Ctx) {
 	m.c = c
 	current := func() string { return c.Settings.Get().Microphone }
-	m.picker = picker.New("Microphone", m.items, current, func(it picker.Item) {
+	m.picker = picker.New(tr.Msg("Microphone"), m.items, current, func(it picker.Item) {
 		c.Settings.Update(func(s *st.Settings) {
 			s.Microphone = it.ID
 			s.MicrophoneName = ""
@@ -31,7 +32,7 @@ func (m *microphone) init(c *core.Ctx) {
 			}
 		})
 	})
-	m.trigger = picker.NewTrigger("Microphone", m.label, nil, func() {
+	m.trigger = picker.NewTrigger(tr.Msg("Microphone"), m.label, nil, func() {
 		m.refresh()
 		m.picker.Open()
 	})
@@ -65,13 +66,13 @@ func (m *microphone) connected(id string) bool {
 }
 
 func (m *microphone) items() []picker.Item {
-	items := []picker.Item{{ID: "", Label: "System default", Detail: "The microphone your system records from"}}
+	items := []picker.Item{{ID: "", Label: tr.T("System default"), Detail: tr.T("The microphone your system records from")}}
 	for _, d := range m.devices {
 		items = append(items, picker.Item{ID: d.ID, Label: d.Name})
 	}
 	s := m.c.Settings.Get()
 	if s.Microphone != "" && m.loaded && !m.connected(s.Microphone) {
-		items = append(items, picker.Item{ID: s.Microphone, Label: m.name(s), Detail: "Not connected"})
+		items = append(items, picker.Item{ID: s.Microphone, Label: m.name(s), Detail: tr.T("Not connected")})
 	}
 	return items
 }
@@ -83,9 +84,9 @@ func (m *microphone) label() (string, string) {
 	s := m.c.Settings.Get()
 	switch {
 	case s.Microphone == "":
-		return "System default", "The microphone your system records from"
+		return tr.T("System default"), tr.T("The microphone your system records from")
 	case m.loaded && !m.connected(s.Microphone):
-		return m.name(s), "Not connected · the default is used"
+		return m.name(s), tr.T("Not connected · the default is used")
 	}
 	return m.name(s), ""
 }

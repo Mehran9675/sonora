@@ -4,6 +4,8 @@ import (
 	"github.com/mehran9675/sonora/internal/engines"
 	"github.com/mehran9675/sonora/internal/manager"
 	"github.com/mehran9675/sonora/ui/components/optionfield"
+
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // OptionStore edits engine man's settings for its option fields. Values
@@ -25,9 +27,9 @@ func (c *Ctx) OptionStore(man *engines.Manifest, onSet func(id string)) optionfi
 				return ""
 			}
 			if c.Manager.Downloaded(man.ID)[value] {
-				return "Downloaded"
+				return tr.T("Downloaded")
 			}
-			return "Not downloaded yet"
+			return tr.T("Not downloaded yet")
 		},
 	}
 }
@@ -36,11 +38,11 @@ func (c *Ctx) OptionStore(man *engines.Manifest, onSet func(id string)) optionfi
 // models, keeping the device awake meanwhile; done (optional) runs
 // afterwards on the UI goroutine.
 func (c *Ctx) InstallModel(rt *manager.Runtime, model string, done func(error)) {
-	awake := c.StayAwake("Downloading a model for " + rt.Manifest().Name)
+	awake := c.StayAwake(tr.T("Downloading a model for {name}", "name", rt.Manifest().Name))
 	c.Manager.InstallModel(rt, model, func(err error) {
 		awake()
 		if err == nil {
-			c.NotifyIfAway(rt.Manifest().Name+" is ready", "The model is downloaded.")
+			c.NotifyIfAway(tr.T("{name} is ready", "name", rt.Manifest().Name), tr.T("The model is downloaded."))
 		}
 		if done != nil {
 			done(err)

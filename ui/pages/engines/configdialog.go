@@ -9,6 +9,7 @@ import (
 	"github.com/mehran9675/sonora/ui/components/overlay"
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/theme"
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // configDialog edits a custom engine's setup options in place.
@@ -22,13 +23,14 @@ type configDialog struct {
 
 func newConfigDialog(c *core.Ctx) *configDialog {
 	d := &configDialog{c: c}
-	d.done = giode.Button("Done", giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
+	d.done = giode.Button("", giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
 		Padding: giode.SymmetricInset(18, 9), BorderRadius: theme.RadiusSm + 2}).OnClick(func() {
 		d.open = false
 		if d.rt != nil {
 			c.Manager.LoadVoices(d.rt, true)
 		}
 	})
+	tr.Bind(func(s string) { d.done.Label(s) }, "Done")
 	overlay.Add(giode.Dialog(&d.open, d.content, dialogStyle()))
 	return d
 }

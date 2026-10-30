@@ -65,6 +65,11 @@ Studio; your script is kept when you switch away.
   *Recordings* tab lists your recordings to play, transcribe, export or delete.
 - **Any model.** Built-in engines, Python plugins, API servers and command-line tools all
   appear in the same list and work the same way.
+- **Your language.** Sonora speaks English, Bulgarian, Catalan, Croatian, Czech, Danish,
+  Dutch, Estonian, Finnish, French, German, Greek, Hungarian, Italian, Latvian, Lithuanian,
+  Norwegian, Polish, Portuguese, Romanian, Russian, Slovak, Slovenian, Spanish, Swedish,
+  Turkish and Ukrainian. It follows the system language, or pick one in *Settings →
+  Appearance*; the app switches at once.
 - **Modern design.** Dark and light themes (or follow the system), a frameless window with a custom title bar,
   the Inter typeface, a violet-to-cyan accent.
 

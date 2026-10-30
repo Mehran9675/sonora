@@ -1,0 +1,13 @@
+{
+  "Loaded {n} words": {"one": "Loaded {n} word", "other": "Loaded {n} words"},
+  "Loaded {n} words from {file}": {"one": "Loaded {n} word from {file}", "other": "Loaded {n} words from {file}"},
+  "That recording is too short; speak for at least {n} seconds": {"one": "That recording is too short; speak for at least {n} second", "other": "That recording is too short; speak for at least {n} seconds"},
+  "{n} characters": {"one": "{n} character", "other": "{n} characters"},
+  "{n} d ago": {"one": "{n} d ago", "other": "{n} d ago"},
+  "{n} engines ready": {"one": "{n} engine ready", "other": "{n} engines ready"},
+  "{n} h ago": {"one": "{n} h ago", "other": "{n} h ago"},
+  "{n} hours": {"one": "{n} hour", "other": "{n} hours"},
+  "{n} min ago": {"one": "{n} min ago", "other": "{n} min ago"},
+  "{n} minutes": {"one": "{n} minute", "other": "{n} minutes"},
+  "{n} words": {"one": "{n} word", "other": "{n} words"}
+}

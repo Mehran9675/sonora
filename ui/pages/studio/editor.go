@@ -1,7 +1,6 @@
 package studio
 
 import (
-	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -17,6 +16,8 @@ import (
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
+
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // expandedMargin is the room, in dp, an expanded script card leaves for
@@ -43,27 +44,30 @@ type editor struct {
 
 func newEditor(c *core.Ctx) *editor {
 	e := &editor{}
-	e.in = giode.Input.Text("Type or paste the text you want to hear…", giode.Styles{
+	e.in = giode.Input.Text("", giode.Styles{
 		BorderColor: "transparent", Padding: giode.UniformInset(0), Color: "theme.text", FontSize: 17, Width: -1,
 		Height: -1, // fill the card so a tap anywhere in it starts typing
-	}).Multiline(true).Label("Script").OnChange(func(text string) {
+	}).Multiline(true).OnChange(func(text string) {
 		e.mu.Lock()
 		e.draft = text
 		e.mu.Unlock()
 	})
+	tr.Bind(func(s string) { e.in.Placeholder(s) }, "Type or paste the text you want to hear…")
+	tr.Bind(func(s string) { e.in.Label(s) }, "Script")
 	e.draft = c.Settings.Get().Draft
 	e.in.SetText(e.draft)
+	// element sets the buttons' text every frame.
 	ghost := giode.Styles{Color: "theme.muted", Background: "theme.text", FontSize: 13, Padding: giode.SymmetricInset(10, 6), BorderRadius: 8}
-	e.sample = giode.Button("Try a sample", ghost).Variant(giode.VariantGhost).
+	e.sample = giode.Button("", ghost).Variant(giode.VariantGhost).
 		Icon(icons.Icon(icons.Sparkles, 15, "")).OnClick(func() {
 		e.in.ChangeText(samples[e.next%len(samples)])
 		e.next++
 	})
-	e.clear = giode.Button("Clear", ghost).Variant(giode.VariantGhost).
+	e.clear = giode.Button("", ghost).Variant(giode.VariantGhost).
 		Icon(icons.Icon(icons.Trash, 15, "")).OnClick(func() { e.in.ChangeText("") })
 	e.expand = giode.Button("", ghost).Variant(giode.VariantGhost).
 		Icon(icons.Icon(icons.Expand, 15, "")).OnClick(func() { e.expanded = !e.expanded })
-	e.open = giode.Button("Open file", ghost).Variant(giode.VariantGhost).
+	e.open = giode.Button("", ghost).Variant(giode.VariantGhost).
 		Icon(icons.Icon(icons.FileText, 15, "")).OnClick(func() { e.openFile(c) })
 	return e
 }
@@ -89,9 +93,9 @@ func (e *editor) openFile(c *core.Ctx) {
 		}
 		e.in.ChangeText(text)
 		words := len(strings.Fields(text))
-		msg := fmt.Sprintf("Loaded %d words", words)
+		msg := tr.N("Loaded {n} words", words)
 		if name != "" {
-			msg += " from " + name
+			msg = tr.N("Loaded {n} words from {file}", words, "file", name)
 		}
 		c.Success(msg)
 	})
@@ -113,16 +117,17 @@ func (e *editor) element(rt *manager.Runtime, height int) giode.Element {
 	text := e.in.Text()
 	words := len(strings.Fields(text))
 	secs := float64(words) / 2.6
-	stats := fmt.Sprintf("%d characters · %d words · ≈ %s", len([]rune(text)), words, core.Clock(time.Duration(secs*float64(time.Second))))
+	stats := tr.N("{n} characters", len([]rune(text))) + " · " + tr.N("{n} words", words) + " · ≈ " +
+		core.Clock(time.Duration(secs*float64(time.Second)))
 	footer := []giode.Element{giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(stats, theme.Caption))}
 	// On a phone the hint shows in the voice panel instead: beside the
 	// stats it squeezes them, and the text field, to nothing.
 	if hint := rt.Manifest().Hint; hint != "" && rt.State != manager.StateUnavailable && height == 0 {
-		footer = append(footer, chip.Chip(hint))
+		footer = append(footer, chip.Chip(tr.T(hint)))
 	}
 	card := theme.Card()
 	card.FlexGrow, card.Width, card.Gap = 1, -1, 12
-	header := []giode.Element{giode.Box(giode.Styles{FlexGrow: 1}, giode.Text("Script", theme.Heading)), e.open, e.sample, e.clear}
+	header := []giode.Element{giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(tr.T("Script"), theme.Heading)), e.open, e.sample, e.clear}
 	if height > 0 {
 		if e.expanded {
 			// Fill the screen below the tab bar and page padding; Back
@@ -144,9 +149,9 @@ func (e *editor) element(rt *manager.Runtime, height int) giode.Element {
 		e.sample.Label("")
 		e.clear.Label("")
 	} else {
-		e.open.Label("Open file")
-		e.sample.Label("Try a sample")
-		e.clear.Label("Clear")
+		e.open.Label(tr.T("Open file"))
+		e.sample.Label(tr.T("Try a sample"))
+		e.clear.Label(tr.T("Clear"))
 	}
 	return giode.Stack(card,
 		giode.Row(giode.Styles{Width: -1, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap, Gap: 4}, header...),

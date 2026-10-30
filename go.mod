@@ -10,7 +10,7 @@ require (
 	github.com/hajimehoshi/go-mp3 v0.3.4
 	github.com/jfreymuth/oggvorbis v1.0.5
 	github.com/ledongthuc/pdf v0.0.0-20250511090121-5959a4027728
-	github.com/mehran9675/giode v0.1.6-alpha.1
+	github.com/mehran9675/giode v0.1.18-alpha.1
 	github.com/mewkiz/flac v1.0.14
 	github.com/thesyncim/gopus v0.1.2
 	golang.org/x/image v0.26.0
@@ -19,6 +19,7 @@ require (
 )
 
 require (
+	fyne.io/systray v1.12.2 // indirect
 	gioui.org/shader v1.0.9 // indirect
 	gioui.org/x v0.10.2 // indirect
 	git.sr.ht/~jackmordaunt/go-toast v1.0.0 // indirect
@@ -26,7 +27,7 @@ require (
 	github.com/esiqveland/notify v0.11.0 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-text/typesetting v0.3.4 // indirect
-	github.com/godbus/dbus/v5 v5.0.6 // indirect
+	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/icza/bitio v1.1.0 // indirect
 	github.com/jfreymuth/pulse v0.1.3 // indirect
 	github.com/jfreymuth/vorbis v1.0.2 // indirect

@@ -19,6 +19,8 @@ import (
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
+
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // Page is the Transcribe screen. Create it once.
@@ -50,9 +52,10 @@ func New(c *core.Ctx) *Page {
 	bar := theme.Scrolling(5)
 	p.left = giode.Scroll(p.leftColumn, bar)
 	p.column = giode.Scroll(p.compactColumn, bar)
-	p.addEngine = giode.Button("Open Engines", giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
+	p.addEngine = giode.Button("", giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
 		Padding: giode.SymmetricInset(16, 9), BorderRadius: theme.RadiusSm + 2}).
 		Icon(icons.Icon(icons.Chip, 15, "")).OnClick(func() { c.ShowEngines(engines.TaskTranscribe) })
+	tr.Bind(func(s string) { p.addEngine.Label(s) }, "Open Engines")
 	c.Transcribe = func(path, title string) {
 		p.setSource(path, title, false)
 		c.Go(core.PageTranscribe)
@@ -121,14 +124,14 @@ func (p *Page) start() {
 	s := c.Settings.Get()
 	in := manager.TranscribeInput{Source: p.source, Title: p.sourceName,
 		Language: language(rt.Manifest(), s.Language), Translate: s.Translate}
-	awake := c.StayAwake("Transcribing")
+	awake := c.StayAwake(tr.T("Transcribing"))
 	c.Manager.Transcribe(rt, in, func(e transcripts.Entry, err error) {
 		awake()
 		if err != nil {
 			c.Error(err)
 			return
 		}
-		c.NotifyIfAway("Transcript ready", e.Title)
+		c.NotifyIfAway(tr.T("Transcript ready"), e.Title)
 		p.dropSource()
 		p.result.show(e)
 	})
@@ -151,8 +154,8 @@ func language(m *engines.Manifest, want string) string {
 func (p *Page) Element() giode.Element {
 	rt := p.engine()
 	if rt == nil {
-		return emptystate.New(icons.Captions, "Add a speech-to-text engine",
-			"Install Whisper or another transcription engine from the Engines page, or connect a transcription API.",
+		return emptystate.New(icons.Captions, tr.T("Add a speech-to-text engine"),
+			tr.T("Install Whisper or another transcription engine from the Engines page, or connect a transcription API."),
 			p.addEngine)
 	}
 	if giode.Compact() {

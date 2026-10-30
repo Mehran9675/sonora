@@ -4,19 +4,21 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/mehran9675/giode"
+
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // PickFile shows the system file picker for one file of the given
 // types (extensions or MIME types) and returns it with its name. It
 // blocks: call it off the UI goroutine. A desktop without a picker
-// service gets a hint to use another way in.
+// service gets a hint to use another way in: otherwise, an English
+// sentence translated here.
 func (c *Ctx) PickFile(types []string, otherwise string) (giode.PickedFile, error) {
 	files, err := c.App.PickFiles(context.Background(), giode.PickOptions{Types: types})
 	switch {
@@ -24,7 +26,11 @@ func (c *Ctx) PickFile(types []string, otherwise string) (giode.PickedFile, erro
 		return giode.PickedFile{}, err
 	case err != nil:
 		// Linux systems without the XDG desktop portal have no picker.
-		return giode.PickedFile{}, fmt.Errorf("couldn't open a file picker on this system (%v)%s", err, otherwise)
+		msg := tr.T("Couldn't open a file picker on this system ({error}).", "error", err)
+		if otherwise != "" {
+			msg += " " + tr.T(otherwise)
+		}
+		return giode.PickedFile{}, errors.New(msg)
 	case len(files) == 0:
 		return giode.PickedFile{}, giode.ErrCanceled
 	}

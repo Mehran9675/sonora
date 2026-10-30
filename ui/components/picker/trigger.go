@@ -5,6 +5,7 @@ import (
 
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // Trigger is the field that opens a picker, showing the current choice.
@@ -42,7 +43,8 @@ func NewTrigger(name string, label func() (title, detail string), lead func() gi
 			Padding: giode.SymmetricInset(12, 9), BorderRadius: theme.RadiusSm + 2,
 			Background: "theme.text/0.03", BorderWidth: 1, BorderColor: border,
 		}, row...)
-	}).Label(name).OnClick(func(giode.ClickEvent) { onClick() })
+	}).OnClick(func(giode.ClickEvent) { onClick() })
+	tr.Bind(func(s string) { t.p.Label(s) }, name)
 	return t
 }
 

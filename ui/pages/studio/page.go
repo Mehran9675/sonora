@@ -15,6 +15,8 @@ import (
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
+
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // Page is the Studio. Create it once.
@@ -40,9 +42,10 @@ func New(c *core.Ctx) *Page {
 	p.player = playerbar.New(c)
 	p.panel = newVoicePanel(p)
 	p.column = giode.Scroll(p.compactColumn, theme.Scrolling(4))
-	p.addEngine = giode.Button("Add an engine", giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
+	p.addEngine = giode.Button("", giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
 		Padding: giode.SymmetricInset(16, 9), BorderRadius: theme.RadiusSm + 2}).
 		Icon(icons.Icon(icons.Plus, 15, "")).OnClick(func() { c.Go(core.PageEngines) })
+	tr.Bind(func(s string) { p.addEngine.Label(s) }, "Add an engine")
 	c.UseEngine = func(id string) {
 		p.selectEngine(id)
 		c.Go(core.PageStudio)
@@ -107,8 +110,8 @@ func (p *Page) SaveDraft() {
 func (p *Page) Element() giode.Element {
 	rt := p.engine()
 	if rt == nil {
-		return emptystate.New(icons.Globe, "Connect a voice engine",
-			"Add an API server, such as Kokoro-FastAPI on your computer or a cloud TTS service, and Sonora speaks through it.",
+		return emptystate.New(icons.Globe, tr.T("Connect a voice engine"),
+			tr.T("Add an API server, such as Kokoro-FastAPI on your computer or a cloud TTS service, and Sonora speaks through it."),
 			p.addEngine)
 	}
 	p.c.Manager.LoadVoices(rt, false)

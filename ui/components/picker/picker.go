@@ -12,6 +12,7 @@ import (
 	"github.com/mehran9675/sonora/ui/components/overlay"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // Picker is a modal list. Create it once; it registers itself as an
@@ -39,13 +40,15 @@ const searchFrom = 9
 // the keyboard over the list.
 const touch = runtime.GOOS == "android" || runtime.GOOS == "ios"
 
-// New returns a picker titled title listing items(); selected returns
-// the current choice's ID; onPick runs when the user chooses.
+// New returns a picker titled title (English, shown translated)
+// listing items(); selected returns the current choice's ID; onPick
+// runs when the user chooses.
 func New(title string, items func() []Item, selected func() string, onPick func(Item)) *Picker {
 	p := &Picker{title: title, items: items, selected: selected, onPick: onPick}
 	field := theme.Field()
 	field.Padding = giode.SymmetricInset(12, 10)
-	p.search = giode.Input.Text("Search…", field)
+	p.search = giode.Input.Text("", field)
+	tr.Bind(func(s string) { p.search.Placeholder(s) }, "Search…")
 	p.rows = giode.NewKeyedCache[string, *giode.PressableElement]()
 	p.scroll = giode.Scroll(p.list, theme.Scrolling(6))
 	p.close = giode.Button("", giode.Styles{Color: "theme.muted", Background: "theme.text", Padding: giode.UniformInset(6), BorderRadius: 8}).
@@ -73,7 +76,7 @@ func (p *Picker) Open() {
 func (p *Picker) content() giode.Element {
 	parts := []giode.Element{
 		giode.Row(giode.Styles{Width: -1, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap},
-			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(p.title, theme.Heading)),
+			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(tr.T(p.title), theme.Heading)),
 			p.close,
 		),
 	}
@@ -105,7 +108,7 @@ func (p *Picker) list() giode.Element {
 	}
 	if len(rows) == 0 {
 		rows = append(rows, giode.Box(giode.Styles{Width: -1, Padding: giode.UniformInset(24)},
-			giode.Text("Nothing matches “"+q+"”", giode.Styles{Color: "theme.muted", TextAlign: giode.TextAlignCenter, Width: -1})))
+			giode.Text(tr.T("Nothing matches “{query}”", "query", q), giode.Styles{Color: "theme.muted", TextAlign: giode.TextAlignCenter, Width: -1})))
 	}
 	return giode.Stack(giode.Styles{Width: -1, Gap: 2, Padding: giode.Inset{Right: 10}}, rows...)
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // Bar is stateful; create one per page that shows it.
@@ -38,11 +39,12 @@ func New(c *core.Ctx) *Bar {
 			st.Transform = giode.Transform{Scale: 1.06}
 		}
 		return giode.Box(st, icon)
-	}).Label("Play").OnClick(func(giode.ClickEvent) {
+	}).OnClick(func(giode.ClickEvent) {
 		if c.Now != nil {
 			c.Player.Toggle()
 		}
 	})
+	tr.Bind(func(s string) { b.play.Label(s) }, "Play")
 	b.wave = &waveform.Waveform{
 		Peaks: func() []float32 {
 			if c.Now == nil {
@@ -78,9 +80,9 @@ func New(c *core.Ctx) *Bar {
 // Element lays out the bar.
 func (b *Bar) Element() giode.Element {
 	c := b.c
-	title, sub, clock := "Nothing to play yet", "Generated audio appears here", "0:00"
+	title, sub, clock := tr.T("Nothing to play yet"), tr.T("Generated audio appears here"), "0:00"
 	if c.Manager.Job != nil {
-		title, sub = "Generating…", c.Manager.Job.Runtime.Manifest().Name
+		title, sub = tr.T("Generating…"), c.Manager.Job.Runtime.Manifest().Name
 	} else if c.Now != nil {
 		title, sub = c.Now.Title, c.Now.Subtitle
 		pos := float32(c.Now.Duration) * c.Player.Progress()

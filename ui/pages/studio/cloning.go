@@ -7,6 +7,8 @@ import (
 
 	"github.com/mehran9675/sonora/internal/engines"
 	"github.com/mehran9675/sonora/ui/theme"
+
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // voiceChoice is the Voice section: the voice picker, plus a switch to
@@ -30,8 +32,8 @@ func voiceChoice(f *engineForm) giode.Element {
 // its transcript.
 func cloneBody(f *engineForm) giode.Element {
 	m := f.rt.Manifest()
-	body := []giode.Element{giode.Text("Record yourself or pick a file: 5–30 seconds of one person speaking clearly, "+
-		"with no music or noise.", giode.Styles{Color: "theme.muted", FontSize: 12, LineHeight: 17})}
+	body := []giode.Element{giode.Text(tr.T("Record yourself or pick a file: 5–30 seconds of one person speaking clearly, "+
+		"with no music or noise."), giode.Styles{Color: "theme.muted", FontSize: 12, LineHeight: 17})}
 	switch {
 	case f.recorder.Recording():
 		body = append(body, f.recorder.Element())
@@ -47,9 +49,9 @@ func cloneBody(f *engineForm) giode.Element {
 		))
 	}
 	if m.Transcript != engines.CloneNone {
-		label := "Transcript · optional, detected automatically"
+		label := tr.T("Transcript · optional, detected automatically")
 		if m.Transcript == engines.CloneRequired {
-			label = "Transcript · required"
+			label = tr.T("Transcript · required")
 		}
 		body = append(body, giode.Text(label, theme.Caption), giode.Box(giode.Styles{Width: -1}, f.transcript))
 	}

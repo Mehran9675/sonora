@@ -42,6 +42,10 @@ type Settings struct {
 	// unplugged.
 	Microphone     string `json:"microphone,omitempty"`
 	MicrophoneName string `json:"microphone_name,omitempty"`
+
+	// UILanguage is the language Sonora's own text is in ("de"; "" is
+	// the system's).
+	UILanguage string `json:"ui_language,omitempty"`
 }
 
 // Store loads and saves Settings. Methods are safe from any goroutine.

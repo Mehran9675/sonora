@@ -7,6 +7,8 @@ import (
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
+
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // history lists earlier transcripts; a click opens one.
@@ -24,7 +26,7 @@ func (h *history) element() giode.Element {
 	if len(entries) == 0 {
 		return giode.Box(giode.Styles{})
 	}
-	els := []giode.Element{giode.Text("Earlier transcripts", theme.Overline)}
+	els := []giode.Element{giode.Text(tr.T("Earlier transcripts"), theme.Overline)}
 	for _, e := range entries {
 		e := e
 		els = append(els, h.rows.Get(e.ID, func() *row { return newRow(h.p, e) }).element())
@@ -65,11 +67,12 @@ func newRow(p *Page, e transcripts.Entry) *row {
 			),
 			giode.Text(core.Clock(cur.Duration)+"  ·  "+core.Ago(cur.Created), theme.Caption),
 		)
-	}).Label("Open transcript").OnClick(func(giode.ClickEvent) {
+	}).OnClick(func(giode.ClickEvent) {
 		if cur, ok := c.Transcripts.Get(r.id); ok {
 			p.result.show(cur)
 		}
 	})
+	tr.Bind(func(s string) { r.open.Label(s) }, "Open transcript")
 	ghost := giode.Styles{Color: "theme.muted", Background: "theme.text", Padding: giode.UniformInset(8), BorderRadius: 8}
 	r.export = giode.Button("", ghost).Variant(giode.VariantGhost).Icon(icons.Icon(icons.Share, 15, "")).OnClick(func() {
 		if cur, ok := c.Transcripts.Get(r.id); ok {

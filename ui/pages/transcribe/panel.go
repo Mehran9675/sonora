@@ -22,6 +22,8 @@ import (
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
+
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // panel is the right-hand column: engine, audio, language, settings
@@ -54,39 +56,39 @@ type form struct {
 func newPanel(p *Page) *panel {
 	v := &panel{p: p, forms: map[string]*form{}}
 	c := p.c
-	v.engines = picker.New("Choose a transcription engine", func() []picker.Item {
+	v.engines = picker.New(tr.Msg("Choose a transcription engine"), func() []picker.Item {
 		var ready, other []picker.Item
 		for _, rt := range c.Manager.EnginesFor(engines.TaskTranscribe) {
 			m := rt.Manifest()
 			label, _ := statuspill.Describe(rt)
-			it := picker.Item{ID: m.ID, Label: m.Name, Detail: joinNonEmpty(m.Vendor, label)}
+			it := picker.Item{ID: m.ID, Label: m.Name, Detail: joinNonEmpty(core.Parts(m.Vendor), label)}
 			if rt.State == manager.StateReady || rt.State == manager.StateWorking {
-				it.Group = "Ready to use"
+				it.Group = tr.T("Ready to use")
 				ready = append(ready, it)
 			} else {
-				it.Group = "Available to install"
+				it.Group = tr.T("Available to install")
 				other = append(other, it)
 			}
 		}
 		return append(ready, other...)
 	}, func() string { return c.Settings.Get().TranscribeEngine }, func(it picker.Item) { p.selectEngine(it.ID) })
-	v.engine = picker.NewTrigger("Engine", func() (string, string) {
+	v.engine = picker.NewTrigger(tr.Msg("Engine"), func() (string, string) {
 		label, _ := statuspill.Describe(v.rt)
-		return v.rt.Manifest().Name, joinNonEmpty(v.rt.Manifest().Vendor, label)
+		return v.rt.Manifest().Name, joinNonEmpty(core.Parts(v.rt.Manifest().Vendor), label)
 	}, func() giode.Element { return badge.Engine(v.rt.Manifest(), 32) }, v.engines.Open)
 
 	primary := giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
 		Padding: giode.SymmetricInset(14, 8), BorderRadius: theme.RadiusSm}
 	outline := giode.Styles{Color: "theme.text", Background: "theme.border", BorderColor: "theme.border",
 		FontSize: 13, Padding: giode.SymmetricInset(12, 7), BorderRadius: theme.RadiusSm}
-	v.install = giode.Button("Install", primary).Icon(icons.Icon(icons.Download, 15, "")).OnClick(func() {
+	v.install = giode.Button("", primary).Icon(icons.Icon(icons.Download, 15, "")).OnClick(func() {
 		rt := v.rt
 		done := func(err error) {
 			if err != nil {
 				c.Error(err)
 				return
 			}
-			c.Success(rt.Manifest().Name + " is ready")
+			c.Success(tr.T("{name} is ready", "name", rt.Manifest().Name))
 		}
 		// Engines with a model choice download the model the panel's
 		// selector shows.
@@ -96,16 +98,21 @@ func newPanel(p *Page) *panel {
 		}
 		c.Install(rt, done)
 	})
-	v.manage = giode.Button("Open Engines", outline).Variant(giode.VariantOutlined).
+	tr.Bind(func(s string) { v.install.Label(s) }, "Install")
+	v.manage = giode.Button("", outline).Variant(giode.VariantOutlined).
 		OnClick(func() { c.ShowEngines(engines.TaskTranscribe) })
-	v.pick = giode.Button("Choose file…", outline).Variant(giode.VariantOutlined).
+	tr.Bind(func(s string) { v.manage.Label(s) }, "Open Engines")
+	v.pick = giode.Button("", outline).Variant(giode.VariantOutlined).
 		Icon(icons.Icon(icons.Upload, 15, "")).OnClick(v.pickFile)
+	tr.Bind(func(s string) { v.pick.Label(s) }, "Choose file…")
 	v.clear = giode.Button("", giode.Styles{Color: "theme.muted", Background: "theme.text", Padding: giode.UniformInset(5), BorderRadius: 8}).
 		Variant(giode.VariantGhost).Icon(icons.Icon(icons.Close, 14, "")).OnClick(p.dropSource)
 	v.recorder = voicerecorder.NewWith(c, voicerecorder.Options{
 		Min: time.Second, Name: "speech",
-		Hint: "Speak normally; press Stop when you're done.", Ready: "Press Stop when you're done.",
-	}, func(path string) { p.setSource(path, "Recording "+time.Now().Format("Jan 2, 15:04"), false) })
+		Hint: tr.Msg("Speak normally; press Stop when you're done."), Ready: tr.Msg("Press Stop when you're done."),
+	}, func(path string) {
+		p.setSource(path, tr.T("Recording {time}", "time", time.Now().Format("Jan 2, 15:04")), false)
+	})
 	v.play = giode.Pressable(func(s giode.PressState) giode.Element {
 		icon := icons.Solid(icons.Play, 12, "theme.primary")
 		if c.IsPlaying(p.source) {
@@ -117,23 +124,25 @@ func newPanel(p *Page) *panel {
 		}
 		return giode.Box(giode.Styles{Width: 28, Height: 28, BorderRadius: 99, Background: bg,
 			Align: giode.AlignCenter, Justify: giode.JustifyCenter}, icon)
-	}).Label("Play audio").OnClick(func(giode.ClickEvent) {
+	}).OnClick(func(giode.ClickEvent) {
 		if filepath.Ext(p.source) != ".wav" {
-			c.Info("Only WAV files play here; the transcript will play once it's done")
+			c.Info(tr.T("Only WAV files play here; the transcript will play once it's done"))
 			return
 		}
-		c.PlayPause(p.source, p.sourceName, "Audio to transcribe")
+		c.PlayPause(p.source, p.sourceName, tr.T("Audio to transcribe"))
 	})
-	v.run = giode.Button("Transcribe", giode.Styles{}).OnClick(p.start)
-	v.eject = giode.Button("Eject", giode.Styles{Color: "theme.muted", Background: "theme.text", FontSize: 12,
+	tr.Bind(func(s string) { v.play.Label(s) }, "Play audio")
+	v.run = giode.Button("", giode.Styles{}).OnClick(p.start)
+	v.eject = giode.Button("", giode.Styles{Color: "theme.muted", Background: "theme.text", FontSize: 12,
 		Padding: giode.SymmetricInset(8, 4), BorderRadius: theme.RadiusSm}).Variant(giode.VariantGhost).
 		Icon(icons.Icon(icons.Eject, 13, "")).OnClick(func() {
 		if err := c.Manager.Eject(v.rt); err != nil {
 			c.Error(err)
 			return
 		}
-		c.Info(v.rt.Manifest().Name + " unloaded — memory freed")
+		c.Info(tr.T("{name} unloaded — memory freed", "name", v.rt.Manifest().Name))
 	})
+	tr.Bind(func(s string) { v.eject.Label(s) }, "Eject")
 	v.scroll = giode.Scroll(v.content, theme.Scrolling(5))
 	return v
 }
@@ -145,7 +154,7 @@ func (v *panel) pickFile() {
 	var path, name string
 	var temp bool
 	c.Background(func() error {
-		f, err := c.PickFile(append([]string{"audio/*", "video/*"}, decode.Extensions...), "; record instead")
+		f, err := c.PickFile(append([]string{"audio/*", "video/*"}, decode.Extensions...), tr.Msg("Record instead."))
 		if err != nil {
 			return err
 		}
@@ -157,7 +166,7 @@ func (v *panel) pickFile() {
 		}
 		name = f.Name
 		if name == "" {
-			name = "Audio from " + time.Now().Format("Jan 2, 15:04")
+			name = tr.T("Audio from {time}", "time", time.Now().Format("Jan 2, 15:04"))
 		}
 		path, err = core.SavePicked(f, core.PickedDir(), "audio")
 		temp = true
@@ -206,12 +215,12 @@ func (v *panel) form(rt *manager.Runtime) *form {
 		}
 	}
 	if len(choices) > 1 {
-		f.language = optionfield.New(engines.Option{ID: "language", Label: "Spoken language", Type: engines.OptionSelect,
-			Choices: choices, Help: "Detecting works well; naming the language helps short or noisy recordings."}, global)
+		f.language = optionfield.New(engines.Option{ID: "language", Label: tr.Msg("Spoken language"), Type: engines.OptionSelect,
+			Choices: choices, Help: tr.Msg("Detecting works well; naming the language helps short or noisy recordings.")}, global)
 	}
 	if m.Translate {
-		f.translate = optionfield.New(engines.Option{ID: "translate", Label: "Translate into English", Type: engines.OptionBool,
-			Help: "Write the text in English, whatever language is spoken."}, global)
+		f.translate = optionfield.New(engines.Option{ID: "translate", Label: tr.Msg("Translate into English"), Type: engines.OptionBool,
+			Help: tr.Msg("Write the text in English, whatever language is spoken.")}, global)
 	}
 	store := c.OptionStore(m, nil)
 	for _, o := range m.Options {
@@ -247,11 +256,11 @@ func (v *panel) compactElement(rt *manager.Runtime) giode.Element {
 
 func (v *panel) content() giode.Element {
 	rt := v.rt
-	els := []giode.Element{section("Engine", v.engineSection())}
+	els := []giode.Element{section(tr.T("Engine"), v.engineSection())}
 	if callout := v.callout(); callout != nil {
 		els = append(els, callout)
 	}
-	els = append(els, section("Audio", v.sourceSection()))
+	els = append(els, section(tr.T("Audio"), v.sourceSection()))
 	if rt.State == manager.StateReady || rt.State == manager.StateWorking {
 		f := v.form(rt)
 		if f.language != nil {
@@ -275,7 +284,7 @@ func (v *panel) sourceSection() giode.Element {
 		return v.recorder.Element()
 	case p.source == "":
 		return giode.Stack(giode.Styles{Width: -1, Gap: 10},
-			giode.Text("Pick a recording or video, or record right here.", giode.Styles{Color: "theme.muted", FontSize: 12, LineHeight: 17}),
+			giode.Text(tr.T("Pick a recording or video, or record right here."), giode.Styles{Color: "theme.muted", FontSize: 12, LineHeight: 17}),
 			giode.Row(giode.Styles{Width: -1, Gap: 8}, v.pick, v.recorder.Button()),
 		)
 	}
@@ -295,7 +304,7 @@ func (v *panel) callout() giode.Element {
 	var body []giode.Element
 	switch rt.State {
 	case manager.StateNotInstalled:
-		body = append(body, giode.Text(m.Name+" needs a one-time setup. Sonora downloads everything it needs automatically.",
+		body = append(body, giode.Text(tr.T("{name} needs a one-time setup. Sonora downloads everything it needs automatically.", "name", m.Name),
 			giode.Styles{Color: "theme.text", FontSize: 13, LineHeight: 19}))
 		if m.Size != "" {
 			body = append(body, chip.Chip(m.Size))
@@ -308,17 +317,17 @@ func (v *panel) callout() giode.Element {
 			}
 		}
 		if rt.Err != "" {
-			body = append(body, giode.Text(firstLine(rt.Err), giode.Styles{Color: "theme.danger", FontSize: 12, MaxLines: 3}))
+			body = append(body, giode.Text(tr.T(firstLine(rt.Err)), giode.Styles{Color: "theme.danger", FontSize: 12, MaxLines: 3}))
 		}
 		body = append(body, giode.Row(giode.Styles{Gap: 8}, v.install, v.manage))
 	case manager.StateInstalling:
 		body = append(body,
-			giode.Text("Installing "+m.Name+"…", giode.Styles{Color: "theme.text", FontSize: 13, FontWeight: giode.FontWeightBold}),
+			giode.Text(tr.T("Installing {name}…", "name", m.Name), giode.Styles{Color: "theme.text", FontSize: 13, FontWeight: giode.FontWeightBold}),
 			progressbar.New(rt.Progress),
-			giode.Text(rt.Status, giode.Styles{Color: "theme.muted", FontSize: 12, TextOverflow: giode.TextOverflowEllipsis}),
+			giode.Text(tr.T(rt.Status), giode.Styles{Color: "theme.muted", FontSize: 12, TextOverflow: giode.TextOverflowEllipsis}),
 		)
 	case manager.StateUnavailable:
-		body = append(body, giode.Text(m.Hint, giode.Styles{Color: "theme.text", FontSize: 13, LineHeight: 19}))
+		body = append(body, giode.Text(tr.T(m.Hint), giode.Styles{Color: "theme.text", FontSize: 13, LineHeight: 19}))
 	default:
 		return nil
 	}
@@ -335,9 +344,9 @@ func (v *panel) footer() giode.Element {
 		BorderRadius: theme.RadiusMd, Padding: giode.SymmetricInset(16, 13), BoxShadow: giode.BoxShadow{Y: 8, Blur: 24, Color: "#8b5cf650"}}
 	if job != nil {
 		st.BackgroundGradient, st.Background, st.BoxShadow = nil, "theme.danger", giode.BoxShadow{}
-		v.run.Label("Stop").Icon(icons.Solid(icons.Stop, 14, ""))
+		v.run.Label(tr.T("Stop")).Icon(icons.Solid(icons.Stop, 14, ""))
 	} else {
-		v.run.Label("Transcribe").Icon(icons.Icon(icons.Captions, 18, ""))
+		v.run.Label(tr.T("Transcribe")).Icon(icons.Icon(icons.Captions, 18, ""))
 	}
 	v.run.Styles(st).Disabled(job == nil && (!ready || v.p.source == "" || v.recorder.Recording()))
 
@@ -346,7 +355,7 @@ func (v *panel) footer() giode.Element {
 	case job != nil:
 		line := giode.Row(giode.Styles{Width: -1, Gap: 8, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap},
 			giode.Spinner(giode.Styles{Width: 14, Height: 14, Color: "theme.primary"}),
-			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(job.Runtime.Status,
+			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(tr.T(job.Runtime.Status),
 				giode.Styles{Color: "theme.muted", FontSize: 12, TextOverflow: giode.TextOverflowEllipsis})),
 			giode.Text(core.Clock(time.Since(job.Started)), giode.Styles{Color: "theme.muted", FontSize: 12, FontFamily: theme.Mono}),
 		)
@@ -355,11 +364,11 @@ func (v *panel) footer() giode.Element {
 			status = giode.Stack(giode.Styles{Width: -1, Gap: 8}, progressbar.New(job.Runtime.Progress), line)
 		}
 	case rt.Err != "" && rt.State == manager.StateReady:
-		status = giode.Text(firstLine(rt.Err), giode.Styles{Color: "theme.danger", FontSize: 12, MaxLines: 3})
+		status = giode.Text(tr.T(firstLine(rt.Err)), giode.Styles{Color: "theme.danger", FontSize: 12, MaxLines: 3})
 	case !ready:
-		status = giode.Text("Install the engine to start transcribing.", theme.Caption)
+		status = giode.Text(tr.T("Install the engine to start transcribing."), theme.Caption)
 	default:
-		status = giode.Text("Transcripts are kept below, with their audio.", theme.Caption)
+		status = giode.Text(tr.T("Transcripts are kept below, with their audio."), theme.Caption)
 	}
 	return giode.Stack(giode.Styles{Width: -1, Gap: 10, Padding: giode.UniformInset(20)},
 		giode.Box(giode.Styles{Width: -1}, v.run),
@@ -377,7 +386,7 @@ func (v *panel) engineSection() giode.Element {
 		v.engine.Element(),
 		giode.Row(giode.Styles{Width: -1, Gap: 8, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap, Padding: giode.Inset{Left: 4}},
 			giode.Box(giode.Styles{Width: 8, Height: 8, BorderRadius: 99, Background: "theme.success"}),
-			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text("Model loaded in memory", theme.Caption)),
+			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(tr.T("Model loaded in memory"), theme.Caption)),
 			v.eject,
 		),
 	)

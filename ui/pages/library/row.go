@@ -10,6 +10,8 @@ import (
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
+
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // row is one clip in the list.
@@ -73,7 +75,7 @@ func (r *row) element() giode.Element {
 
 // playButton plays and pauses the audio at path.
 func playButton(c *core.Ctx, path, title, subtitle string) *giode.PressableElement {
-	return giode.Pressable(func(s giode.PressState) giode.Element {
+	b := giode.Pressable(func(s giode.PressState) giode.Element {
 		playing := c.IsPlaying(path)
 		icon := icons.Solid(icons.Play, 14, "theme.primary")
 		bg := "theme.primary/0.14"
@@ -85,7 +87,9 @@ func playButton(c *core.Ctx, path, title, subtitle string) *giode.PressableEleme
 		}
 		return giode.Box(giode.Styles{Width: 40, Height: 40, BorderRadius: 99, Background: bg,
 			Align: giode.AlignCenter, Justify: giode.JustifyCenter}, icon)
-	}).Label("Play").OnClick(func(giode.ClickEvent) { c.PlayPause(path, title, subtitle) })
+	}).OnClick(func(giode.ClickEvent) { c.PlayPause(path, title, subtitle) })
+	tr.Bind(func(s string) { b.Label(s) }, "Play")
+	return b
 }
 
 // firstWords returns up to n words of text, for a file name.

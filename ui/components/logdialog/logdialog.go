@@ -9,6 +9,7 @@ import (
 	"github.com/mehran9675/sonora/ui/components/overlay"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // Dialog is created once and registers itself as an overlay.
@@ -45,11 +46,11 @@ func (d *Dialog) content() giode.Element {
 	body := giode.Element(d.view.Element(420))
 	if len(d.rt.Log) == 0 {
 		body = giode.Box(giode.Styles{Width: -1, Height: 120, Align: giode.AlignCenter, Justify: giode.JustifyCenter},
-			giode.Text("Nothing logged yet. Install or use the engine to see its output here.", theme.Subtle))
+			giode.Text(tr.T("Nothing logged yet. Install or use the engine to see its output here."), theme.Subtle))
 	}
 	return giode.Stack(giode.Styles{Width: -1, MaxWidth: 720, Gap: 14},
 		giode.Row(giode.Styles{Width: -1, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap},
-			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(d.rt.Manifest().Name+" · log", theme.Heading)),
+			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(tr.T("{name} · log", "name", d.rt.Manifest().Name), theme.Heading)),
 			d.close,
 		),
 		body,

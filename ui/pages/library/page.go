@@ -17,6 +17,8 @@ import (
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
+
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // Page is the Library screen. Create it once.
@@ -39,16 +41,18 @@ type Page struct {
 func New(c *core.Ctx) *Page {
 	p := &Page{c: c, rows: giode.NewKeyedCache[string, *row](), tab: "clips",
 		recordings: &recordingList{c: c}, recRows: giode.NewKeyedCache[string, *recRow]()}
-	p.tabs = segmented.New([]segmented.Option{{Value: "clips", Label: "Generated"}, {Value: "recordings", Label: "Recordings"}},
+	p.tabs = segmented.New([]segmented.Option{{Value: "clips", Label: tr.Msg("Generated")}, {Value: "recordings", Label: tr.Msg("Recordings")}},
 		func() string { return p.tab }, func(v string) { p.tab = v; p.recordings.refresh() })
 	field := theme.Field()
 	field.Width = 280
-	p.search = giode.Input.Text("Search…", field)
+	p.search = giode.Input.Text("", field)
+	tr.Bind(func(s string) { p.search.Placeholder(s) }, "Search…")
 	p.scroll = giode.Scroll(p.list, theme.Scrolling(6))
 	p.player = playerbar.New(c)
-	p.studio = giode.Button("Open Studio", giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
+	p.studio = giode.Button("", giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
 		Padding: giode.SymmetricInset(16, 9), BorderRadius: theme.RadiusSm + 2}).
 		Icon(icons.Icon(icons.Sparkles, 15, "")).OnClick(func() { c.Go(core.PageStudio) })
+	tr.Bind(func(s string) { p.studio.Label(s) }, "Open Studio")
 	return p
 }
 
@@ -70,10 +74,10 @@ func (p *Page) list() giode.Element {
 	entries := p.entries()
 	if len(entries) == 0 {
 		if len(p.c.Library.Entries()) == 0 {
-			return emptystate.New(icons.Library, "No clips yet",
-				"Everything you generate in the Studio is saved here, ready to play again or export.", p.studio)
+			return emptystate.New(icons.Library, tr.T("No clips yet"),
+				tr.T("Everything you generate in the Studio is saved here, ready to play again or export."), p.studio)
 		}
-		return emptystate.New(icons.Search, "No matches", "Try a different word.")
+		return emptystate.New(icons.Search, tr.T("No matches"), tr.T("Try a different word."))
 	}
 	els := make([]giode.Element, 0, len(entries))
 	for _, e := range entries {
@@ -98,10 +102,10 @@ func (p *Page) recordingList() giode.Element {
 	}
 	switch {
 	case len(all) == 0:
-		return emptystate.New(icons.Mic, "No recordings yet",
-			"Recordings you make to transcribe or to clone a voice are kept here, ready to play, transcribe or export.")
+		return emptystate.New(icons.Mic, tr.T("No recordings yet"),
+			tr.T("Recordings you make to transcribe or to clone a voice are kept here, ready to play, transcribe or export."))
 	case len(els) == 0:
-		return emptystate.New(icons.Search, "No matches", "Try a different word.")
+		return emptystate.New(icons.Search, tr.T("No matches"), tr.T("Try a different word."))
 	}
 	return column(els)
 }
@@ -126,7 +130,7 @@ func (p *Page) Element() giode.Element {
 	}
 	p.search.Styles(field)
 	return giode.Stack(giode.Styles{Width: -1, Height: -1, Gap: 20, Padding: giode.UniformInset(core.Gutter())},
-		pagehead.Head(giode.Compact(), "Library", "Your generated audio and recordings, newest first.", p.search),
+		pagehead.Head(giode.Compact(), tr.T("Library"), tr.T("Your generated audio and recordings, newest first."), p.search),
 		giode.Box(giode.Styles{Width: -1, MaxWidth: 420}, p.tabs.Element()),
 		giode.Box(giode.Styles{Width: -1, FlexGrow: 1}, p.scroll),
 		p.player.Element(),

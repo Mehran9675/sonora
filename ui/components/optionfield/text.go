@@ -8,22 +8,19 @@ import (
 
 	"github.com/mehran9675/sonora/internal/engines"
 	"github.com/mehran9675/sonora/ui/theme"
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // text is a single-line input with optional suggestion chips.
 type text struct {
+	opt  engines.Option
 	in   *input.Input
 	sugg []*giode.PressableElement
 }
 
 func newText(opt engines.Option, st Store) *text {
-	t := &text{}
-	placeholder := opt.Placeholder
-	if placeholder == "" && opt.Default != nil {
-		placeholder = fmt.Sprint(opt.Default)
-	}
-	t.in = giode.Input.Text(placeholder, theme.Field()).Label(opt.Label).
-		OnChange(func(s string) { st.Set(opt.ID, s) })
+	t := &text{opt: opt}
+	t.in = giode.Input.Text("", theme.Field()).OnChange(func(s string) { st.Set(opt.ID, s) })
 	if opt.Type == engines.OptionSecret {
 		t.in.Password(true)
 	}
@@ -46,6 +43,14 @@ func newText(opt engines.Option, st Store) *text {
 }
 
 func (t *text) Element() giode.Element {
+	// Fields are rebuilt whenever a form opens, so the label and
+	// placeholder are translated here rather than bound. A placeholder
+	// that's the default value isn't translated.
+	placeholder := tr.T(t.opt.Placeholder)
+	if t.opt.Placeholder == "" && t.opt.Default != nil {
+		placeholder = fmt.Sprint(t.opt.Default)
+	}
+	t.in.Label(tr.T(t.opt.Label)).Placeholder(placeholder)
 	if len(t.sugg) == 0 {
 		return giode.Box(giode.Styles{Width: -1}, t.in)
 	}

@@ -2,6 +2,7 @@
 package app
 
 import (
+	"cmp"
 	"image"
 	"log"
 
@@ -23,6 +24,7 @@ import (
 	"github.com/mehran9675/sonora/ui/pages/transcribe"
 	"github.com/mehran9675/sonora/ui/shell"
 	"github.com/mehran9675/sonora/ui/theme"
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // Run opens the window and blocks until it closes.
@@ -50,8 +52,10 @@ func Run() error {
 		Frameless:  true,
 		Center:     true,
 		Background: "theme.background",
-		Logger:     log.Default(),
-		LogLevel:   giode.LogLevelWarning,
+		// The chosen language, or the system's when Sonora has it.
+		Locale:   cmp.Or(store.Get().UILanguage, tr.System()),
+		Logger:   log.Default(),
+		LogLevel: giode.LogLevelWarning,
 		// Android may end a backgrounded app without warning, so the
 		// draft is saved whenever the app leaves the screen.
 		OnBackground: func() {
