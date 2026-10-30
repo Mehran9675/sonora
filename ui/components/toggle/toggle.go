@@ -4,6 +4,8 @@ package toggle
 import (
 	"github.com/mehran9675/giode"
 	"github.com/mehran9675/giode/styles/properties"
+
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // Toggle is a stateful switch with a label. Create it once.
@@ -13,7 +15,7 @@ type Toggle struct {
 	fn func(bool)
 }
 
-// New returns a switch labelled label.
+// New returns a switch labelled label (English, shown translated).
 func New(label string, on bool, onChange func(bool)) *Toggle {
 	t := &Toggle{on: on, fn: onChange}
 	t.p = giode.Pressable(func(s giode.PressState) giode.Element {
@@ -35,13 +37,14 @@ func New(label string, on bool, onChange func(bool)) *Toggle {
 			}),
 		)
 		return giode.Row(giode.Styles{Gap: 10, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap},
-			sw, giode.Text(label, giode.Styles{Color: "theme.text", FontSize: 13}))
-	}).Label(label).OnClick(func(giode.ClickEvent) {
+			sw, giode.Text(tr.T(label), giode.Styles{Color: "theme.text", FontSize: 13}))
+	}).OnClick(func(giode.ClickEvent) {
 		t.on = !t.on
 		if t.fn != nil {
 			t.fn(t.on)
 		}
 	})
+	tr.Bind(func(s string) { t.p.Label(s) }, label)
 	return t
 }
 

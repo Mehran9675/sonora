@@ -6,6 +6,7 @@ import (
 	"github.com/mehran9675/giode"
 
 	"github.com/mehran9675/sonora/internal/manager"
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // For returns the pill for rt.
@@ -14,22 +15,22 @@ func For(rt *manager.Runtime) giode.Element {
 	return Pill(label, color)
 }
 
-// Describe returns the label and theme color for rt's state.
+// Describe returns the translated label and theme color for rt's state.
 func Describe(rt *manager.Runtime) (string, string) {
 	switch rt.State {
 	case manager.StateReady:
-		return "Ready", "theme.success"
+		return tr.T("Ready"), "theme.success"
 	case manager.StateWorking:
-		return "Working", "theme.accent"
+		return tr.T("Working"), "theme.accent"
 	case manager.StateInstalling:
-		return "Installing", "theme.primary"
+		return tr.T("Installing"), "theme.primary"
 	case manager.StateUnavailable:
-		return "Unavailable", "theme.warning"
+		return tr.T("Unavailable"), "theme.warning"
 	}
 	if rt.Err != "" {
-		return "Install failed", "theme.danger"
+		return tr.T("Install failed"), "theme.danger"
 	}
-	return "Not installed", "theme.muted"
+	return tr.T("Not installed"), "theme.muted"
 }
 
 // Pill is a dot plus label in color.

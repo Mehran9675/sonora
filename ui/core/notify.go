@@ -5,15 +5,18 @@ import (
 	"strings"
 
 	"github.com/mehran9675/giode"
+
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
-// Info shows a short notification.
+// Info shows a short notification. Callers translate msg.
 func (c *Ctx) Info(msg string) { c.Toasts.Show(giode.ToastInfo, msg) }
 
 // Success shows a confirmation.
 func (c *Ctx) Success(msg string) { c.Toasts.Show(giode.ToastSuccess, msg) }
 
-// Error shows err's first line; cancelled dialogs are ignored.
+// Error shows err's first line, translated when it's one of Sonora's
+// messages; cancelled dialogs are ignored.
 func (c *Ctx) Error(err error) {
 	if err == nil || errors.Is(err, giode.ErrCanceled) {
 		return
@@ -22,6 +25,7 @@ func (c *Ctx) Error(err error) {
 	if i := strings.IndexByte(msg, '\n'); i > 0 {
 		msg = msg[:i]
 	}
+	msg = tr.T(msg)
 	if len(msg) > 160 {
 		msg = msg[:160] + "…"
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/mehran9675/sonora/ui/components/overlay"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // Action is one choice in the sheet.
@@ -52,9 +53,9 @@ func (s *Sheet) Show(title string, actions ...Action) {
 			if ps.Hovered {
 				bg = "theme.text/0.05"
 			}
-			text := []giode.Element{giode.Text(a.Label, giode.Styles{Color: "theme.text", FontSize: 14, FontWeight: giode.FontWeightMedium})}
+			text := []giode.Element{giode.Text(tr.T(a.Label), giode.Styles{Color: "theme.text", FontSize: 14, FontWeight: giode.FontWeightMedium})}
 			if a.Detail != "" {
-				text = append(text, giode.Text(a.Detail, theme.Caption))
+				text = append(text, giode.Text(tr.T(a.Detail), theme.Caption))
 			}
 			return giode.Row(giode.Styles{Width: -1, Align: giode.AlignCenter, Gap: 12, Wrap: giode.WrapNoWrap,
 				Padding: giode.SymmetricInset(12, 11), BorderRadius: theme.RadiusSm + 2, Background: bg},
@@ -62,7 +63,7 @@ func (s *Sheet) Show(title string, actions ...Action) {
 					Align: giode.AlignCenter, Justify: giode.JustifyCenter}, icons.Icon(a.Icon, 16, "theme.primary")),
 				giode.Stack(giode.Styles{FlexGrow: 1, Gap: 2}, text...),
 			)
-		}).Label(a.Label).OnClick(func(giode.ClickEvent) {
+		}).Label(tr.T(a.Label)).OnClick(func(giode.ClickEvent) {
 			s.open = false
 			a.Do()
 		})
@@ -72,7 +73,7 @@ func (s *Sheet) Show(title string, actions ...Action) {
 
 func (s *Sheet) content() giode.Element {
 	els := []giode.Element{giode.Row(giode.Styles{Width: -1, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap, Padding: giode.Inset{Bottom: 4}},
-		giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(s.title, giode.Styles{Color: "theme.text", FontSize: 16, FontWeight: giode.FontWeightBold,
+		giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(tr.T(s.title), giode.Styles{Color: "theme.text", FontSize: 16, FontWeight: giode.FontWeightBold,
 			MaxLines: 2, TextOverflow: giode.TextOverflowEllipsis})),
 		s.close,
 	)}

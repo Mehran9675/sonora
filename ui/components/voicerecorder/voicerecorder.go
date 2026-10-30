@@ -4,6 +4,7 @@ package voicerecorder
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -16,6 +17,7 @@ import (
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 const (
@@ -32,7 +34,8 @@ type Options struct {
 	// recording (0: the limit set in Settings).
 	Min, Max time.Duration
 	Name     string // file name prefix; default "voice"
-	// Hint shows while recording, Ready once the take is long enough.
+	// Hint shows while recording, Ready once the take is long enough;
+	// both are English (tr.Msg) and shown translated.
 	Hint, Ready string
 }
 
@@ -67,10 +70,10 @@ func NewWith(c *core.Ctx, opts Options, onDone func(path string)) *Recorder {
 		opts.Name = "voice"
 	}
 	if opts.Hint == "" {
-		opts.Hint = "Read naturally, a few sentences, in a quiet room."
+		opts.Hint = tr.Msg("Read naturally, a few sentences, in a quiet room.")
 	}
 	if opts.Ready == "" {
-		opts.Ready = "Sounds good — press Stop when you're done."
+		opts.Ready = tr.Msg("Sounds good — press Stop when you're done.")
 	}
 	r := &Recorder{c: c, onDone: onDone, opts: opts}
 	r.meter = &levelmeter.Meter{Color: "theme.danger", Levels: func() []float32 {
@@ -79,12 +82,14 @@ func NewWith(c *core.Ctx, opts Options, onDone func(path string)) *Recorder {
 		}
 		return r.rec.Levels()
 	}}
-	r.start = giode.Button("Record", giode.Styles{Color: "theme.text", Background: "theme.border", BorderColor: "theme.border",
+	r.start = giode.Button("", giode.Styles{Color: "theme.text", Background: "theme.border", BorderColor: "theme.border",
 		FontSize: 13, Padding: giode.SymmetricInset(12, 7), BorderRadius: theme.RadiusSm}).
 		Variant(giode.VariantOutlined).Icon(icons.Icon(icons.Mic, 15, "")).OnClick(r.begin)
-	r.stop = giode.Button("Stop", giode.Styles{Background: "theme.danger", Color: "#ffffff", FontSize: 13,
+	r.stop = giode.Button("", giode.Styles{Background: "theme.danger", Color: "#ffffff", FontSize: 13,
 		Padding: giode.SymmetricInset(12, 7), BorderRadius: theme.RadiusSm}).
 		Icon(icons.Solid(icons.Stop, 12, "")).OnClick(func() { r.finish(true) })
+	tr.Bind(func(s string) { r.start.Label(s) }, "Record")
+	tr.Bind(func(s string) { r.stop.Label(s) }, "Stop")
 	r.cancel = giode.Button("", giode.Styles{Color: "theme.muted", Background: "theme.text", Padding: giode.UniformInset(6), BorderRadius: 8}).
 		Variant(giode.VariantGhost).Icon(icons.Icon(icons.Close, 14, "")).OnClick(func() { r.finish(false) })
 	return r
@@ -154,7 +159,7 @@ func (r *Recorder) finish(keep bool) {
 		}
 		if length < r.opts.Min {
 			os.Remove(p)
-			return fmt.Errorf("That recording is too short; speak for at least %d seconds", int(r.opts.Min.Seconds()))
+			return errors.New(tr.N("That recording is too short; speak for at least {n} seconds", int(r.opts.Min.Seconds())))
 		}
 		path = p
 		return nil
@@ -177,15 +182,15 @@ func (r *Recorder) Element() giode.Element {
 	giode.HandleBack(func() { r.finish(false) }) // Back discards the take
 	elapsed := r.rec.Elapsed()
 	clock := fmt.Sprintf("%s / %s", core.Clock(elapsed), core.Clock(r.limit()))
-	hint := r.opts.Hint
+	hint := tr.T(r.opts.Hint)
 	if elapsed >= r.opts.Min {
-		hint = r.opts.Ready
+		hint = tr.T(r.opts.Ready)
 	}
 	return giode.Stack(giode.Styles{Width: -1, Gap: 10, Padding: giode.UniformInset(12),
 		Background: "theme.danger/0.08", BorderRadius: theme.RadiusMd, BorderWidth: 1, BorderColor: "theme.danger/0.3"},
 		giode.Row(giode.Styles{Width: -1, Gap: 8, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap},
 			giode.Box(giode.Styles{Width: 9, Height: 9, BorderRadius: 99, Background: "theme.danger"}),
-			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text("Recording", giode.Styles{Color: "theme.text", FontSize: 13, FontWeight: giode.FontWeightBold})),
+			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(tr.T("Recording"), giode.Styles{Color: "theme.text", FontSize: 13, FontWeight: giode.FontWeightBold})),
 			giode.Text(clock, giode.Styles{Color: "theme.secondary", FontSize: 12, FontFamily: theme.Mono}),
 			r.cancel,
 		),

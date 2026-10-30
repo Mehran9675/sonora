@@ -7,6 +7,7 @@ import (
 
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // Item is a clickable sidebar row. Create it once.
@@ -17,6 +18,7 @@ type Item struct {
 
 // New returns an item showing icon and label; active reports whether
 // it is the current page; badge (optional) returns a count to show.
+// label is English (tr.Msg); it shows in the current language.
 func New(icon, label string, active func() bool, badge func() string, onClick func()) *Item {
 	it := &Item{}
 	it.p = giode.Pressable(func(s giode.PressState) giode.Element {
@@ -37,12 +39,12 @@ func New(icon, label string, active func() bool, badge func() string, onClick fu
 			return giode.Stack(giode.Styles{
 				Width: -1, Gap: 4, Align: giode.AlignCenter, Padding: giode.SymmetricInset(4, 8),
 				BorderRadius: theme.RadiusSm + 2, Background: bg,
-			}, icons.Icon(icon, 20, iconColor), giode.Text(label, giode.Styles{Color: fg, FontSize: 11, FontWeight: giode.FontWeightMedium}))
+			}, icons.Icon(icon, 20, iconColor), giode.Text(tr.T(label), giode.Styles{Color: fg, FontSize: 11, FontWeight: giode.FontWeightMedium}))
 		}
 		row := []giode.Element{
 			icons.Icon(icon, 18, iconColor),
 			giode.Box(giode.Styles{FlexGrow: 1},
-				giode.Text(label, giode.Styles{Color: fg, FontSize: 14, FontWeight: giode.FontWeightMedium})),
+				giode.Text(tr.T(label), giode.Styles{Color: fg, FontSize: 14, FontWeight: giode.FontWeightMedium})),
 		}
 		if badge != nil {
 			if b := badge(); b != "" {
@@ -55,7 +57,8 @@ func New(icon, label string, active func() bool, badge func() string, onClick fu
 			Width: -1, Gap: 12, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap,
 			Padding: giode.SymmetricInset(12, 10), BorderRadius: theme.RadiusSm + 2, Background: bg,
 		}, row...)
-	}).Label(label).OnClick(func(giode.ClickEvent) { onClick() })
+	}).OnClick(func(giode.ClickEvent) { onClick() })
+	tr.Bind(func(s string) { it.p.Label(s) }, label)
 	return it
 }
 

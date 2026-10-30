@@ -93,6 +93,15 @@ WebVTT (`transcripts/export.go`).
 - `ui/components/*` are reusable pieces, one per package: picker, waveform, player bar,
   option fields (which render any engine's settings from its manifest), segmented
   control, toggle, badges, chips, log view.
+- `ui/tr` translates the UI (giode's `i18n` underneath). Messages are keyed by their English
+  text: `tr.T("Install")`, `tr.T("Downloading {file}", "file", name)`, `tr.N("{n} words", n)`.
+  Text drawn every frame calls `tr.T` there; elements built once take theirs through
+  `tr.Bind`, which sets it again when the language changes; English kept in tables is
+  marked `tr.Msg` and translated where it's shown. Engine descriptions, option labels and
+  the manager's status messages are English data, translated where they're shown.
+  Catalogs are `ui/tr/locales/<code>.json` (English needs only plural forms).
+  `go run ./tools/i18nkeys -missing de` lists what a catalog lacks, and `ui/tr`'s test fails
+  when a catalog misses a key, changes a placeholder or lacks a plural form.
 - Background work never touches UI state directly: the manager applies results with
   `App.Post`, so everything the view reads is changed on the UI goroutine.
 

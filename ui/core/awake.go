@@ -4,6 +4,8 @@ import (
 	"sync/atomic"
 
 	"github.com/mehran9675/sonora/internal/manager"
+
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // away is set while the app is in the background (minimized, or behind
@@ -55,11 +57,11 @@ func (c *Ctx) NotifyIfAway(title, body string) {
 // Install installs an engine, keeping the device awake through its
 // downloads; done (optional) runs afterwards on the UI goroutine.
 func (c *Ctx) Install(rt *manager.Runtime, done func(error)) {
-	awake := c.StayAwake("Installing " + rt.Manifest().Name)
+	awake := c.StayAwake(tr.T("Installing {name}", "name", rt.Manifest().Name))
 	c.Manager.Install(rt, func(err error) {
 		awake()
 		if err == nil {
-			c.NotifyIfAway(rt.Manifest().Name+" is installed", "Ready to use.")
+			c.NotifyIfAway(tr.T("{name} is installed", "name", rt.Manifest().Name), tr.T("Ready to use."))
 		}
 		if done != nil {
 			done(err)

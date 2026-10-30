@@ -12,12 +12,13 @@ import (
 	"git.wow.st/gmp/jni"
 
 	"github.com/mehran9675/sonora/internal/audio/record"
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 const recordAudio = "android.permission.RECORD_AUDIO"
 
 // errMicDenied is returned when the user doesn't allow the microphone.
-var errMicDenied = errors.New("Sonora needs the microphone to record. Allow it when Android asks, or in the app's settings")
+var errMicDenied = errors.New(tr.Msg("Sonora needs the microphone to record. Allow it when Android asks, or in the app's settings"))
 
 // RequestMicrophone asks Android for the microphone permission, showing
 // the system prompt the first time, and waits up to a minute for the
@@ -85,16 +86,16 @@ func requestMic(vm jni.JVM, view uintptr) error {
 // inputTypes names the AudioDeviceInfo types that are microphones;
 // others (telephony, tuners, echo reference…) are left out.
 var inputTypes = map[int32]string{
-	3:  "Wired headset",     // TYPE_WIRED_HEADSET
-	5:  "Line in",           // TYPE_LINE_ANALOG
-	6:  "Digital line in",   // TYPE_LINE_DIGITAL
-	7:  "Bluetooth headset", // TYPE_BLUETOOTH_SCO
-	11: "USB microphone",    // TYPE_USB_DEVICE
-	12: "USB accessory",     // TYPE_USB_ACCESSORY
-	13: "Dock",              // TYPE_DOCK
-	15: "Phone microphone",  // TYPE_BUILTIN_MIC
-	22: "USB headset",       // TYPE_USB_HEADSET
-	26: "Bluetooth headset", // TYPE_BLE_HEADSET
+	3:  tr.Msg("Wired headset"),     // TYPE_WIRED_HEADSET
+	5:  tr.Msg("Line in"),           // TYPE_LINE_ANALOG
+	6:  tr.Msg("Digital line in"),   // TYPE_LINE_DIGITAL
+	7:  tr.Msg("Bluetooth headset"), // TYPE_BLUETOOTH_SCO
+	11: tr.Msg("USB microphone"),    // TYPE_USB_DEVICE
+	12: tr.Msg("USB accessory"),     // TYPE_USB_ACCESSORY
+	13: tr.Msg("Dock"),              // TYPE_DOCK
+	15: tr.Msg("Phone microphone"),  // TYPE_BUILTIN_MIC
+	22: tr.Msg("USB headset"),       // TYPE_USB_HEADSET
+	26: tr.Msg("Bluetooth headset"), // TYPE_BLE_HEADSET
 }
 
 // Microphones lists the inputs AudioManager reports; miniaudio sees
@@ -135,6 +136,7 @@ func Microphones() ([]record.Device, error) {
 				return err
 			}
 			label, ok := inputTypes[kind]
+			label = tr.T(label)
 			if !ok {
 				continue
 			}

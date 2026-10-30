@@ -11,6 +11,8 @@ import (
 	"github.com/mehran9675/giode"
 
 	"github.com/mehran9675/sonora/ui/icons"
+
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // SaveClip asks where to save the audio file at path (the system
@@ -54,9 +56,9 @@ func (c *Ctx) save(name string, open func() (io.ReadCloser, error)) {
 		case err != nil:
 			c.Error(err)
 		case fallback != "":
-			c.Success("Saved to " + fallback)
+			c.Success(tr.T("Saved to {path}", "path", fallback))
 		default:
-			c.Success("Saved")
+			c.Success(tr.T("Saved"))
 		}
 	})
 }
@@ -152,7 +154,7 @@ func (c *Ctx) ShareText(text, title string) {
 		if err != nil {
 			c.Error(err)
 		} else if !Mobile {
-			c.Success("Copied to the clipboard")
+			c.Success(tr.T("Copied to the clipboard"))
 		}
 	})
 }

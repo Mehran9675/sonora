@@ -7,6 +7,7 @@ import (
 
 	"github.com/mehran9675/sonora/internal/engines"
 	"github.com/mehran9675/sonora/ui/theme"
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // Store reads and writes option values.
@@ -62,10 +63,10 @@ func (f *Field) Element() giode.Element {
 		return giode.Stack(giode.Styles{Width: -1, Gap: 4}, f.ctrl.Element(), f.help())
 	}
 	head := giode.Row(giode.Styles{Width: -1, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap},
-		giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(f.opt.Label, theme.Overline)))
+		giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(tr.T(f.opt.Label), theme.Overline)))
 	if n, ok := f.ctrl.(*number); ok {
 		head = giode.Row(giode.Styles{Width: -1, Align: giode.AlignCenter, Wrap: giode.WrapNoWrap},
-			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(f.opt.Label, theme.Overline)),
+			giode.Box(giode.Styles{FlexGrow: 1}, giode.Text(tr.T(f.opt.Label), theme.Overline)),
 			giode.Text(n.display(), giode.Styles{Color: "theme.text", FontSize: 12, FontWeight: giode.FontWeightBold}))
 	}
 	return giode.Stack(giode.Styles{Width: -1, Gap: 8}, head, f.ctrl.Element(), f.help())
@@ -75,5 +76,5 @@ func (f *Field) help() giode.Element {
 	if f.opt.Help == "" {
 		return giode.Box(giode.Styles{})
 	}
-	return giode.Text(f.opt.Help, theme.Caption)
+	return giode.Text(tr.T(f.opt.Help), theme.Caption)
 }

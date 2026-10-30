@@ -15,6 +15,8 @@ import (
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
+
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // recording is an audio file in the recordings folder.
@@ -84,14 +86,14 @@ type recRow struct {
 
 func newRecRow(c *core.Ctx, l *recordingList, r recording) *recRow {
 	row := &recRow{c: c, r: r}
-	row.play = playButton(c, r.Path, r.Name, "Recording")
+	row.play = playButton(c, r.Path, r.Name, tr.T("Recording"))
 	ghost := giode.Styles{Color: "theme.muted", Background: "theme.text", Padding: giode.UniformInset(8), BorderRadius: 8}
 	row.transcribe = giode.Button("", ghost).Variant(giode.VariantGhost).Icon(icons.Icon(icons.Captions, 16, "")).
 		OnClick(func() { c.Transcribe(r.Path, r.Name) })
 	row.export = giode.Button("", ghost).Variant(giode.VariantGhost).Icon(icons.Icon(icons.Share, 16, "")).
 		OnClick(func() { c.ExportFile(r.Path, r.Name) })
 	row.remove = giode.Button("", ghost).Variant(giode.VariantGhost).Icon(icons.Icon(icons.Trash, 16, "")).OnClick(func() {
-		c.Toasts.ShowAction(giode.ToastWarning, "Delete "+r.Name+"?", "Delete", func() {
+		c.Toasts.ShowAction(giode.ToastWarning, tr.T("Delete {name}?", "name", r.Name), tr.T("Delete"), func() {
 			giode.AfterLayout(func() {
 				if c.Player.Loaded() == r.Path {
 					c.Player.Unload()
@@ -133,9 +135,9 @@ func (row *recRow) element() giode.Element {
 func sizeLabel(n int64) string {
 	switch {
 	case n >= 1<<30:
-		return fmt.Sprintf("%.1f GB", float64(n)/(1<<30))
+		return tr.T("{size} GB", "size", fmt.Sprintf("%.1f", float64(n)/(1<<30)))
 	case n >= 1<<20:
-		return fmt.Sprintf("%.1f MB", float64(n)/(1<<20))
+		return tr.T("{size} MB", "size", fmt.Sprintf("%.1f", float64(n)/(1<<20)))
 	}
-	return fmt.Sprintf("%d KB", (n+1023)>>10)
+	return tr.T("{size} KB", "size", (n+1023)>>10)
 }

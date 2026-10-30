@@ -8,6 +8,8 @@ import (
 	"github.com/mehran9675/sonora/internal/library"
 	"github.com/mehran9675/sonora/internal/manager"
 	"github.com/mehran9675/sonora/internal/settings"
+
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // toggleGenerate starts a generation, or stops the running one.
@@ -25,11 +27,11 @@ func (p *Page) toggleGenerate() {
 	reference := ""
 	if f.cloneMode && rt.Manifest().Clone != engines.CloneNone {
 		if f.reference == "" {
-			c.Error(errors.New("Choose a recording of the voice to clone"))
+			c.Error(errors.New(tr.T("Choose a recording of the voice to clone")))
 			return
 		}
 		if rt.Manifest().Transcript == engines.CloneRequired && strings.TrimSpace(f.transcript.Text()) == "" {
-			c.Error(errors.New(rt.Manifest().Name + " needs the transcript of the recording"))
+			c.Error(errors.New(tr.T("{name} needs the transcript of the recording", "name", rt.Manifest().Name)))
 			return
 		}
 		reference = f.reference
@@ -43,14 +45,14 @@ func (p *Page) toggleGenerate() {
 		Reference:     reference,
 		ReferenceText: f.transcript.Text(),
 	}
-	awake := c.StayAwake("Generating speech")
+	awake := c.StayAwake(tr.T("Generating speech"))
 	c.Manager.Generate(rt, in, func(e library.Entry, err error) {
 		awake()
 		if err != nil {
 			c.Error(err)
 			return
 		}
-		c.NotifyIfAway("Speech is ready", firstWords(e.Text))
+		c.NotifyIfAway(tr.T("Speech is ready"), firstWords(e.Text))
 		c.Open(c.Library.Path(e), e.VoiceName, e.EngineName, true)
 		// Engines that report voices once loaded have them now.
 		if len(rt.Voices) == 0 {

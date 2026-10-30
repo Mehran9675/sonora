@@ -15,6 +15,7 @@ import (
 	"github.com/mehran9675/sonora/ui/core"
 	"github.com/mehran9675/sonora/ui/icons"
 	"github.com/mehran9675/sonora/ui/theme"
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // Page is the Engines screen. Create it once.
@@ -36,13 +37,14 @@ func New(c *core.Ctx) *Page {
 	p.adder = newAddDialog(c)
 	p.config = newConfigDialog(c)
 	p.logs = logdialog.New()
-	p.add = giode.Button("Add engine", giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
+	p.add = giode.Button("", giode.Styles{BackgroundGradient: theme.Brand(90), Color: "#ffffff", FontSize: 13,
 		Padding: giode.SymmetricInset(14, 9), BorderRadius: theme.RadiusSm + 2}).
 		Icon(icons.Icon(icons.Plus, 16, "")).OnClick(p.adder.show)
+	tr.Bind(func(s string) { p.add.Label(s) }, "Add engine")
 	p.scroll = giode.Scroll(p.content, theme.Scrolling(6))
 	p.tabs = segmented.New([]segmented.Option{
-		{Value: string(engines.TaskSpeak), Label: "Text to speech"},
-		{Value: string(engines.TaskTranscribe), Label: "Speech to text"},
+		{Value: string(engines.TaskSpeak), Label: tr.Msg("Text to speech")},
+		{Value: string(engines.TaskTranscribe), Label: tr.Msg("Speech to text")},
 	}, func() string { return string(p.task) }, func(v string) { p.task = engines.Task(v) })
 	c.ShowEngines = func(task engines.Task) {
 		p.task = task
@@ -72,19 +74,19 @@ func (p *Page) content() giode.Element {
 			rest = append(rest, el)
 		}
 	}
-	subtitle := "Install voice models with one click, or connect your own."
+	subtitle := tr.T("Install voice models with one click, or connect your own.")
 	if p.task == engines.TaskTranscribe {
-		subtitle = "Install speech recognition models with one click, or connect a transcription API."
+		subtitle = tr.T("Install speech recognition models with one click, or connect a transcription API.")
 	}
 	els := []giode.Element{
-		pagehead.Head(giode.Compact(), "Engines", subtitle, p.add),
+		pagehead.Head(giode.Compact(), tr.T("Engines"), subtitle, p.add),
 		giode.Box(giode.Styles{Width: -1, MaxWidth: 420}, p.tabs.Element()),
 	}
 	if len(ready) > 0 {
-		els = append(els, group("Installed", ready))
+		els = append(els, group(tr.T("Installed"), ready))
 	}
 	if len(rest) > 0 {
-		els = append(els, group("Available", rest))
+		els = append(els, group(tr.T("Available"), rest))
 	}
 	return giode.Stack(giode.Styles{Width: -1, Gap: 26, Padding: giode.UniformInset(core.Gutter())}, els...)
 }

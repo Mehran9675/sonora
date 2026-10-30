@@ -8,6 +8,7 @@ import (
 	"github.com/mehran9675/giode/components/slider"
 
 	"github.com/mehran9675/sonora/internal/engines"
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // number is a slider over [Min, Max] snapped to Step.
@@ -45,7 +46,7 @@ func (n *number) fromUnit(u float32) float64 {
 func (n *number) display() string {
 	v := n.value()
 	if v == 0 && n.opt.Min == 0 && n.opt.Help != "" {
-		return "Auto"
+		return tr.T("Auto")
 	}
 	return strconv.FormatFloat(v, 'f', -1, 64)
 }

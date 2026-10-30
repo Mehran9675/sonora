@@ -3,22 +3,29 @@ package core
 import (
 	"time"
 
+	"github.com/mehran9675/sonora/ui/tr"
+
 	"github.com/mehran9675/sonora/internal/paths"
 )
 
 // RecordQuality is a recording quality setting.
 type RecordQuality struct {
-	Value, Label string
-	Bitrate      int // Opus, bits per second
+	Value, Name string // Name is English; translate it with tr.T
+	Bitrate     int    // Opus, bits per second
+}
+
+// Detail describes the quality's bitrate and size, translated.
+func (q RecordQuality) Detail() string {
+	return tr.T("{kbps} kbps · about {mb} MB an hour", "kbps", q.Bitrate/1000, "mb", q.Bitrate*3600/8/1000000)
 }
 
 // RecordQualities are the recording quality settings, smallest first.
 // Recordings are Opus: even Small keeps speech clear.
 var RecordQualities = []RecordQuality{
-	{"small", "Small · 16 kbps · about 7 MB an hour", 16000},
-	{"standard", "Standard · 32 kbps · about 14 MB an hour", 32000},
-	{"high", "High · 64 kbps · about 28 MB an hour", 64000},
-	{"best", "Best · 128 kbps · about 56 MB an hour", 128000},
+	{"small", tr.Msg("Small"), 16000},
+	{"standard", tr.Msg("Standard"), 32000},
+	{"high", tr.Msg("High"), 64000},
+	{"best", tr.Msg("Best"), 128000},
 }
 
 // RecordLimits are the choices for the longest recording, in minutes.

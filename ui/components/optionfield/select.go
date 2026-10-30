@@ -9,6 +9,7 @@ import (
 	"github.com/mehran9675/sonora/internal/engines"
 	"github.com/mehran9675/sonora/ui/components/picker"
 	"github.com/mehran9675/sonora/ui/components/segmented"
+	"github.com/mehran9675/sonora/ui/tr"
 )
 
 // segmentChars is the most label text, in characters, that fits
@@ -17,6 +18,8 @@ const segmentChars = 30
 
 // newSelect uses segments for up to three short choices and a picker
 // otherwise, or whenever the store describes choices (Store.Detail).
+// Segments, the picker's title and the trigger's name translate the
+// labels they keep at render; the items translate here.
 func newSelect(opt engines.Option, st Store) control {
 	current := func() string { return fmt.Sprint(valueOr(st.Get(opt.ID), opt.Default)) }
 	chars, described := 0, false
@@ -34,7 +37,7 @@ func newSelect(opt engines.Option, st Store) control {
 	items := func() []picker.Item {
 		var out []picker.Item
 		for _, c := range opt.Choices {
-			out = append(out, picker.Item{ID: c.Value, Label: c.Label, Detail: st.detail(opt.ID, c.Value)})
+			out = append(out, picker.Item{ID: c.Value, Label: tr.T(c.Label), Detail: st.detail(opt.ID, c.Value)})
 		}
 		return out
 	}
@@ -43,7 +46,7 @@ func newSelect(opt engines.Option, st Store) control {
 		cur := current()
 		for _, c := range opt.Choices {
 			if c.Value == cur {
-				return c.Label, st.detail(opt.ID, cur)
+				return tr.T(c.Label), st.detail(opt.ID, cur)
 			}
 		}
 		return cur, ""
