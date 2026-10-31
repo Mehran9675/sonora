@@ -27,6 +27,12 @@ arch = ["arm64", "arm", "amd64"]
 permissions = ["microphone"]
 keep_alive = true
 notifications = true
+# The adaptive icon's layers (Android 8+), drawn by tools/makeicon: the S
+# inside the middle 66dp, over the navy of the tile; the monochrome
+# layer is its shape for themed icons (Android 13+).
+icon_foreground = "assets/icon/android-foreground.png"
+icon_background = "#15163a"
+icon_monochrome = "assets/icon/android-monochrome.png"
 
 [ios.usage]
 microphone = "Sonora records your voice to clone it or to transcribe what you say."

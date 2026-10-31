@@ -255,8 +255,12 @@ giode run -mcp         # exposes the UI over MCP (giode) for automated UI testin
 SONORA_HOME=/tmp/s ./sonora   # use a throwaway data folder
 ```
 
-The icon is drawn by code. After changing `tools/makeicon`, regenerate the PNGs and the
-Windows resources:
+The icon - an S of three sound-wave strands, violet to cyan on navy - is drawn by code.
+`tools/makeicon` writes the full-bleed icon (Windows, Linux, the window and the sidebar),
+the macOS one on Apple's icon grid, and the layers of Android's adaptive icon: the S on a
+transparent canvas inside the launcher's safe zone, and its shape for themed icons
+(`giode.toml` sets those and the navy background). After changing it, regenerate the PNGs
+and the Windows resources:
 
 ```sh
 go run ./tools/makeicon assets/icon

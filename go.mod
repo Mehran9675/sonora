@@ -10,7 +10,7 @@ require (
 	github.com/hajimehoshi/go-mp3 v0.3.4
 	github.com/jfreymuth/oggvorbis v1.0.5
 	github.com/ledongthuc/pdf v0.0.0-20250511090121-5959a4027728
-	github.com/mehran9675/giode v0.1.18-alpha.1
+	github.com/mehran9675/giode v0.1.19-alpha.1
 	github.com/mewkiz/flac v1.0.14
 	github.com/thesyncim/gopus v0.1.2
 	golang.org/x/image v0.26.0
