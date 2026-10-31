@@ -45,8 +45,8 @@ github.com/jfreymuth/vorbis v1.0.2 h1:m1xH6+ZI4thH927pgKD8JOH4eaGRm18rEE9/0WKjvN
 github.com/jfreymuth/vorbis v1.0.2/go.mod h1:DoftRo4AznKnShRl1GxiTFCseHr4zR9BN3TWXyuzrqQ=
 github.com/ledongthuc/pdf v0.0.0-20250511090121-5959a4027728 h1:QwWKgMY28TAXaDl+ExRDqGQltzXqN/xypdKP86niVn8=
 github.com/ledongthuc/pdf v0.0.0-20250511090121-5959a4027728/go.mod h1:1fEHWurg7pvf5SG6XNE5Q8UZmOwex51Mkx3SLhrW5B4=
-github.com/mehran9675/giode v0.1.18-alpha.1 h1:sIIUqaMqURFpnjcn4aBI7MjGVO5O/LpMJCvQZn8ehPo=
-github.com/mehran9675/giode v0.1.18-alpha.1/go.mod h1:Lh6RVGzsMX8csfjxuyjjXPzPPJGilh2lpu4aeDYvBJ8=
+github.com/mehran9675/giode v0.1.19-alpha.1 h1:h4tQj0BC43/gEPdNGnMTo0g5xSGVcwDbGSJSrKLftS0=
+github.com/mehran9675/giode v0.1.19-alpha.1/go.mod h1:Lh6RVGzsMX8csfjxuyjjXPzPPJGilh2lpu4aeDYvBJ8=
 github.com/mewkiz/flac v1.0.14 h1:hyRGAM8NCKznoPmIi9zz2jyO+nfmxY2ErqBnHZ+gxh4=
 github.com/mewkiz/flac v1.0.14/go.mod h1:HfPYDA+oxjyuqMu2V+cyKcxF51KM6incpw5eZXmfA6k=
 github.com/mewkiz/pkg v0.0.0-20250417130911-3f050ff8c56d h1:IL2tii4jXLdhCeQN69HNzYYW1kl0meSG0wt5+sLwszU=

@@ -7,7 +7,6 @@ import (
 
 	"github.com/mehran9675/sonora/ui/components/overlay"
 	"github.com/mehran9675/sonora/ui/core"
-	"github.com/mehran9675/sonora/ui/icons"
 )
 
 // compactBelow is the width, in dp, up to which the app uses the
@@ -29,7 +28,7 @@ func New(c *core.Ctx, pages map[core.Page]func() giode.Element, onTheme func()) 
 	s := &Shell{c: c, sidebar: NewSidebar(c, onTheme), pages: pages}
 	if !core.Mobile {
 		bar := giode.TitleBar(c.App, "Sonora", giode.Styles{Background: "theme.surface", Color: "theme.muted"}).
-			Icon(icons.Icon(icons.Waves, 14, "theme.primary"))
+			Icon(giode.Image(logoImage(), giode.Styles{Width: 16, Height: 16, Fit: giode.FitContain, BorderRadius: 4}))
 		if runtime.GOOS == "darwin" {
 			bar.Variant(giode.TitleBarMac)
 		}
